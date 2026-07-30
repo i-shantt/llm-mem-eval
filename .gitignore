@@ -12,3 +12,6 @@ data/emb_cache/
 results/*.log
 results/c[0-9].json
 results/smoke_*.json
+
+# judge worksheets are for hand-labelling; keep the labelled ones
+results/*_worksheet.jsonl

@@ -1,87 +1,80 @@
 {
   "_README": [
-    "Cost figures for memory systems as REPORTED by their own papers or by",
-    "third-party comparisons. Nothing here was measured by this repo.",
+    "Cost and accuracy figures for memory systems as REPORTED by their own",
+    "papers. Nothing here was measured by this repo.",
     "",
-    "Two cautions that must survive into any plot or table:",
-    "  1. These were measured on different benchmarks (mostly LoCoMo), not on",
-    "     LongMemEval, so they are NOT directly comparable to our measured",
-    "     numbers. Plot them on separate axes or label them explicitly.",
-    "  2. Every entry below was taken from a paper abstract, table snippet, or",
-    "     secondary comparison, not from a full read of the source. Each has",
-    "     verified=false until someone opens the paper and confirms it.",
+    "Every entry was checked against the actual paper on 2026-07-29 and carries",
+    "`verified: true` with the specific table it came from, or was removed.",
     "",
-    "`verified` MUST be flipped to true only by a human who has read the cited",
-    "source. Do not plot unverified numbers in a final artifact."
+    "Caution that must survive into any plot or table: these were measured on",
+    "different benchmarks (LoCoMo for Mem0/RecMem, LongMemEval for the energy",
+    "numbers) and are NOT directly comparable to each other or to our measured",
+    "numbers. Label the benchmark on every number you display."
   ],
-  "systems": [
+
+  "_removed": [
     {
-      "name": "Mem0",
-      "benchmark": "LoCoMo",
-      "read_tokens_per_query": 1764,
-      "write_tokens_total": 1520800,
-      "write_llm_calls": null,
-      "reported_score": 67.13,
-      "score_metric": "LLM-as-a-Judge",
-      "source": "Mem0 paper (arXiv 2504.19413) for read tokens + score; write token total as reported in RecMem's comparison table (arXiv 2605.16045)",
-      "verified": false
+      "claim": "verbatim RAG costs ~$0.01 with no LLM calls while Mem0 costs $0.50+ with 1000+ LLM calls per instance",
+      "attributed_to": "arXiv 2606.06448",
+      "status": "NOT FOUND IN SOURCE - REMOVED",
+      "note": "That paper quantifies construction cost in energy (kJ) and LLM call counts, not dollars. No such dollar figures appear. The claim came from a search-result paraphrase and should never be cited."
     },
     {
-      "name": "A-Mem",
-      "benchmark": "LoCoMo",
-      "read_tokens_per_query": null,
-      "write_tokens_total": 1459900,
-      "write_llm_calls": null,
-      "reported_score": null,
-      "score_metric": null,
-      "source": "RecMem comparison table (arXiv 2605.16045)",
-      "verified": false
-    },
-    {
-      "name": "RecMem",
-      "benchmark": "LoCoMo",
-      "read_tokens_per_query": null,
-      "write_tokens_total": 193200,
-      "write_llm_calls": null,
-      "reported_score": null,
-      "score_metric": null,
-      "source": "RecMem (arXiv 2605.16045)",
-      "verified": false
-    },
-    {
-      "name": "full-context",
-      "benchmark": "LoCoMo",
-      "read_tokens_per_query": 26031,
-      "write_tokens_total": 0,
-      "write_llm_calls": 0,
-      "reported_score": 70.71,
-      "score_metric": "LLM-as-a-Judge",
-      "source": "Mem0 paper for token count; long-context score from LoCoMo leaderboard discussion",
-      "verified": false
-    },
-    {
-      "name": "verbatim-RAG",
-      "benchmark": "LoCoMo",
-      "read_tokens_per_query": null,
-      "write_tokens_total": 0,
-      "write_llm_calls": 0,
-      "write_dollars_per_instance": 0.01,
-      "reported_score": null,
-      "score_metric": null,
-      "source": "Agent Memory characterization (arXiv 2606.06448): verbatim RAG ~$0.01 with no LLM calls vs Mem0 $0.50+ with 1000+ LLM calls",
-      "verified": false
-    },
-    {
-      "name": "Mem0 (write cost, dollars)",
-      "benchmark": "LoCoMo",
-      "read_tokens_per_query": null,
-      "write_tokens_total": null,
-      "write_llm_calls": 1000,
-      "write_dollars_per_instance": 0.50,
-      "reported_score": null,
-      "score_metric": null,
-      "source": "Agent Memory characterization (arXiv 2606.06448)",
-      "verified": false
+      "claim": "full-context scores 70.71 LLM-as-a-Judge on LoCoMo",
+      "status": "SUPERSEDED - REMOVED",
+      "note": "Mem0's own Table 2 reports 72.90 +/- 0.19 for the full-context baseline. The 70.71 figure came from a secondary discussion, not a primary table."
     }
-  ]
+  ],
+
+  "locomo_read_path": {
+    "_source": "Mem0, arXiv 2504.19413, Table 2",
+    "_benchmark": "LoCoMo",
+    "_unit": "mean prompt tokens supplied to the answering model per question",
+    "_verified": true,
+    "_note": "This paper reports NO write-path cost. It documents retrieval and inference latency but is silent on tokens or LLM calls consumed during memory extraction and consolidation. That omission is the gap this repo is about.",
+    "systems": [
+      {
+        "name": "Mem0",
+        "tokens_per_query": 1764,
+        "llm_judge_score": 66.88,
+        "llm_judge_stderr": 0.15,
+        "p95_latency_s": 1.440
+      },
+      {
+        "name": "full-context",
+        "tokens_per_query": 26031,
+        "llm_judge_score": 72.90,
+        "llm_judge_stderr": 0.19,
+        "p95_latency_s": 17.117
+      }
+    ]
+  },
+
+  "locomo_construction_tokens": {
+    "_source": "RecMem, arXiv 2605.16045, Table 8 ('Construction tokens across different memory systems')",
+    "_benchmark": "LoCoMo",
+    "_unit": "construction tokens per conversation",
+    "_verified": true,
+    "_note": "Secondary source for Mem0 and A-Mem: these are RecMem's measurements of its competitors, not those systems' own reported figures. Mem0's own paper does not report this at all, so no primary source exists.",
+    "systems": [
+      {"name": "Mem0", "construction_tokens": 1520800},
+      {"name": "A-Mem", "construction_tokens": 1459900},
+      {"name": "RecMem", "construction_tokens": 193200}
+    ]
+  },
+
+  "longmemeval_construction_energy": {
+    "_source": "Agent Memory: Characterization and System Implications of Stateful Long-Horizon Workloads, arXiv 2606.06448, Tables 1 and 3",
+    "_benchmark": "LongMemEval, 300 queries",
+    "_unit": "kilojoules, end-to-end",
+    "_verified": true,
+    "_note": "Same benchmark this repo uses, so the relative ordering is the most comparable published evidence available. The paper states construction dominates the agent lifecycle, and classifies BM25/embedRAG as Paradigm II: deterministic indexing with no LLM calls.",
+    "systems": [
+      {"name": "embedRAG", "energy_kj": 495, "construction_llm_calls": null, "paradigm": "II (no LLM calls)"},
+      {"name": "BM25", "energy_kj": 582, "construction_llm_calls": null, "paradigm": "II (no LLM calls)"},
+      {"name": "GraphRAG", "energy_kj": 2082, "construction_llm_calls": 3215, "paradigm": "III (LLM-mediated extraction)"},
+      {"name": "Mem0", "energy_kj": 4878, "construction_llm_calls": null, "paradigm": "III (LLM-mediated extraction)"},
+      {"name": "Letta", "energy_kj": 15429, "construction_llm_calls": 18394, "paradigm": "IV (agentic control flow)"}
+    ]
+  }
 }

@@ -80,11 +80,19 @@ def main() -> None:
     full_read_per_query = args.full_context_tokens * PROMPT_PRICE_PER_1M / 1e6
 
     published = json.loads(Path("data/published_costs.json").read_text())
-    mem0 = next(s for s in published["systems"] if s["name"] == "Mem0")
-    mem0_write = mem0["write_tokens_total"] * PROMPT_PRICE_PER_1M / 1e6
-    mem0_read_per_query = (
-        mem0["read_tokens_per_query"] * PROMPT_PRICE_PER_1M / 1e6
+    # Read path from Mem0's own Table 2; construction tokens from RecMem's
+    # Table 8, because Mem0's paper reports no write-path cost at all.
+    read_block = published["locomo_read_path"]
+    build_block = published["locomo_construction_tokens"]
+    mem0_read_tokens = next(
+        s["tokens_per_query"] for s in read_block["systems"] if s["name"] == "Mem0"
     )
+    mem0_build_tokens = next(
+        s["construction_tokens"] for s in build_block["systems"]
+        if s["name"] == "Mem0"
+    )
+    mem0_write = mem0_build_tokens * PROMPT_PRICE_PER_1M / 1e6
+    mem0_read_per_query = mem0_read_tokens * PROMPT_PRICE_PER_1M / 1e6
 
     ns = list(range(1, args.max_queries + 1))
     series = {
