@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# 278MB benchmark download; fetch with the command in README
+data/raw/
+# derived embeddings, regenerable
+data/emb_cache/
+
+# run artifacts: keep the committed report, not every sweep
+results/*.log
+results/c[0-9].json
+results/smoke_*.json

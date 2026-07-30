@@ -1,0 +1,87 @@
+{
+  "_README": [
+    "Cost figures for memory systems as REPORTED by their own papers or by",
+    "third-party comparisons. Nothing here was measured by this repo.",
+    "",
+    "Two cautions that must survive into any plot or table:",
+    "  1. These were measured on different benchmarks (mostly LoCoMo), not on",
+    "     LongMemEval, so they are NOT directly comparable to our measured",
+    "     numbers. Plot them on separate axes or label them explicitly.",
+    "  2. Every entry below was taken from a paper abstract, table snippet, or",
+    "     secondary comparison, not from a full read of the source. Each has",
+    "     verified=false until someone opens the paper and confirms it.",
+    "",
+    "`verified` MUST be flipped to true only by a human who has read the cited",
+    "source. Do not plot unverified numbers in a final artifact."
+  ],
+  "systems": [
+    {
+      "name": "Mem0",
+      "benchmark": "LoCoMo",
+      "read_tokens_per_query": 1764,
+      "write_tokens_total": 1520800,
+      "write_llm_calls": null,
+      "reported_score": 67.13,
+      "score_metric": "LLM-as-a-Judge",
+      "source": "Mem0 paper (arXiv 2504.19413) for read tokens + score; write token total as reported in RecMem's comparison table (arXiv 2605.16045)",
+      "verified": false
+    },
+    {
+      "name": "A-Mem",
+      "benchmark": "LoCoMo",
+      "read_tokens_per_query": null,
+      "write_tokens_total": 1459900,
+      "write_llm_calls": null,
+      "reported_score": null,
+      "score_metric": null,
+      "source": "RecMem comparison table (arXiv 2605.16045)",
+      "verified": false
+    },
+    {
+      "name": "RecMem",
+      "benchmark": "LoCoMo",
+      "read_tokens_per_query": null,
+      "write_tokens_total": 193200,
+      "write_llm_calls": null,
+      "reported_score": null,
+      "score_metric": null,
+      "source": "RecMem (arXiv 2605.16045)",
+      "verified": false
+    },
+    {
+      "name": "full-context",
+      "benchmark": "LoCoMo",
+      "read_tokens_per_query": 26031,
+      "write_tokens_total": 0,
+      "write_llm_calls": 0,
+      "reported_score": 70.71,
+      "score_metric": "LLM-as-a-Judge",
+      "source": "Mem0 paper for token count; long-context score from LoCoMo leaderboard discussion",
+      "verified": false
+    },
+    {
+      "name": "verbatim-RAG",
+      "benchmark": "LoCoMo",
+      "read_tokens_per_query": null,
+      "write_tokens_total": 0,
+      "write_llm_calls": 0,
+      "write_dollars_per_instance": 0.01,
+      "reported_score": null,
+      "score_metric": null,
+      "source": "Agent Memory characterization (arXiv 2606.06448): verbatim RAG ~$0.01 with no LLM calls vs Mem0 $0.50+ with 1000+ LLM calls",
+      "verified": false
+    },
+    {
+      "name": "Mem0 (write cost, dollars)",
+      "benchmark": "LoCoMo",
+      "read_tokens_per_query": null,
+      "write_tokens_total": null,
+      "write_llm_calls": 1000,
+      "write_dollars_per_instance": 0.50,
+      "reported_score": null,
+      "score_metric": null,
+      "source": "Agent Memory characterization (arXiv 2606.06448)",
+      "verified": false
+    }
+  ]
+}
