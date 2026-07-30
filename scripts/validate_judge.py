@@ -1,8 +1,17 @@
 """Compute judge/human agreement from a hand-labelled worksheet.
 
+OPTIONAL. The main eval path grades deterministically and needs no labels at
+all -- see memllm/eval/grade.py and scripts/audit_graders.py. This script exists
+for the case where you want human ground truth on the LLM judge specifically.
+
+If you do, label the *disagreements* file that run_e2e_eval.py writes when
+--judge-backend is set, not the full worksheet. Where the deterministic grader
+and the judge already agree, a human label almost always confirms both, so those
+labels cost effort and buy nothing.
+
     python scripts/validate_judge.py \
-        --results results/e2e_hybrid_k10_n50.json \
-        --worksheet results/e2e_hybrid_k10_n50_worksheet.jsonl
+        --results results/e2e_hybrid_k10_n100.json \
+        --worksheet results/e2e_hybrid_k10_n100_disagreements.jsonl
 """
 
 from __future__ import annotations
@@ -24,14 +33,23 @@ def main() -> None:
     args = ap.parse_args()
 
     payload = json.loads(Path(args.results).read_text())
+    records = payload.get("records") or payload.get("answers") or []
     judged = [
         JudgedAnswer(
-            question_id=a["question_id"], question=a["question"], gold=a["gold"],
-            pred=a["pred"], is_abstention=a["is_abstention"],
-            verdict=a["verdict"], raw_verdict=a["raw_verdict"],
+            question_id=r["question_id"], question=r["question"], gold=r["gold"],
+            pred=r["pred"], is_abstention=r["is_abstention"],
+            verdict=r.get("verdict", r.get("judge")),
+            raw_verdict=r.get("raw_verdict", ""),
         )
-        for a in payload["answers"]
+        for r in records
     ]
+    if not any(j.verdict is not None for j in judged):
+        raise SystemExit(
+            f"{args.results} has no LLM judge verdicts. Re-run "
+            "scripts/run_e2e_eval.py with --judge-backend, or just use the "
+            "deterministic grade (scripts/audit_graders.py reports its error "
+            "rates and needs no labels)."
+        )
 
     stats = judge_agreement(judged, args.worksheet)
     print(json.dumps(stats, indent=2))

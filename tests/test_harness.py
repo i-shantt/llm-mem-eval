@@ -127,6 +127,73 @@ def test_real_data_loads() -> None:
     print(f"  ok  real data loads ({len(ex.turns)} turns in example 0)")
 
 
+def test_grader_rejects_near_misses() -> None:
+    """The failure mode that inflates every judged benchmark: accepting wrong
+    answers. Numeric substrings are the sneakiest case."""
+    from memllm.eval.grade import grade
+
+    assert grade("You said Target.", "Target") is True
+    assert grade("It was about 800 dollars.", "$800") is True
+    assert grade("twenty books", "20") is True          # number word
+    assert grade("Feb 14", "February 14th") is True     # month abbrev + ordinal
+
+    assert grade("120 pages", "20") is False            # substring trap
+    assert grade("You said Walmart.", "Target") is False
+    assert grade("I don't know, it wasn't mentioned.", "Target") is False
+    assert grade("", "Target") is False
+
+    # Abstention inverts: declining is the correct behaviour.
+    assert grade("I cannot find that information.", "n/a", is_abstention=True) is True
+    assert grade("It was Target.", "n/a", is_abstention=True) is False
+
+    # Both of these came from inspecting real 1.5B output, where the grader was
+    # wrong in the direction that penalises a correct model.
+    # 38 gold keys name an acceptable alternative in prose; matching the whole
+    # string rejects an answer the key permits.
+    alt = "1 day. 2 days (including the last day) is also acceptable."
+    assert grade("Two days passed between them.", alt) is True
+    assert grade("It was 1 day.", alt) is True
+    assert grade("It was 9 days.", alt) is False
+    # A gold that asserts unanswerability is an abstention even when the
+    # question id is not flagged, and "don't have enough information" is a
+    # refusal even though it says neither "don't know" nor "not mentioned".
+    unanswerable = ("The information provided is not enough. You did not "
+                    "mention buying an iPad case.")
+    assert grade("I don't have enough information to determine that.",
+                 unanswerable) is True
+    assert grade("It took 3 days to arrive.", unanswerable) is False
+
+    # Abstractive gold has no checkable surface form; abstain, do not guess.
+    long_gold = ("The user would prefer responses that acknowledge their "
+                 "interest in both thrill rides and special seasonal events.")
+    assert grade("Something about theme parks.", long_gold) is None
+    print("  ok  grader rejects near-misses, abstains on abstractive gold")
+
+
+def test_grader_audit_has_zero_false_accepts() -> None:
+    """Regression guard on the property the whole eval rests on.
+
+    If the grader starts accepting known-wrong answers, every accuracy number in
+    the repo becomes an overestimate, and nothing else here would catch it.
+    """
+    from memllm.eval.grade import grade
+    from memllm.eval.grader_audit import audit_grader, build_audit_cases
+
+    ex = load_examples(DATA)[:60]
+    cases = build_audit_cases(ex, per_type=10)
+    assert cases, "no audit cases constructed"
+
+    report = audit_grader(
+        cases,
+        lambda c: grade(c.pred, c.gold, c.kind.endswith("abstention")),
+    )
+    assert report["false_accept_rate"] == 0.0, (
+        f"grader accepts known-wrong answers: {report['false_accept_rate']}")
+    hard = report["false_reject_rate_hard"]
+    assert hard is None or hard <= 0.05, f"false-reject on rewrites: {hard}"
+    print(f"  ok  grader audit: 0 false accepts over {report['n_cases']} constructed cases")
+
+
 if __name__ == "__main__":
     print("harness smoke tests")
     test_granularity_preserves_evidence()
@@ -135,4 +202,6 @@ if __name__ == "__main__":
     test_bm25_finds_obvious_evidence()
     test_embed_cache_replays_cost_not_disk_read()
     test_real_data_loads()
+    test_grader_rejects_near_misses()
+    test_grader_audit_has_zero_false_accepts()
     print("all passed")

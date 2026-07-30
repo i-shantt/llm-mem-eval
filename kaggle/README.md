@@ -53,10 +53,14 @@ hf_hub_download("xiaowu0162/longmemeval", "longmemeval_s",
 
 ```python
 !python tests/test_harness.py
+!python scripts/audit_graders.py          # grader error rates, ~2s, no model
 !python scripts/measure_token_stats.py --limit 40 > /dev/null
 !python scripts/run_e2e_eval.py --limit 3 --retriever bm25 --k 5 \
     --answer-backend ollama:qwen2.5:7b-instruct --tag kaggle_smoke
 ```
+
+The audit must report a false-accept rate of `0.000` before any accuracy number
+from this session means anything.
 
 ## Cell 5 — the real runs
 
@@ -67,19 +71,24 @@ hf_hub_download("xiaowu0162/longmemeval", "longmemeval_s",
     --granularity turn --k 20 --tag sweep_turn_n100
 
 # end-to-end, one arm per retriever so retrieval quality can be separated
-# from answer quality
+# from answer quality. Grading is deterministic, so no judge model is loaded.
 for r in ["bm25", "hybrid", "oracle"]:
     !python scripts/run_e2e_eval.py --limit 100 --retriever {r} --k 10 \
         --answer-backend ollama:qwen2.5:7b-instruct \
-        --judge-backend ollama:llama3.1:8b-instruct \
         --tag e2e_{r}_k10_n100
 ```
+
+Optionally add `--judge-backend ollama:llama3.1:8b-instruct` to one arm. That
+does not replace the deterministic grade; it reports how often an LLM judge
+disagrees with it, which is a result worth having in its own right. Use a
+*different* model from the answerer — a model grading its own output is biased
+toward it.
 
 The `oracle` arm matters: it separates "we retrieved the wrong turn" from "we
 retrieved the right turn and the model still answered wrong." Without it, a low
 end-to-end score is uninterpretable.
 
-## Cell 6 — download results, then hand-label
+## Cell 6 — download results
 
 ```python
 !python scripts/make_report.py > RESULTS.md
@@ -87,10 +96,9 @@ end-to-end score is uninterpretable.
 !tar czf /kaggle/working/results.tar.gz results RESULTS.md
 ```
 
-Download `results.tar.gz`. Then hand-label a worksheet locally and run
-`scripts/validate_judge.py`. **Until that agreement number exists, the
-end-to-end accuracies are not reportable** — that is the whole point of the
-critique this project makes, so it applies to our own numbers first.
+Download `results.tar.gz`. Nothing needs hand-labelling: the grader's error
+rates come from `results/grader_audit.json`, and every accuracy should be
+reported next to them.
 
 ## Notes
 

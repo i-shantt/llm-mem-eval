@@ -1,0 +1,95 @@
+{
+  "n_examples": 500,
+  "graders": {
+    "deterministic": {
+      "n_cases": 3050,
+      "n_graded": 3050,
+      "n_abstained": 0,
+      "accuracy": 0.999344262295082,
+      "false_accept_rate": 0.0,
+      "false_reject_rate": 0.001142857142857143,
+      "false_reject_rate_hard": 0.0036363636363636364,
+      "false_accept_note": "known-wrong answers marked CORRECT; the LoCoMo audit measured up to 0.63 for its judge",
+      "by_kind": {
+        "correct_abstention": {
+          "n": 120,
+          "correct": 120,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "empty": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "hallucinated_on_abstention": {
+          "n": 30,
+          "correct": 30,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "hard_case_punct": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "hard_month_abbrev": {
+          "n": 3,
+          "correct": 3,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "hard_number_word": {
+          "n": 152,
+          "correct": 150,
+          "none": 0,
+          "accuracy": 0.9868421052631579
+        },
+        "hard_unit_expanded": {
+          "n": 35,
+          "correct": 35,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "identity": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "padded": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "perturbed_number": {
+          "n": 190,
+          "correct": 190,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "refusal_to_answerable": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "sentence": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "swapped_gold": {
+          "n": 360,
+          "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        }
+      }
+    }
+  }
+}
