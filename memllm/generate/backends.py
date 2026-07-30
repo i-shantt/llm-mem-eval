@@ -99,11 +99,19 @@ class OllamaBackend:
         host: str = "http://localhost:11434",
         max_new_tokens: int = 64,
         timeout: int = 300,
+        num_ctx: int = 8192,
     ) -> None:
         self.model_name = model_name
         self.host = host.rstrip("/")
         self.max_new_tokens = max_new_tokens
         self.timeout = timeout
+        # Ollama defaults num_ctx to 2048 and silently drops whatever does not
+        # fit. Retrieved context at k=10 is already ~1.4K tokens and k=20 is
+        # past the limit, so leaving this at the default would truncate the
+        # memory we are measuring and degrade answers for a reason invisible in
+        # the results. Set it explicitly and verify per call below.
+        self.num_ctx = num_ctx
+        self.n_truncated = 0
 
     @property
     def name(self) -> str:
@@ -129,6 +137,7 @@ class OllamaBackend:
             "options": {
                 "num_predict": max_new_tokens or self.max_new_tokens,
                 "temperature": 0.0,
+                "num_ctx": self.num_ctx,
             },
         }).encode()
         req = urllib.request.Request(
@@ -138,9 +147,17 @@ class OllamaBackend:
         )
         with urllib.request.urlopen(req, timeout=self.timeout) as resp:
             body = json.loads(resp.read())
+
+        prompt_tokens = int(body.get("prompt_eval_count", 0))
+        # If the prompt filled the window, context was almost certainly dropped.
+        # Count it rather than reporting an accuracy that quietly reflects a
+        # truncated prompt.
+        if prompt_tokens >= self.num_ctx - (max_new_tokens or self.max_new_tokens):
+            self.n_truncated += 1
+
         return Generation(
             text=body.get("response", "").strip(),
-            prompt_tokens=int(body.get("prompt_eval_count", 0)),
+            prompt_tokens=prompt_tokens,
             completion_tokens=int(body.get("eval_count", 0)),
         )
 

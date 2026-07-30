@@ -63,6 +63,9 @@ def main() -> None:
                    help="optional LLM judge, for cross-checking the "
                         "deterministic grader; off by default")
     ap.add_argument("--max-new-tokens", type=int, default=64)
+    ap.add_argument("--num-ctx", type=int, default=8192,
+                   help="ollama context window; the default of 2048 truncates "
+                        "retrieved memory at k>=10")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tag", default=None)
     args = ap.parse_args()
@@ -79,7 +82,10 @@ def main() -> None:
     if hasattr(retriever, "warmup"):
         retriever.warmup()
 
-    answerer = build_backend(args.answer_backend, max_new_tokens=args.max_new_tokens)
+    answer_kw = {"max_new_tokens": args.max_new_tokens}
+    if args.answer_backend.startswith("ollama:"):
+        answer_kw["num_ctx"] = args.num_ctx
+    answerer = build_backend(args.answer_backend, **answer_kw)
     judger = build_backend(args.judge_backend) if args.judge_backend else None
     print(f"answer backend: {answerer.name}")
     print(f"judge backend:  {judger.name if judger else 'none (deterministic grading)'}")
@@ -194,8 +200,20 @@ def main() -> None:
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(payload, indent=2))
 
+    n_trunc = getattr(answerer, "n_truncated", 0)
+    if n_trunc:
+        payload["n_prompts_truncated"] = n_trunc
+        payload["truncation_warning"] = (
+            f"{n_trunc}/{n} prompts filled the context window; retrieved memory "
+            "was probably dropped. Raise --num-ctx and re-run."
+        )
+        out.write_text(json.dumps(payload, indent=2))
+
     print(f"\naccuracy: {payload['accuracy']:.3f} "
           f"({n_det_graded} graded, {n_not_gradable} not gradable)")
+    if n_trunc:
+        print(f"WARNING: {n_trunc}/{n} prompts hit the context limit -- "
+              f"raise --num-ctx above {answerer.num_ctx} and re-run")
     print(f"token-F1: {payload['token_f1_mean']:.3f}")
     print(f"read tokens/query: {payload['read_tokens_per_query']:.0f}")
     for t, v in payload["accuracy_by_question_type"].items():
