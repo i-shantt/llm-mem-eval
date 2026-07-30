@@ -40,7 +40,7 @@ model is better practice — a model grading its own output is biased toward it.
 ## Cell 3 — get the code and data
 
 ```python
-!git clone https://github.com/<your-username>/memllm.git /kaggle/working/memllm
+!git clone https://github.com/i-shantt/memllm.git /kaggle/working/memllm
 %cd /kaggle/working/memllm
 !pip install -q rank_bm25 sentence-transformers tiktoken
 
