@@ -19,22 +19,25 @@ partial run is still usable.
 
 ## What this run is for
 
-The previous run left three questions open. Each is answered below.
+The scaling-ladder run settled the truncation question and broke two
+assumptions. This run follows up on what it found.
 
-1. **Is the low accuracy the model or the system?** The oracle arm hands the
-   model the gold evidence, so `1 − oracle_accuracy` is model-and-grader loss
-   with retrieval removed. At 7B, oracle was **0.549** — 45 points of loss with
-   nothing left to retrieve. This run measures oracle across a **scaling
-   ladder**, 1.5B → 3B → 7B → 14B, rather than at one larger size. A trend over
-   ~10× of parameters is stronger evidence than a single point, and it fits on
-   one T4.
-2. **Was the last run silently truncated?** `num_ctx` was never set, so Ollama
-   used its 2048 default while prompts averaged 2,232–2,893 tokens. Accuracy was
-   inversely ordered with prompt length across arms — exactly what truncation
-   produces. The 7B rung reruns the identical config at 8192 and settles it.
-3. **Does session granularity pay off end to end?** Retrieval `recall@10` goes
-   **0.811 → 0.981** from turn to session granularity. That was measured on the
-   retrieval path only; the `hybrid@session` arm tests whether it converts.
+1. **Granularity, compared honestly.** The last run compared `k=10` across
+   granularities. Ten sessions is ~22K tokens against an 8192 window, so
+   llama.cpp discarded half the context and every prompt came back clamped to
+   exactly 4098 tokens; both session arms scored 0.03–0.04 and measured the
+   clamp. Units differ ~40× in size, so `k` is now set **per granularity** to
+   hold read cost at ~2,600 tokens: 12 turns, 48 user turns, or 1 session. That
+   is the only comparison that means anything for a project about cost.
+2. **Oracle is not a ceiling, so stop treating it as one.** It retrieves only
+   `has_answer`-labelled turns, which is a *smaller* prompt than a retriever
+   builds on 59 of 100 questions. Hybrid beat oracle at 1.5B and 14B. The arm
+   still measures something useful, but `1 − oracle` is not model loss alone.
+3. **Answer length is confounding the model comparison.** Capping stored
+   answers at their first N words, 14B's 14-point lead over 7B decays to zero
+   (+0.142 full → +0.044 at 15 words → 0.000 at 8). Token-F1 puts the same gap
+   at +0.011. `make_report.py` now prints that decay for every arm, so it is
+   visible rather than assumed.
 
 ### Why not 32B
 
@@ -159,11 +162,16 @@ run(["python", "scripts/measure_token_stats.py", "--limit", N], "token stats")
 
 # Now emits per-question recall@10, which is what separates a retrieval failure
 # from a generation failure on any individual question.
-for gran in ["turn", "user_turn", "session"]:
+# k is per granularity, not shared. Units differ ~40x in size (turn ~213 tok,
+# user_turn ~54, session ~2187), so a shared k compares a 2.6K-token prompt
+# against a 22K-token one. These three k values are ~2600 read tokens each.
+BUDGET_K = {"turn": 12, "user_turn": 48, "session": 1}
+for gran, k in BUDGET_K.items():
     run(["python", "scripts/run_retrieval_eval.py", "--limit", N, "--no-cache",
          "--retrievers", "random", "recency", "bm25", "dense", "hybrid", "oracle",
-         "--granularity", gran, "--k", "20", "--tag", f"sweep_{gran}_n{N}"],
-        f"retrieval sweep: {gran}")
+         "--granularity", gran, "--k", str(max(k, 20)),
+         "--ks", "1", "3", "5", "10", "20", str(k),
+         "--tag", f"sweep_{gran}_n{N}"], f"retrieval sweep: {gran} (budget k={k})")
 ```
 
 ## Cell 4 — the scaling ladder (~2.5–3 hours, resumable)
@@ -173,16 +181,16 @@ import subprocess, pathlib
 N = "100"
 LADDER = ["1.5b", "3b", "7b", "14b"]   # drop "14b" if Cell 1 showed CPU offload
 
-def arm(size, retriever, gran, ctx="8192"):
+def arm(size, retriever, gran, k="10", ctx="8192"):
     """One end-to-end arm. Skipped if it already has a results file."""
-    tag = f"e2e_{size}_{retriever}_{gran}_k10_n{N}"
+    tag = f"e2e_{size}_{retriever}_{gran}_k{k}_n{N}"
     out = pathlib.Path(f"results/{tag}.json")
     if out.exists():
         print(f"[skip] {tag} already done"); return
     print(f"\n===== {tag} =====", flush=True)
     r = subprocess.run(
         ["python", "scripts/run_e2e_eval.py", "--limit", N,
-         "--retriever", retriever, "--granularity", gran, "--k", "10",
+         "--retriever", retriever, "--granularity", gran, "--k", k,
          "--num-ctx", ctx,
          # 64 truncated at least five answers mid-sentence last time, and a
          # bigger model is more verbose. A cut-off answer grades as wrong.
@@ -212,9 +220,17 @@ for size in LADDER:
 # bm25 0.385 / hybrid 0.429 / oracle 0.549 is truncation, not skill.
 arm("7b", "bm25", "turn")
 
-# --- does session granularity convert? only the top two rungs need it ---
+# --- granularity at a MATCHED read-token budget ---
+# The previous run compared k=10 across granularities. Ten sessions is ~22K
+# tokens against an 8192 window, so llama.cpp discarded half the context and
+# every prompt came back clamped to 4098 tokens -- the arms scored 0.03-0.04
+# and measured the clamp, not the system. k is now set per granularity so all
+# three arms read ~2600 tokens, which is the only comparison that means
+# anything for a project about cost.
 for size in LADDER[-2:]:
-    arm(size, "hybrid", "session")
+    arm(size, "hybrid", "turn", k="12")
+    arm(size, "hybrid", "user_turn", k="48")
+    arm(size, "hybrid", "session", k="1")
 ```
 
 ## Cell 5 — summary, truncation audit, and download (~2 min)
@@ -312,10 +328,16 @@ prediction rather than a rationalised outcome. Only 7B is measured today.
 
 | rung | oracle @ turn | hybrid @ turn | gap |
 |---|---|---|---|
-| 1.5B | 0.28–0.38 | 0.20–0.28 | ~0.10 |
-| 3B | 0.42–0.50 | 0.32–0.40 | ~0.10 |
-| **7B (measured)** | **0.549** | **0.429** | **0.120** |
-| 14B | 0.62–0.70 | 0.50–0.58 | ~0.12 |
+| 1.5B | 0.341 | 0.352 | −0.011 |
+| 3B | 0.407 | 0.308 | +0.099 |
+| 7B | 0.571 | 0.440 | +0.131 |
+| 14B | 0.549 | 0.582 | −0.033 |
+
+Those are measured, not predicted. What is still open is granularity at matched
+budget, and the prediction there is that **session at k=1 beats turn at k=12**
+on the same token budget — one whole session carries its own context, where
+twelve scattered turns do not. If that holds, the finding is that *what* you
+retrieve matters more than *how well* you rank it, at equal cost.
 
 Three things this can show, in order of how much they are worth:
 

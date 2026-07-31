@@ -65,6 +65,11 @@ def main() -> None:
     ap.add_argument("--granularity", default="turn",
                     choices=["turn", "user_turn", "session"])
     ap.add_argument("--k", type=int, default=20, help="depth to retrieve")
+    ap.add_argument("--ks", type=int, nargs="+", default=[1, 3, 5, 10, 20],
+                    help="depths to report. Granularities are only comparable "
+                         "at a matched read-token budget, and units differ in "
+                         "size by ~40x, so that means a different k for each: "
+                         "~2600 tokens is 12 turns, 48 user turns, or 1 session")
     ap.add_argument("--embed-model", default="BAAI/bge-small-en-v1.5")
     ap.add_argument("--device", default="auto")
     ap.add_argument("--recency-weight", type=float, default=0.0)
@@ -113,7 +118,7 @@ def main() -> None:
                 el = time.perf_counter() - t0
                 print(f"  [{rname}] {i}/{len(examples)}  {el:.0f}s", flush=True)
 
-        metrics = aggregate(results)
+        metrics = aggregate(results, ks=tuple(args.ks))
         n = len(examples)
         payload = {
             "retriever": rname,
@@ -134,6 +139,10 @@ def main() -> None:
                     "question_id": r.question_id,
                     "question_type": r.question_type,
                     "n_evidence": r.n_evidence,
+                    "k": args.k,
+                    "recall@k": r.recall_at(args.k),
+                    "any_hit@k": r.any_hit_at(args.k),
+                    # kept under the old names too so existing joins still work
                     "recall@10": r.recall_at(10),
                     "any_hit@10": r.any_hit_at(10),
                     "first_evidence_rank": (
