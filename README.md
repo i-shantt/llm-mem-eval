@@ -165,6 +165,84 @@ still worth measuring. It just is not sufficient, which is why this repo labels
 real disagreements as well — and reports what that found rather than only the
 number that looks good.
 
+## What the end-to-end run found
+
+Retrieval quality is not answer quality, so the same 100 questions were run
+through four model sizes of one family (Qwen2.5, q4_K_M, `num_ctx` 8192, no
+judge). Full tables in [RESULTS.md](RESULTS.md).
+
+| model | oracle | hybrid | bm25 |
+|---|---|---|---|
+| 1.5B | 0.341 | 0.352 | — |
+| 3B | 0.407 | 0.308 | — |
+| 7B | **0.571** | 0.440 | 0.396 |
+| 14B | 0.549 | **0.582** | — |
+
+Three findings. Two of them cost this repo a claim it had already made, which
+is the more useful half.
+
+### Scale helps, and the grader exaggerates by how much
+
+End-to-end accuracy rises from 0.352 to 0.582 across ~10× of parameters, so
+model capacity is the largest single term. But answer length rises with it too
+(median 14 → 32 words), and containment grading marks an answer correct if the
+gold span appears *anywhere* in it. Longer answers get more chances.
+
+Re-grading the same stored answers with each capped at its first N words prices
+that directly — the median gold answer is 11 characters, so a correct answer
+does not need many words:
+
+| arm | full | 40w | 25w | 15w | 8w |
+|---|---|---|---|---|---|
+| 7B hybrid | 0.440 | 0.429 | 0.352 | 0.341 | 0.231 |
+| 14B hybrid | 0.582 | 0.560 | 0.451 | 0.385 | 0.231 |
+| **14B − 7B** | **+0.142** | +0.131 | +0.099 | +0.044 | **0.000** |
+
+The 14B lead decays monotonically to zero. Token-F1, which penalises length
+rather than rewarding it, puts the same gap at **+0.011**. Scale is real; the
+14-point version of it is mostly verbosity. `scripts/make_report.py` prints this
+decay for every arm, so it cannot quietly stop being true.
+
+### Oracle is not a ceiling
+
+The oracle arm retrieves exactly the turns LongMemEval labels `has_answer`. That
+is a *smaller* prompt than a retriever builds — smaller on **59 of 100
+questions** — not a superset of one. So it is not an upper bound, and hybrid
+beat it at both 1.5B and 14B:
+
+> **Q:** Where did I redeem the $5 coupon on coffee creamer? **Gold:** Target
+> **oracle** (949 tokens): *"…The specific location is not mentioned in your
+> previous conversations."*
+> **hybrid** (2,755 tokens): *"…you redeemed the $5 coupon on coffee creamer at
+> Target."*
+
+The answer lived in a turn the benchmark never labelled as evidence. `1 −
+oracle_accuracy` therefore is not model loss with retrieval removed; it also
+contains whatever the evidence labelling missed. Any paper reporting an oracle
+or "gold-context" arm as a ceiling is making this mistake.
+
+### Granularity has to be priced, not just measured
+
+Retrieval units differ ~40× in size — a turn averages 213 tokens, a user turn
+54, a whole session 2,187. Comparing granularities at a shared `k` therefore
+compares a 2,600-token prompt against a 22,000-token one, which is not a
+comparison at all. Two symptoms, both measured here:
+
+- The `random` baseline's `recall@10` rises from **0.021 to 0.213** between turn
+  and session granularity, purely because there are only ~48 sessions per
+  example and a fixed `k=10` grabs a fifth of the haystack.
+- Two end-to-end arms at session granularity, `k=10`, scored 0.044 and 0.033.
+  All 100 prompts in each came back at exactly 4,098 tokens: they overflowed the
+  8,192 window, llama.cpp discarded half the context, and the model answered
+  "the excerpts don't mention it" to almost everything. Ollama's own token
+  counter could not see it, because `prompt_eval_count` reports what the server
+  *kept*. The backend now measures prompts before sending them, and the report
+  marks any arm whose prompt lengths are all identical as `INVALID`.
+
+Granularity is only comparable at a **matched read-token budget**, which means a
+different `k` for each: ~2,600 tokens buys 12 turns, 48 user turns, or 1 session.
+That is the comparison a project about cost should have been running.
+
 ## Layout
 
 ```
@@ -243,9 +321,24 @@ reported number carries its own `n`.
   *characterise* a judge and to surface disagreements, not to produce a headline
   number.
 - Deterministic grading is stricter than a human on genuine paraphrase, so
-  absolute accuracies here are a **lower bound**. Every system is graded by the
-  identical rule, so the comparisons between systems — which is what this project
-  claims — are unaffected by that bias.
+  absolute accuracies here are a **lower bound**.
+- **Identical grading does not make every comparison safe, and this repo used to
+  claim it did.** Containment rewards length, so it is fair across *retrievers
+  at a fixed model* — same answerer, same verbosity — and unfair across *models
+  that differ in verbosity*. Measured: 14B's 14-point lead over 7B decays to
+  zero as answers are capped toward gold length, and token-F1 puts the same gap
+  at 1 point. Read the length-decay table in [RESULTS.md](RESULTS.md) before
+  quoting any cross-model number here.
+- **The oracle arm is not an upper bound.** It retrieves only `has_answer`
+  turns, which on 59 of 100 questions is a smaller prompt than a real retriever
+  builds, and hybrid beat it at two of four model sizes. Treat it as "gold
+  evidence only", not as a ceiling.
+- **Granularities are not comparable at a shared `k`.** Units differ ~40× in
+  size, so equal `k` means unequal read cost — and the `random` floor itself
+  moves from 0.021 to 0.213 between turn and session granularity. Comparisons
+  need a matched token budget. Relatedly, the `user_turn` rows are scored on 88
+  questions rather than 97, because some questions have their evidence only in
+  assistant turns, so that column is a slightly different question set.
 - `--judge-backend` adds an LLM judge and reports where the two graders disagree.
   Those disagreements are the only cases a human label would inform; agreement
   cases teach you nothing. If you want human validation, label those (a few per
