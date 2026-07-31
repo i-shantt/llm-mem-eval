@@ -126,6 +126,22 @@ def main() -> None:
                 "seed": args.seed,
             },
             "metrics": metrics,
+            # Aggregates cannot tell a retrieval failure from a generation
+            # failure on any single question. These can: an end-to-end miss at
+            # recall@10 == 1.0 is the model's, not the retriever's.
+            "per_question": [
+                {
+                    "question_id": r.question_id,
+                    "question_type": r.question_type,
+                    "n_evidence": r.n_evidence,
+                    "recall@10": r.recall_at(10),
+                    "any_hit@10": r.any_hit_at(10),
+                    "first_evidence_rank": (
+                        min(r.evidence_ranks) if r.evidence_ranks else None
+                    ),
+                }
+                for r in results
+            ],
             "embed_cache": cache.stats(),
             "timing_is_authoritative": not cache.used_replayed_timings,
             "cost_total": ledger.to_dict(),

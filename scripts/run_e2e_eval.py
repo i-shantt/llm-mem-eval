@@ -66,6 +66,9 @@ def main() -> None:
     ap.add_argument("--num-ctx", type=int, default=8192,
                    help="ollama context window; the default of 2048 truncates "
                         "retrieved memory at k>=10")
+    ap.add_argument("--gen-timeout", type=int, default=300,
+                   help="per-request timeout in seconds; a 32B model on modest "
+                        "hardware needs more than the 300s default")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tag", default=None)
     args = ap.parse_args()
@@ -85,6 +88,7 @@ def main() -> None:
     answer_kw = {"max_new_tokens": args.max_new_tokens}
     if args.answer_backend.startswith("ollama:"):
         answer_kw["num_ctx"] = args.num_ctx
+        answer_kw["timeout"] = args.gen_timeout
     answerer = build_backend(args.answer_backend, **answer_kw)
     judger = build_backend(args.judge_backend) if args.judge_backend else None
     print(f"answer backend: {answerer.name}")
@@ -144,6 +148,12 @@ def main() -> None:
             "is_abstention": ex.is_abstention,
             "extractive": is_extractive(gold),
             "deterministic": det, "judge": verdict, "raw_verdict": raw,
+            # Kept per-record so a weak arm can be checked for two mechanical
+            # causes before it is blamed on the model: a prompt that overflowed
+            # the context window, and an answer cut off at the token cap.
+            "prompt_tokens": gen.prompt_tokens,
+            "completion_tokens": gen.completion_tokens,
+            "hit_token_cap": gen.completion_tokens >= args.max_new_tokens,
         })
 
         if i % 5 == 0 or i == len(examples):
@@ -183,6 +193,8 @@ def main() -> None:
         "read_tokens_per_query": (
             ledger.read.llm_prompt_tokens + ledger.read.llm_completion_tokens
         ) / n,
+        "prompt_tokens_max": max((r["prompt_tokens"] for r in records), default=0),
+        "n_hit_token_cap": sum(r["hit_token_cap"] for r in records),
         "records": records,
     }
     if judger is not None:
@@ -215,7 +227,12 @@ def main() -> None:
         print(f"WARNING: {n_trunc}/{n} prompts hit the context limit -- "
               f"raise --num-ctx above {answerer.num_ctx} and re-run")
     print(f"token-F1: {payload['token_f1_mean']:.3f}")
-    print(f"read tokens/query: {payload['read_tokens_per_query']:.0f}")
+    print(f"read tokens/query: {payload['read_tokens_per_query']:.0f} "
+          f"(max prompt {payload['prompt_tokens_max']}, ctx {args.num_ctx})")
+    if payload["n_hit_token_cap"]:
+        print(f"NOTE: {payload['n_hit_token_cap']}/{n} answers were cut off at "
+              f"--max-new-tokens {args.max_new_tokens}; a truncated answer can "
+              f"be graded wrong for containing no gold span")
     for t, v in payload["accuracy_by_question_type"].items():
         print(f"  {t:<28} {v['accuracy']:.3f}  (n={v['n']})")
     print(f"\nwrote {out}")
