@@ -213,19 +213,26 @@ def main() -> None:
     out.write_text(json.dumps(payload, indent=2))
 
     n_trunc = getattr(answerer, "n_truncated", 0)
+    max_sent = getattr(answerer, "max_sent_tokens", 0)
     if n_trunc:
         payload["n_prompts_truncated"] = n_trunc
+        payload["max_sent_tokens"] = max_sent
         payload["truncation_warning"] = (
-            f"{n_trunc}/{n} prompts filled the context window; retrieved memory "
-            "was probably dropped. Raise --num-ctx and re-run."
+            f"{n_trunc}/{n} prompts exceeded the context window (largest ~"
+            f"{max_sent} tokens against num_ctx={args.num_ctx}); retrieved "
+            f"memory was dropped before the model saw it. This arm is NOT "
+            f"comparable to an untruncated one. Raise --num-ctx above "
+            f"{max_sent}, or lower --k."
         )
         out.write_text(json.dumps(payload, indent=2))
 
     print(f"\naccuracy: {payload['accuracy']:.3f} "
           f"({n_det_graded} graded, {n_not_gradable} not gradable)")
     if n_trunc:
-        print(f"WARNING: {n_trunc}/{n} prompts hit the context limit -- "
-              f"raise --num-ctx above {answerer.num_ctx} and re-run")
+        print(f"WARNING: {n_trunc}/{n} prompts exceeded num_ctx={args.num_ctx} "
+              f"(largest ~{max_sent} tokens). Memory was dropped before the "
+              f"model saw it; this arm is not comparable. Raise --num-ctx "
+              f"above {max_sent}, or lower --k.")
     print(f"token-F1: {payload['token_f1_mean']:.3f}")
     print(f"read tokens/query: {payload['read_tokens_per_query']:.0f} "
           f"(max prompt {payload['prompt_tokens_max']}, ctx {args.num_ctx})")

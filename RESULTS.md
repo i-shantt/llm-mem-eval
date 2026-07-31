@@ -8,12 +8,24 @@ Gold labels are LongMemEval's per-turn `has_answer` flags, so these numbers invo
 
 | system | granularity | n | any_hit@1 | any_hit@5 | any_hit@10 | recall@10 | MRR |
 |---|---|---|---|---|---|---|---|
+| random | session | 97 | 0.031 | 0.175 | 0.351 | 0.213 | 0.116 |
 | random | turn | 97 | 0.021 | 0.031 | 0.041 | 0.021 | 0.027 |
+| random | user_turn | 88 | 0.034 | 0.114 | 0.148 | 0.073 | 0.066 |
+| recency | session | 97 | 0.082 | 0.289 | 0.454 | 0.292 | 0.188 |
 | recency | turn | 97 | 0.000 | 0.010 | 0.062 | 0.028 | 0.012 |
+| recency | user_turn | 88 | 0.000 | 0.068 | 0.125 | 0.062 | 0.033 |
+| bm25 | session | 97 | 0.887 | 1.000 | 1.000 | 0.984 | 0.931 |
 | bm25 | turn | 97 | 0.546 | 0.742 | 0.825 | 0.693 | 0.634 |
+| bm25 | user_turn | 88 | 0.580 | 0.818 | 0.864 | 0.764 | 0.689 |
+| dense | session | 97 | 0.722 | 0.907 | 0.948 | 0.925 | 0.806 |
 | dense | turn | 97 | 0.464 | 0.814 | 0.897 | 0.821 | 0.616 |
+| dense | user_turn | 88 | 0.545 | 0.852 | 0.943 | 0.854 | 0.692 |
+| hybrid | session | 97 | 0.845 | 0.969 | 0.990 | 0.981 | 0.903 |
 | hybrid | turn | 97 | 0.536 | 0.814 | 0.907 | 0.811 | 0.649 |
+| hybrid | user_turn | 88 | 0.580 | 0.864 | 0.943 | 0.886 | 0.709 |
+| oracle | session | 97 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
 | oracle | turn | 97 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| oracle | user_turn | 88 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
 
 ## Cost, split by write path and read path
 
@@ -22,14 +34,249 @@ The write path is paid once per conversation; the read path is paid per query. P
 | system | write ms/conv | write LLM calls | write LLM tokens | read ms/query | read LLM calls |
 |---|---|---|---|---|---|
 | random | 0 | 0.0 | 0 | 0 | 0.0 |
+| random | 0 | 0.0 | 0 | 0 | 0.0 |
+| random | 0 | 0.0 | 0 | 0 | 0.0 |
 | recency | 0 | 0.0 | 0 | 0 | 0.0 |
-| bm25 | 16 | 0.0 | 0 | 1 | 0.0 |
-| dense | 9028 | 0.0 | 0 | 14 | 0.0 |
-| hybrid | 9043 | 0.0 | 0 | 12 | 0.0 |
+| recency | 0 | 0.0 | 0 | 1 | 0.0 |
+| recency | 0 | 0.0 | 0 | 0 | 0.0 |
+| bm25 | 36 | 0.0 | 0 | 0 | 0.0 |
+| bm25 | 40 | 0.0 | 0 | 2 | 0.0 |
+| bm25 | 6 | 0.0 | 0 | 1 | 0.0 |
+| dense | 663 | 0.0 | 0 | 11 | 0.0 |
+| dense | 3020 | 0.0 | 0 | 11 | 0.0 |
+| dense | 1311 | 0.0 | 0 | 11 | 0.0 |
+| hybrid | 699 | 0.0 | 0 | 12 | 0.0 |
+| hybrid | 3075 | 0.0 | 0 | 14 | 0.0 |
+| hybrid | 1311 | 0.0 | 0 | 12 | 0.0 |
 | oracle | 0 | 0.0 | 0 | 0 | 0.0 |
+| oracle | 0 | 0.0 | 0 | 0 | 0.0 |
+| oracle | 0 | 0.0 | 0 | 0 | 0.0 |
+
+## What a memory unit should be
+
+The same retrievers, over the same conversations, cut into turns, user turns, or whole sessions. Coarser units retrieve more evidence per hit and cost more tokens to read -- the trade this project exists to price.
+
+
+**recall@10**
+
+| system | turn | user_turn | session |
+|---|---|---|---|
+| random | 0.021 | 0.073 | 0.213 |
+| recency | 0.028 | 0.062 | 0.292 |
+| bm25 | 0.693 | 0.764 | 0.984 |
+| dense | 0.821 | 0.854 | 0.925 |
+| hybrid | 0.811 | 0.886 | 0.981 |
+| oracle | 1.000 | 1.000 | 1.000 |
+
+**any_hit@10**
+
+| system | turn | user_turn | session |
+|---|---|---|---|
+| random | 0.041 | 0.148 | 0.351 |
+| recency | 0.062 | 0.125 | 0.454 |
+| bm25 | 0.825 | 0.864 | 1.000 |
+| dense | 0.897 | 0.943 | 0.948 |
+| hybrid | 0.907 | 0.943 | 0.990 |
+| oracle | 1.000 | 1.000 | 1.000 |
+
+**mrr**
+
+| system | turn | user_turn | session |
+|---|---|---|---|
+| random | 0.027 | 0.066 | 0.116 |
+| recency | 0.012 | 0.033 | 0.188 |
+| bm25 | 0.634 | 0.689 | 0.931 |
+| dense | 0.616 | 0.692 | 0.806 |
+| hybrid | 0.649 | 0.709 | 0.903 |
+| oracle | 1.000 | 1.000 | 1.000 |
+
+**Read the `random` row before the others.** It goes 0.021 to 0.213 across the same change, because coarser units mean fewer of them and a fixed `k` therefore grabs a larger share of the haystack. `recall@10` at session granularity is not on the same scale as `recall@10` at turn granularity, and neither is its token cost -- ten sessions is roughly ten times the reading. Granularities are only comparable at a matched read-token budget, which means different `k` per granularity, not a shared one.
+
+
+**Where `any_hit@10` and `recall@10` disagree** (hybrid). A question needing six evidence turns scores `any_hit` = 1.0 on one of them, so `any_hit` overstates readiness to answer:
+
+| granularity | question type | any_hit@10 | recall@10 | overstated by |
+|---|---|---|---|---|
+| turn | multi-session | 0.958 | 0.770 | 0.188 |
+| turn | single-session-preference | 0.667 | 0.528 | 0.139 |
+| user_turn | multi-session | 0.958 | 0.851 | 0.107 |
+| user_turn | single-session-preference | 0.833 | 0.694 | 0.139 |
+
+## End-to-end answer accuracy
+
+Retrieve, answer with a local model, grade deterministically. Graded by normalised token-span containment, never by an LLM judge; abstractive gold answers with no checkable surface form are excluded rather than scored wrong, which is the `not gradable` column.
+
+| model | retriever | granularity | accuracy | token-F1 | graded | not gradable | read tok/query | max prompt | num_ctx | truncated | valid |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| qwen2.5:1.5b-instruct | hybrid | turn | 0.352 | 0.201 | 91 | 9 | 2627 | 4961 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | oracle | turn | 0.341 | 0.189 | 91 | 9 | 2225 | 4481 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | hybrid | turn | 0.308 | 0.171 | 91 | 9 | 2629 | 4961 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | oracle | turn | 0.407 | 0.175 | 91 | 9 | 2235 | 4481 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | bm25 | turn | 0.396 | 0.173 | 91 | 9 | 2903 | 4894 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | hybrid | session | 0.044 | 0.052 | 91 | 9 | 4128 | 4098 | 8192 | 0 | **INVALID** |
+| qwen2.5:7b-instruct | hybrid | turn | 0.440 | 0.179 | 91 | 9 | 2639 | 4961 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | oracle | turn | 0.571 | 0.203 | 91 | 9 | 2242 | 4481 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | hybrid | session | 0.033 | 0.057 | 91 | 9 | 4147 | 4098 | 8192 | 0 | **INVALID** |
+| qwen2.5:14b-instruct | hybrid | turn | 0.582 | 0.190 | 91 | 9 | 2642 | 4961 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | oracle | turn | 0.549 | 0.188 | 91 | 9 | 2244 | 4481 | 8192 | 0 | ok |
+
+> **`e2e_7b_hybrid_session_k10_n100` is not a valid measurement.** Every one of its 100 prompts was exactly 4098 tokens. Prompts do not naturally agree to the token; the server truncated them to a fixed size before the model read them, so the retrieved memory never reached it. Its accuracy of 0.044 measures the clamp, not the system.
+
+> **`e2e_14b_hybrid_session_k10_n100` is not a valid measurement.** Every one of its 100 prompts was exactly 4098 tokens. Prompts do not naturally agree to the token; the server truncated them to a fixed size before the model read them, so the retrieved memory never reached it. Its accuracy of 0.033 measures the clamp, not the system.
+
+### Oracle is not a ceiling
+
+`oracle` retrieves exactly the turns LongMemEval labels `has_answer`, which is a *smaller* prompt than the retrievers produce, not a superset of one. Where the gap below is negative, a real retriever beat the gold labels: the answer needed a turn that was never labelled evidence. So `1 - oracle` is not model loss alone -- it also contains whatever the labelling missed, and the oracle arm cannot be read as an upper bound.
+
+| model | oracle | hybrid | oracle - hybrid | 1 - oracle |
+|---|---|---|---|---|
+| qwen2.5:1.5b-instruct | 0.341 | 0.352 | -0.011 | 0.659 |
+| qwen2.5:3b-instruct | 0.407 | 0.308 | 0.099 | 0.593 |
+| qwen2.5:7b-instruct | 0.571 | 0.440 | 0.132 | 0.429 |
+| qwen2.5:14b-instruct | 0.549 | 0.582 | -0.033 | 0.451 |
+
+### How much of this is the grader rewarding longer answers
+
+The median gold answer is 11 characters. These re-grade the same stored answers with each capped at its first N words. A model whose lead disappears as the cap tightens was not more accurate, it was more verbose -- and the gold span merely appeared somewhere in a longer answer.
+
+| arm | median words | full | 40w | 25w | 15w | 8w |
+|---|---|---|---|---|---|---|
+| 1.5b_hybrid_turn_k10_n100 | 14 | 0.352 | 0.352 | 0.319 | 0.308 | 0.198 |
+| 1.5b_oracle_turn_k10_n100 | 15 | 0.341 | 0.341 | 0.330 | 0.308 | 0.220 |
+| 3b_hybrid_turn_k10_n100 | 17 | 0.308 | 0.308 | 0.286 | 0.275 | 0.209 |
+| 3b_oracle_turn_k10_n100 | 23 | 0.407 | 0.385 | 0.352 | 0.341 | 0.253 |
+| 7b_bm25_turn_k10_n100 | 30 | 0.396 | 0.396 | 0.363 | 0.352 | 0.220 |
+| 7b_hybrid_turn_k10_n100 | 24 | 0.440 | 0.429 | 0.352 | 0.341 | 0.231 |
+| 7b_oracle_turn_k10_n100 | 28 | 0.571 | 0.549 | 0.495 | 0.418 | 0.275 |
+| 14b_hybrid_turn_k10_n100 | 32 | 0.582 | 0.560 | 0.451 | 0.385 | 0.231 |
+| 14b_oracle_turn_k10_n100 | 29 | 0.549 | 0.538 | 0.429 | 0.407 | 0.231 |
+
+### End-to-end accuracy by question type
+
+
+**qwen2.5:1.5b-instruct / hybrid / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.438 |
+| multi-session | 26 | 0.192 |
+| single-session-assistant | 10 | 0.500 |
+| single-session-user | 14 | 0.786 |
+| temporal-reasoning | 25 | 0.160 |
+
+**qwen2.5:1.5b-instruct / oracle / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.375 |
+| multi-session | 26 | 0.269 |
+| single-session-assistant | 10 | 0.500 |
+| single-session-user | 14 | 0.500 |
+| temporal-reasoning | 25 | 0.240 |
+
+**qwen2.5:3b-instruct / hybrid / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.438 |
+| multi-session | 26 | 0.269 |
+| single-session-assistant | 10 | 0.500 |
+| single-session-user | 14 | 0.429 |
+| temporal-reasoning | 25 | 0.120 |
+
+**qwen2.5:3b-instruct / oracle / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.500 |
+| multi-session | 26 | 0.346 |
+| single-session-assistant | 10 | 0.500 |
+| single-session-user | 14 | 0.500 |
+| temporal-reasoning | 25 | 0.320 |
+
+**qwen2.5:7b-instruct / bm25 / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.562 |
+| multi-session | 26 | 0.231 |
+| single-session-assistant | 10 | 0.500 |
+| single-session-user | 14 | 0.714 |
+| temporal-reasoning | 25 | 0.240 |
+
+**qwen2.5:7b-instruct / hybrid / session**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.000 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.040 |
+
+**qwen2.5:7b-instruct / hybrid / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.438 |
+| multi-session | 26 | 0.346 |
+| single-session-assistant | 10 | 0.600 |
+| single-session-user | 14 | 0.714 |
+| temporal-reasoning | 25 | 0.320 |
+
+**qwen2.5:7b-instruct / oracle / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.688 |
+| multi-session | 26 | 0.538 |
+| single-session-assistant | 10 | 0.700 |
+| single-session-user | 14 | 0.571 |
+| temporal-reasoning | 25 | 0.480 |
+
+**qwen2.5:14b-instruct / hybrid / session**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.000 |
+| multi-session | 26 | 0.000 |
+| single-session-assistant | 10 | 0.100 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.080 |
+
+**qwen2.5:14b-instruct / hybrid / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.688 |
+| multi-session | 26 | 0.423 |
+| single-session-assistant | 10 | 0.700 |
+| single-session-user | 14 | 0.786 |
+| temporal-reasoning | 25 | 0.520 |
+
+**qwen2.5:14b-instruct / oracle / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.750 |
+| multi-session | 26 | 0.462 |
+| single-session-assistant | 10 | 0.500 |
+| single-session-user | 14 | 0.643 |
+| temporal-reasoning | 25 | 0.480 |
 
 ## Retrieval quality by question type
 
+
+**recency** (session)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 0.812 | 0.406 | 0.513 |
+| multi-session | 24 | 0.333 | 0.129 | 0.131 |
+| single-session-assistant | 11 | 0.273 | 0.273 | 0.089 |
+| single-session-preference | 6 | 0.333 | 0.333 | 0.215 |
+| single-session-user | 14 | 0.429 | 0.429 | 0.069 |
+| temporal-reasoning | 26 | 0.462 | 0.299 | 0.141 |
 
 **recency** (turn)
 
@@ -42,6 +289,28 @@ The write path is paid once per conversation; the read path is paid per query. P
 | single-session-user | 14 | 0.000 | 0.000 | 0.000 |
 | temporal-reasoning | 26 | 0.038 | 0.008 | 0.006 |
 
+**recency** (user_turn)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 0.438 | 0.208 | 0.107 |
+| multi-session | 24 | 0.083 | 0.031 | 0.020 |
+| single-session-assistant | 2 | 0.000 | 0.000 | 0.033 |
+| single-session-preference | 6 | 0.167 | 0.167 | 0.028 |
+| single-session-user | 14 | 0.000 | 0.000 | 0.000 |
+| temporal-reasoning | 26 | 0.038 | 0.015 | 0.018 |
+
+**bm25** (session)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 1.000 | 1.000 | 0.969 |
+| multi-session | 24 | 1.000 | 0.958 | 0.958 |
+| single-session-assistant | 11 | 1.000 | 1.000 | 1.000 |
+| single-session-preference | 6 | 1.000 | 1.000 | 0.764 |
+| single-session-user | 14 | 1.000 | 1.000 | 1.000 |
+| temporal-reasoning | 26 | 1.000 | 0.978 | 0.855 |
+
 **bm25** (turn)
 
 | question type | n | any_hit@10 | recall@10 | MRR |
@@ -52,6 +321,28 @@ The write path is paid once per conversation; the read path is paid per query. P
 | single-session-preference | 6 | 0.667 | 0.528 | 0.158 |
 | single-session-user | 14 | 0.786 | 0.786 | 0.724 |
 | temporal-reasoning | 26 | 0.731 | 0.606 | 0.579 |
+
+**bm25** (user_turn)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 1.000 | 0.969 | 0.859 |
+| multi-session | 24 | 0.958 | 0.733 | 0.718 |
+| single-session-assistant | 2 | 0.000 | 0.000 | 0.033 |
+| single-session-preference | 6 | 0.667 | 0.611 | 0.375 |
+| single-session-user | 14 | 0.786 | 0.786 | 0.756 |
+| temporal-reasoning | 26 | 0.846 | 0.750 | 0.646 |
+
+**dense** (session)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 1.000 | 0.969 | 0.906 |
+| multi-session | 24 | 1.000 | 0.971 | 0.931 |
+| single-session-assistant | 11 | 1.000 | 1.000 | 1.000 |
+| single-session-preference | 6 | 0.833 | 0.833 | 0.375 |
+| single-session-user | 14 | 0.857 | 0.857 | 0.718 |
+| temporal-reasoning | 26 | 0.923 | 0.881 | 0.694 |
 
 **dense** (turn)
 
@@ -64,6 +355,28 @@ The write path is paid once per conversation; the read path is paid per query. P
 | single-session-user | 14 | 0.857 | 0.857 | 0.631 |
 | temporal-reasoning | 26 | 0.769 | 0.682 | 0.510 |
 
+**dense** (user_turn)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 1.000 | 0.969 | 0.699 |
+| multi-session | 24 | 1.000 | 0.872 | 0.782 |
+| single-session-assistant | 2 | 1.000 | 1.000 | 0.292 |
+| single-session-preference | 6 | 1.000 | 0.861 | 0.778 |
+| single-session-user | 14 | 0.857 | 0.857 | 0.726 |
+| temporal-reasoning | 26 | 0.885 | 0.754 | 0.596 |
+
+**hybrid** (session)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 1.000 | 1.000 | 0.969 |
+| multi-session | 24 | 1.000 | 0.990 | 0.979 |
+| single-session-assistant | 11 | 1.000 | 1.000 | 1.000 |
+| single-session-preference | 6 | 1.000 | 1.000 | 0.694 |
+| single-session-user | 14 | 1.000 | 1.000 | 0.929 |
+| temporal-reasoning | 26 | 0.962 | 0.939 | 0.785 |
+
 **hybrid** (turn)
 
 | question type | n | any_hit@10 | recall@10 | MRR |
@@ -74,3 +387,14 @@ The write path is paid once per conversation; the read path is paid per query. P
 | single-session-preference | 6 | 0.667 | 0.528 | 0.274 |
 | single-session-user | 14 | 0.857 | 0.857 | 0.621 |
 | temporal-reasoning | 26 | 0.846 | 0.750 | 0.583 |
+
+**hybrid** (user_turn)
+
+| question type | n | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| knowledge-update | 16 | 1.000 | 0.969 | 0.775 |
+| multi-session | 24 | 0.958 | 0.851 | 0.806 |
+| single-session-assistant | 2 | 1.000 | 1.000 | 0.171 |
+| single-session-preference | 6 | 0.833 | 0.694 | 0.611 |
+| single-session-user | 14 | 0.929 | 0.929 | 0.701 |
+| temporal-reasoning | 26 | 0.923 | 0.881 | 0.648 |

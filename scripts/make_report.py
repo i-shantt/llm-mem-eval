@@ -109,6 +109,21 @@ def granularity_section(runs: dict[str, dict]) -> None:
             if set(cells) != {"--"}:
                 print(f"| {name} | " + " | ".join(cells) + " |")
 
+    # The random row is the control that makes the rest readable. Coarser units
+    # mean fewer of them, so a fixed k grabs a larger share of the haystack.
+    r_turn = runs.get("random|turn", {}).get("metrics", {}).get("recall@10")
+    r_sess = runs.get("random|session", {}).get("metrics", {}).get("recall@10")
+    if r_turn and r_sess:
+        print(f"\n**Read the `random` row before the others.** It goes "
+              f"{r_turn:.3f} to {r_sess:.3f} across the same change, because "
+              f"coarser units mean fewer of them and a fixed `k` therefore "
+              f"grabs a larger share of the haystack. `recall@10` at session "
+              f"granularity is not on the same scale as `recall@10` at turn "
+              f"granularity, and neither is its token cost -- ten sessions is "
+              f"roughly ten times the reading. Granularities are only "
+              f"comparable at a matched read-token budget, which means "
+              f"different `k` per granularity, not a shared one.\n")
+
     # any_hit flatters aggregation questions: it is satisfied by one evidence
     # turn out of six. Where the two diverge is where the metric choice matters.
     print("\n**Where `any_hit@10` and `recall@10` disagree** (hybrid). A "
@@ -126,6 +141,47 @@ def granularity_section(runs: dict[str, dict]) -> None:
                       f"{v['recall@10']:.3f} | {delta:.3f} |")
 
 
+CAPS = [None, 40, 25, 15, 8]
+
+
+def length_bias_section(arms: list[dict]) -> None:
+    """Containment grading marks an answer correct if the gold span appears
+    anywhere in it, so a longer answer gets more chances. Models differ in
+    verbosity, which makes model-vs-model comparisons length-confounded even
+    though every arm is graded by the identical rule. Re-grading with answers
+    capped at N words prices that: an advantage that survives the cap is
+    accuracy, one that vanishes was length."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    try:
+        from memllm.eval.grade import grade
+    except Exception:
+        return
+    valid = [a for a in arms
+             if len({r.get("prompt_tokens") for r in a.get("records", [])}) > 1]
+    if not valid:
+        return
+
+    print("\n### How much of this is the grader rewarding longer answers\n")
+    print("The median gold answer is 11 characters. These re-grade the same "
+          "stored answers with each capped at its first N words. A model whose "
+          "lead disappears as the cap tightens was not more accurate, it was "
+          "more verbose -- and the gold span merely appeared somewhere in a "
+          "longer answer.\n")
+    print("| arm | median words | " +
+          " | ".join("full" if c is None else f"{c}w" for c in CAPS) + " |")
+    print("|---" * (len(CAPS) + 2) + "|")
+    for a in sorted(valid, key=arm_key):
+        R = a["records"]
+        med = sorted(len(r["pred"].split()) for r in R)[len(R) // 2]
+        cells = []
+        for cap in CAPS:
+            g = [grade(" ".join(r["pred"].split()[:cap]) if cap else r["pred"],
+                       r["gold"], r["is_abstention"]) for r in R]
+            g = [x for x in g if x is not None]
+            cells.append(f"{sum(g)/len(g):.3f}" if g else "--")
+        print(f"| {a['_tag'][4:]} | {med} | " + " | ".join(cells) + " |")
+
+
 def e2e_section(arms: list[dict]) -> None:
     if not arms:
         return
@@ -136,16 +192,34 @@ def e2e_section(arms: list[dict]) -> None:
           "abstractive gold answers with no checkable surface form are excluded "
           "rather than scored wrong, which is the `not gradable` column.\n")
     print("| model | retriever | granularity | accuracy | token-F1 | graded | "
-          "not gradable | read tok/query | max prompt | num_ctx | truncated |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|")
+          "not gradable | read tok/query | max prompt | num_ctx | truncated | "
+          "valid |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    suspect = []
     for a in sorted(arms, key=arm_key):
         c = a["config"]
+        # An arm where every question produced an identical prompt length was
+        # clamped by the server, not measured. Ollama reports what it kept, so
+        # this invariant catches overflows its own counters cannot see.
+        pt = {r.get("prompt_tokens") for r in a.get("records", [])}
+        clamped = len(a.get("records", [])) > 5 and len(pt) == 1
+        if clamped:
+            suspect.append((a, pt.pop()))
         print(f"| {model_label(a)} | {c['retriever']} | "
               f"{c.get('granularity','turn')} | {a['accuracy']:.3f} | "
               f"{a['token_f1_mean']:.3f} | {a['n_graded']} | "
               f"{a['n_not_gradable']} | {a['read_tokens_per_query']:.0f} | "
               f"{a.get('prompt_tokens_max','--')} | {c.get('num_ctx','--')} | "
-              f"{a.get('n_prompts_truncated', 0)} |")
+              f"{a.get('n_prompts_truncated', 0)}"
+              f"{' | **INVALID**' if clamped else ' | ok'} |")
+
+    for a, tok in suspect:
+        print(f"\n> **`{a['_tag']}` is not a valid measurement.** Every one of "
+              f"its {len(a['records'])} prompts was exactly {tok} tokens. "
+              f"Prompts do not naturally agree to the token; the server "
+              f"truncated them to a fixed size before the model read them, so "
+              f"the retrieved memory never reached it. Its accuracy of "
+              f"{a['accuracy']:.3f} measures the clamp, not the system.")
 
     # Oracle hands the model the gold evidence, so the oracle column is the
     # model's own ceiling and the difference is what retrieval costs.
@@ -159,17 +233,21 @@ def e2e_section(arms: list[dict]) -> None:
     pairs = {m: v for m, v in by_model.items()
              if "oracle" in v and "hybrid" in v}
     if pairs:
-        print("\n### Where the loss is\n")
-        print("`oracle` is handed the gold evidence, so `1 - oracle` is model "
-              "and grader loss with retrieval removed, and `oracle - hybrid` "
-              "is what retrieval costs. If that gap holds roughly constant as "
-              "the model grows, retrieval cost is independent of the answering "
-              "model.\n")
-        print("| model | oracle | hybrid | retrieval cost | remaining loss |")
+        print("\n### Oracle is not a ceiling\n")
+        print("`oracle` retrieves exactly the turns LongMemEval labels "
+              "`has_answer`, which is a *smaller* prompt than the retrievers "
+              "produce, not a superset of one. Where the gap below is negative, "
+              "a real retriever beat the gold labels: the answer needed a turn "
+              "that was never labelled evidence. So `1 - oracle` is not model "
+              "loss alone -- it also contains whatever the labelling missed, "
+              "and the oracle arm cannot be read as an upper bound.\n")
+        print("| model | oracle | hybrid | oracle - hybrid | 1 - oracle |")
         print("|---|---|---|---|---|")
         for m, v in sorted(pairs.items(), key=lambda kv: param_count(kv[0])):
             print(f"| {m} | {v['oracle']:.3f} | {v['hybrid']:.3f} | "
                   f"{v['oracle']-v['hybrid']:.3f} | {1-v['oracle']:.3f} |")
+
+    length_bias_section(arms)
 
     print("\n### End-to-end accuracy by question type\n")
     for a in sorted(arms, key=arm_key):

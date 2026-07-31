@@ -112,6 +112,8 @@ class OllamaBackend:
         # the results. Set it explicitly and verify per call below.
         self.num_ctx = num_ctx
         self.n_truncated = 0
+        self.max_sent_tokens = 0
+        self._enc = None
 
     @property
     def name(self) -> str:
@@ -125,6 +127,20 @@ class OllamaBackend:
                 return True
         except Exception:
             return False
+
+    def _estimate_tokens(self, text: str) -> int:
+        """Count what we are about to send. Only an estimate across tokenisers,
+        but the failure it guards against is a 3x overflow, not a 3% one."""
+        if self._enc is None:
+            try:
+                import tiktoken
+
+                self._enc = tiktoken.get_encoding("cl100k_base")
+            except Exception:
+                self._enc = False
+        if self._enc is False:
+            return len(text) // 4
+        return len(self._enc.encode(text))
 
     def generate(self, prompt: str, max_new_tokens: int | None = None) -> Generation:
         import json
@@ -149,11 +165,17 @@ class OllamaBackend:
             body = json.loads(resp.read())
 
         prompt_tokens = int(body.get("prompt_eval_count", 0))
-        # If the prompt filled the window, context was almost certainly dropped.
-        # Count it rather than reporting an accuracy that quietly reflects a
-        # truncated prompt.
-        if prompt_tokens >= self.num_ctx - (max_new_tokens or self.max_new_tokens):
+        # prompt_eval_count is what the server *kept*, not what we sent. When a
+        # prompt overflows, llama.cpp discards half the context and reports the
+        # remainder, so an overflowing prompt comes back looking comfortably
+        # under num_ctx -- a session-granularity run reported 4098 tokens for
+        # all 100 questions against an 8192 window and counted zero truncations.
+        # The only reliable signal is what we sent, measured before sending.
+        sent = self._estimate_tokens(prompt)
+        budget = self.num_ctx - (max_new_tokens or self.max_new_tokens)
+        if sent > budget or prompt_tokens < sent * 0.9:
             self.n_truncated += 1
+            self.max_sent_tokens = max(self.max_sent_tokens, sent)
 
         return Generation(
             text=body.get("response", "").strip(),
