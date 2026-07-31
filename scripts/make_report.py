@@ -9,6 +9,7 @@ artifacts, so the repo cannot drift from its own measurements.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -39,9 +40,149 @@ def load_all(results_dir: Path) -> dict[str, dict]:
     return runs
 
 
+GRAN_ORDER = ["turn", "user_turn", "session"]
+
+
 def sort_key(key: str) -> tuple[int, str]:
     name = key.split("|")[0]
     return (ORDER.index(name) if name in ORDER else len(ORDER), key)
+
+
+def load_e2e(results_dir: Path) -> list[dict]:
+    """End-to-end arms are shaped differently from retrieval sweeps: one run
+    per file, keyed by "accuracy" rather than "metrics"."""
+    arms = []
+    for path in sorted(results_dir.glob("e2e_*.json")):
+        try:
+            payload = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict) and "accuracy" in payload:
+            arms.append(payload | {"_tag": path.stem})
+    return arms
+
+
+def model_label(arm: dict) -> str:
+    name = arm.get("config", {}).get("answer_backend_name", "?")
+    return name.split(":", 1)[1] if ":" in name else name
+
+
+def param_count(label: str) -> float:
+    """Sort a scaling ladder by size, not alphabetically -- otherwise 14b files
+    between 1.5b and 3b and the curve reads as noise."""
+    m = re.search(r"(\d+(?:\.\d+)?)\s*([bm])\b", label.lower())
+    if not m:
+        return float("inf")
+    return float(m.group(1)) * (1e9 if m.group(2) == "b" else 1e6)
+
+
+def arm_key(arm: dict) -> tuple:
+    label = model_label(arm)
+    c = arm["config"]
+    return (param_count(label), label, c["retriever"], c.get("granularity", ""))
+
+
+def granularity_section(runs: dict[str, dict]) -> None:
+    """The same retriever at three definitions of a memory unit. This is the
+    knob the field rarely reports and it moves recall more than the retriever
+    choice does."""
+    grans = [g for g in GRAN_ORDER
+             if any(k.split("|")[1] == g for k in runs)]
+    if len(grans) < 2:
+        return
+
+    print("\n## What a memory unit should be\n")
+    print("The same retrievers, over the same conversations, cut into turns, "
+          "user turns, or whole sessions. Coarser units retrieve more evidence "
+          "per hit and cost more tokens to read -- the trade this project "
+          "exists to price.\n")
+
+    for metric in ("recall@10", "any_hit@10", "mrr"):
+        print(f"\n**{metric}**\n")
+        print("| system | " + " | ".join(grans) + " |")
+        print("|---" * (len(grans) + 1) + "|")
+        for name in ORDER:
+            cells = []
+            for g in grans:
+                m = runs.get(f"{name}|{g}", {}).get("metrics", {})
+                cells.append(f"{m[metric]:.3f}" if metric in m else "--")
+            if set(cells) != {"--"}:
+                print(f"| {name} | " + " | ".join(cells) + " |")
+
+    # any_hit flatters aggregation questions: it is satisfied by one evidence
+    # turn out of six. Where the two diverge is where the metric choice matters.
+    print("\n**Where `any_hit@10` and `recall@10` disagree** (hybrid). A "
+          "question needing six evidence turns scores `any_hit` = 1.0 on one "
+          "of them, so `any_hit` overstates readiness to answer:\n")
+    print("| granularity | question type | any_hit@10 | recall@10 | overstated by |")
+    print("|---|---|---|---|---|")
+    for g in grans:
+        bt = runs.get(f"hybrid|{g}", {}).get("metrics", {}).get(
+            "by_question_type", {})
+        for qtype, v in sorted(bt.items()):
+            delta = v["any_hit@10"] - v["recall@10"]
+            if delta >= 0.10:
+                print(f"| {g} | {qtype} | {v['any_hit@10']:.3f} | "
+                      f"{v['recall@10']:.3f} | {delta:.3f} |")
+
+
+def e2e_section(arms: list[dict]) -> None:
+    if not arms:
+        return
+
+    print("\n## End-to-end answer accuracy\n")
+    print("Retrieve, answer with a local model, grade deterministically. "
+          "Graded by normalised token-span containment, never by an LLM judge; "
+          "abstractive gold answers with no checkable surface form are excluded "
+          "rather than scored wrong, which is the `not gradable` column.\n")
+    print("| model | retriever | granularity | accuracy | token-F1 | graded | "
+          "not gradable | read tok/query | max prompt | num_ctx | truncated |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|")
+    for a in sorted(arms, key=arm_key):
+        c = a["config"]
+        print(f"| {model_label(a)} | {c['retriever']} | "
+              f"{c.get('granularity','turn')} | {a['accuracy']:.3f} | "
+              f"{a['token_f1_mean']:.3f} | {a['n_graded']} | "
+              f"{a['n_not_gradable']} | {a['read_tokens_per_query']:.0f} | "
+              f"{a.get('prompt_tokens_max','--')} | {c.get('num_ctx','--')} | "
+              f"{a.get('n_prompts_truncated', 0)} |")
+
+    # Oracle hands the model the gold evidence, so the oracle column is the
+    # model's own ceiling and the difference is what retrieval costs.
+    by_model: dict[str, dict[str, float]] = {}
+    for a in arms:
+        if a["config"].get("granularity", "turn") != "turn":
+            continue
+        by_model.setdefault(model_label(a), {})[a["config"]["retriever"]] = (
+            a["accuracy"]
+        )
+    pairs = {m: v for m, v in by_model.items()
+             if "oracle" in v and "hybrid" in v}
+    if pairs:
+        print("\n### Where the loss is\n")
+        print("`oracle` is handed the gold evidence, so `1 - oracle` is model "
+              "and grader loss with retrieval removed, and `oracle - hybrid` "
+              "is what retrieval costs. If that gap holds roughly constant as "
+              "the model grows, retrieval cost is independent of the answering "
+              "model.\n")
+        print("| model | oracle | hybrid | retrieval cost | remaining loss |")
+        print("|---|---|---|---|---|")
+        for m, v in sorted(pairs.items(), key=lambda kv: param_count(kv[0])):
+            print(f"| {m} | {v['oracle']:.3f} | {v['hybrid']:.3f} | "
+                  f"{v['oracle']-v['hybrid']:.3f} | {1-v['oracle']:.3f} |")
+
+    print("\n### End-to-end accuracy by question type\n")
+    for a in sorted(arms, key=arm_key):
+        bt = a.get("accuracy_by_question_type")
+        if not bt:
+            continue
+        c = a["config"]
+        print(f"\n**{model_label(a)} / {c['retriever']} / "
+              f"{c.get('granularity','turn')}**\n")
+        print("| question type | n | accuracy |")
+        print("|---|---|---|")
+        for qtype, v in sorted(bt.items()):
+            print(f"| {qtype} | {v['n']} | {v['accuracy']:.3f} |")
 
 
 def main() -> None:
@@ -90,6 +231,9 @@ def main() -> None:
               f"{c.get('write_llm_tokens',0):.0f} | "
               f"{c.get('read_wall_clock_s',0)*1000:.0f} | "
               f"{read_calls/n:.1f} |")
+
+    granularity_section(runs)
+    e2e_section(load_e2e(results_dir))
 
     print("\n## Retrieval quality by question type\n")
     for key in sorted(runs, key=sort_key):
