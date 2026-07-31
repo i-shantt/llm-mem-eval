@@ -105,6 +105,66 @@ The audit is not decoration — it found and fixed four real defects, two of whi
 were costing 29 accuracy points on identical model outputs. See
 [Honest limits](#honest-limits) for where it stops being sufficient.
 
+### What happened when we labelled the disagreements
+
+The design says: run both graders, and hand-label only where they disagree.
+We did that. On one arm (`qwen2.5:7b-instruct` answering, hybrid retrieval,
+k=10, n=100, judged by `llama3.1:8b-instruct`) the two graders disagreed on
+**36 answers**. All 36 were labelled by hand — about fifteen minutes of work,
+against the ~100 labels a from-scratch validation would have cost.
+
+**The deterministic grader was right on 27 of 36. The LLM judge was right on 9.**
+
+Of the 36, 27 answers were unambiguously wrong. **The judge accepted 26 of
+them:**
+
+| question | gold | model answered | judge |
+|---|---|---|---|
+| pre-1920 coins in my collection | 38 | 37 | CORRECT |
+| what time do I go to the gym | 6:00 pm | 7:00 pm | CORRECT |
+| Saturday wake-up time | 7:30 am | 7:45 am | CORRECT |
+| total online courses completed | 20 | 12 | CORRECT |
+| total views on YouTube + TikTok | 1,998 | 2,018 | CORRECT |
+| who gave me the jewelry | my aunt | *"I don't know"* | CORRECT |
+| how much faster was my 5K | 10 minutes | *"I don't have enough details"* | CORRECT |
+| what did I save on the handbag | $300 | *"I can't determine"* | CORRECT |
+
+Ten of the 26 are the judge marking a **flat refusal** correct on a question
+that has a real gold answer. That is not leniency, it is a broken grader. The
+audited LoCoMo judge accepted 63% of wrong answers; this one accepted 26 of 27.
+
+State the caveat with the number: the disagreement set is *selected* for
+disagreement, so 26/27 bounds the judge's false-accept rate on hard cases, not
+over the whole run. Bounding it over the whole run needs labels on the
+agreement set too. It is disqualifying either way — **no judged accuracy from
+an 8B judge appears anywhere in this repo.**
+
+### The one false accept the constructed audit could not have caught
+
+The deterministic grader was not clean either. It was wrong on 9 of the 36:
+eight false rejects (all gold-surface-form handling — `55-inch` vs "55 inches",
+`Friday` vs "Fridays", `University of California, Los Angeles (UCLA)` vs
+"UCLA"), and one **false accept**:
+
+> **Q:** Which group did I join first, 'Page Turners' or 'Marketing Professionals'?
+> **Gold:** Page Turners
+> **Model:** "You joined the **'Marketing Professionals'** group first, as you
+> asked about marketing resources […] before mentioning the 'Page Turners' book
+> club group."
+> **Deterministic grader: CORRECT.** ❌
+
+The gold string is present, so containment accepts it — while the answer
+asserts the opposite. On a two-alternative question both candidates appear in
+the retrieved context and in most answers, which makes containment nearly
+uninformative for that question shape.
+
+This is exactly the limitation the constructed audit is documented as unable to
+find: substituted and perturbed golds are *easy* negatives, and this is a hard
+one. The 0.000 false-accept rate over 3,050 constructed cases is still true and
+still worth measuring. It just is not sufficient, which is why this repo labels
+real disagreements as well — and reports what that found rather than only the
+number that looks good.
+
 ## Layout
 
 ```
@@ -167,7 +227,21 @@ reported number carries its own `n`.
   answers are wrong in obvious ways; a real model's near-miss can be subtler.
   A 0.000 false-accept rate over constructed cases is *necessary* for trusting
   the grader, not *sufficient*. Two of the four defects the grader had were found
-  by reading real model output, not by the audit — so the repo does both.
+  by reading real model output, not by the audit — so the repo does both. This
+  is not hypothetical: hand-labelling the disagreements turned up a real false
+  accept the constructed audit missed, on a "which of A or B" question where the
+  gold string appears inside an answer that asserts the opposite.
+- **The deterministic grader has a known false-reject class**: gold answers whose
+  surface form differs from a correct answer's (singular/plural, a parenthetical
+  alias, a gold that is a full sentence rather than a span, a gold that is a
+  superset like `University of Melbourne in Australia`). Measured at 8 of 36
+  labelled disagreements on one arm. It depresses absolute accuracy and, because
+  the same rule is applied to every system, leaves comparisons intact.
+- **LLM judges at 8B are not usable for this task.** Measured here, not assumed:
+  `llama3.1:8b-instruct` accepted 26 of 27 wrong answers, including ten flat
+  refusals to questions that had gold answers. `--judge-backend` exists to
+  *characterise* a judge and to surface disagreements, not to produce a headline
+  number.
 - Deterministic grading is stricter than a human on genuine paraphrase, so
   absolute accuracies here are a **lower bound**. Every system is graded by the
   identical rule, so the comparisons between systems — which is what this project
