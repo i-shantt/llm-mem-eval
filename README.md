@@ -24,6 +24,11 @@ exactly the systems that spend the most up front. Measured on LongMemEval
 > Meanwhile a zero-LLM-write-path retriever is **49.7× cheaper per query than
 > full context** — at $0.00031/query against $0.01561.
 
+And that retriever earns its accuracy rather than inheriting it: against
+closed-book, matched-budget random, and recency controls, **75–85% of every
+accuracy reported here is attributable to retrieval**, p < 0.0001 at all four
+model sizes. [Details below.](#how-much-of-that-is-memory)
+
 ## What the retrieval numbers say
 
 Full tables in [RESULTS.md](RESULTS.md) — regenerated from run artifacts, never
@@ -181,6 +186,66 @@ judge). Full tables in [RESULTS.md](RESULTS.md).
 Three findings. Two of them cost this repo a claim it had already made, which
 is the more useful half.
 
+### How much of that is memory?
+
+None of the numbers above mean anything on their own. A question answerable
+from world knowledge, or one that leaks its answer in its phrasing, is credited
+to the retriever by default. So every rung was re-run against three controls at
+a matched read-token budget: `none` (closed book, no memory), `random` (same
+`k`, units chosen without the query) and `recency` (just keep the last `k`
+turns). Scoring is against the *strongest* of the three, since a system that
+beats random but loses to "keep the last 10 turns" has shown nothing.
+
+| model | closed book | best control | hybrid | lift | 95% CI | attributable |
+|---|---|---|---|---|---|---|
+| 1.5B | 0.033 | 0.066 | 0.352 | +0.286 | [+0.187, +0.385] | 81% |
+| 3B | 0.044 | 0.077 | 0.308 | +0.231 | [+0.143, +0.330] | 75% |
+| 7B | 0.055 | 0.088 | 0.440 | +0.352 | [+0.242, +0.462] | 80% |
+| 14B | 0.044 | 0.099 | 0.582 | +0.484 | [+0.374, +0.593] | 83% |
+
+Every arm is significant at p < 0.0001 (exact McNemar on discordant pairs,
+paired bootstrap CI). **75–85% of every headline accuracy in this repo survives
+its control.** Closed book is flat in model size — 0.033 to 0.055 across ~10× of
+parameters — so none of the lift is the model already knowing the answer.
+
+This refutes the hypothesis the controls were built to test. The expectation was
+that a meaningful slice of LongMemEval would turn out to be answerable without
+memory, making the reported numbers partly unearned. It is not: on both
+single-session types the control scores exactly **0.000**, so the 0.786 that
+1.5B and 14B *both* reach on `single-session-user` is entirely retrieval.
+
+### Memory only pays where the model can spend it
+
+Lift is not uniform across question types, and the gradient is the useful part:
+
+| question type | 1.5B | 3B | 7B | 14B |
+|---|---|---|---|---|
+| single-session-user | +0.786 | +0.429 | +0.714 | +0.786 |
+| single-session-assistant | +0.500 | +0.500 | +0.600 | +0.700 |
+| knowledge-update | +0.250 | +0.250 | +0.188 | +0.438 |
+| multi-session | +0.154 | +0.154 | +0.231 | +0.308 |
+| temporal-reasoning | +0.080 | +0.080 | +0.280 | +0.440 |
+
+Pure lookup is saturated at 1.5B: `single-session-user` gains +0.786 from
+memory on the smallest model, and 10× the parameters adds nothing. Reasoning
+over retrieved evidence is the opposite — `temporal-reasoning` gains +0.080 at
+1.5B and 3B, where the model holds the dates and still cannot compare them, and
++0.440 at 14B from the *same* retrieval.
+
+For a project about cost that is the actionable result: **memory quality has a
+per-question-type model-capacity threshold, and below it, better memory is
+wasted money.** Paying for a retriever that nails temporal evidence is worth
+5.5× more at 14B than at 3B. No memory paper reports this, because reporting it
+requires the control arms.
+
+`knowledge-update` is also where memory matters least in relative terms —
+`recency` alone scores 0.250, since a recently-updated fact is in the recent
+turns by construction.
+
+Reproduce with `python scripts/run_ablation.py --results results`. With no
+control arms present it refuses to report a lift and marks every system
+`unattributable`.
+
 ### Scale helps, and the grader exaggerates by how much
 
 End-to-end accuracy rises from 0.352 to 0.582 across ~10× of parameters, so
@@ -322,6 +387,19 @@ reported number carries its own `n`.
   number.
 - Deterministic grading is stricter than a human on genuine paraphrase, so
   absolute accuracies here are a **lower bound**.
+- **The control arms bound what memory contributed, not what any *particular*
+  memory system would.** They say 75–85% of the accuracy here is attributable to
+  retrieval rather than to priors or to spending tokens. They do not transfer to
+  Mem0 or Zep, whose numbers are still *reported* rather than measured — running
+  those through the same controls is the obvious next step and has not been done.
+- **The controls share the grader, so a bias that hits system and control
+  unequally would distort lift.** The obvious candidate was checked and cleared:
+  the closed-book arm refuses on 47% of questions against hybrid's 13%, but
+  every one of those questions has a real gold answer, so a refusal is a genuine
+  failure to produce it and is correctly scored wrong. The asymmetry *is* the
+  lift rather than an artefact of it. The known false-reject class (paraphrase,
+  aliases, superset golds) applies to both arms and is not obviously
+  asymmetric — though that has not been quantified per-arm.
 - **Identical grading does not make every comparison safe, and this repo used to
   claim it did.** Containment rewards length, so it is fair across *retrievers
   at a fixed model* — same answerer, same verbosity — and unfair across *models
