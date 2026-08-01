@@ -20,16 +20,16 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.5824175824175825,
+  "accuracy": 0.5934065934065934,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
-  "token_f1_mean": 0.18959709354427667,
+  "token_f1_mean": 0.19278734375997986,
   "accuracy_by_question_type": {
     "knowledge-update": {
       "n": 16,
-      "correct": 11,
-      "accuracy": 0.6875
+      "correct": 12,
+      "accuracy": 0.75
     },
     "multi-session": {
       "n": 26,
@@ -1162,7 +1162,7 @@
       "pred": "You take a cocktail-making class on Fridays.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 2612,

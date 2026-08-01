@@ -25,7 +25,7 @@ exactly the systems that spend the most up front. Measured on LongMemEval
 > full context** — at $0.00031/query against $0.01561.
 
 And that retriever earns its accuracy rather than inheriting it: against
-closed-book, matched-budget random, and recency controls, **75–85% of every
+closed-book, matched-budget random, and recency controls, **76–85% of every
 accuracy reported here is attributable to retrieval**, p < 0.0001 at all four
 model sizes. [Details below.](#how-much-of-that-is-memory)
 
@@ -97,12 +97,12 @@ wrong.
 rebuilds the LoCoMo audit's method as a script: take a gold answer, substitute a
 different question's gold, perturb its numbers, replace it with a refusal — each
 result's correct verdict is known *by construction*, so no annotation is needed.
-Current numbers over 3,050 constructed cases:
+Current numbers over 3,136 constructed cases:
 
 | | rate |
 |---|---|
 | false accept (known-wrong answers marked correct) | **0.000** |
-| false reject on meaning-preserving rewrites | **0.004** |
+| false reject on meaning-preserving rewrites | **0.003** |
 
 For comparison, the audited LoCoMo judge's false-accept rate reached **0.63**.
 
@@ -165,10 +165,28 @@ uninformative for that question shape.
 
 This is exactly the limitation the constructed audit is documented as unable to
 find: substituted and perturbed golds are *easy* negatives, and this is a hard
-one. The 0.000 false-accept rate over 3,050 constructed cases is still true and
+one. The 0.000 false-accept rate over 3,136 constructed cases is still true and
 still worth measuring. It just is not sufficient, which is why this repo labels
 real disagreements as well — and reports what that found rather than only the
 number that looks good.
+
+**Two of those false rejects are now fixed.** `normalize_tokens` strips regular
+plurals, so `Friday`/"Fridays" and `55-inch`/"55 inches" both match, and the
+audit gained a `hard_plural` bucket that would have caught them. Re-grading the
+stored predictions moved 13 verdicts across 8 of 23 arms; no control arm moved.
+`scripts/regrade.py` replays any grader change over every result ever produced
+and prints each changed verdict, because the model's full answer text is stored.
+
+Doing that surfaced a **second false accept the audit had also missed**, this
+one structural rather than surface-level. Set comparison — added so a gold
+listing four refinery processes would accept them in any order — also accepted
+*"JetBlue, Delta, American Airlines, then United"* against gold `JetBlue, Delta,
+United, American Airlines` for the question *"What is the order of airlines I
+flew with from earliest to latest?"*. Right items, wrong order, which is the
+wrong answer. `grade()` now takes the question and disables set comparison when
+the question asks for an ordering. Every list case in the audit had been a
+*positive*, so nothing tested that the grader could still reject a list; there
+is now a `reordered_ordered_list` negative.
 
 ## What the end-to-end run found
 
@@ -178,10 +196,10 @@ judge). Full tables in [RESULTS.md](RESULTS.md).
 
 | model | oracle | hybrid | bm25 |
 |---|---|---|---|
-| 1.5B | 0.341 | 0.352 | — |
-| 3B | 0.407 | 0.308 | — |
-| 7B | **0.571** | 0.440 | 0.396 |
-| 14B | 0.549 | **0.582** | — |
+| 1.5B | 0.352 | 0.352 | — |
+| 3B | **0.418** | 0.319 | — |
+| 7B | **0.593** | 0.473 | 0.418 |
+| 14B | 0.571 | **0.593** | — |
 
 Three findings. Two of them cost this repo a claim it had already made, which
 is the more useful half.
@@ -199,12 +217,12 @@ beats random but loses to "keep the last 10 turns" has shown nothing.
 | model | closed book | best control | hybrid | lift | 95% CI | attributable |
 |---|---|---|---|---|---|---|
 | 1.5B | 0.033 | 0.066 | 0.352 | +0.286 | [+0.187, +0.385] | 81% |
-| 3B | 0.044 | 0.077 | 0.308 | +0.231 | [+0.143, +0.330] | 75% |
-| 7B | 0.055 | 0.088 | 0.440 | +0.352 | [+0.242, +0.462] | 80% |
-| 14B | 0.044 | 0.099 | 0.582 | +0.484 | [+0.374, +0.593] | 83% |
+| 3B | 0.044 | 0.077 | 0.319 | +0.242 | [+0.154, +0.341] | 76% |
+| 7B | 0.055 | 0.088 | 0.473 | +0.385 | [+0.275, +0.495] | 81% |
+| 14B | 0.044 | 0.099 | 0.593 | +0.495 | [+0.385, +0.604] | 83% |
 
 Every arm is significant at p < 0.0001 (exact McNemar on discordant pairs,
-paired bootstrap CI). **75–85% of every headline accuracy in this repo survives
+paired bootstrap CI). **76–85% of every headline accuracy in this repo survives
 its control.** Closed book is flat in model size — 0.033 to 0.055 across ~10× of
 parameters — so none of the lift is the model already knowing the answer.
 
@@ -220,9 +238,9 @@ Lift is not uniform across question types, and the gradient is the useful part:
 
 | question type | 1.5B | 3B | 7B | 14B |
 |---|---|---|---|---|
-| single-session-user | +0.786 | +0.429 | +0.714 | +0.786 |
-| single-session-assistant | +0.500 | +0.500 | +0.600 | +0.700 |
-| knowledge-update | +0.250 | +0.250 | +0.188 | +0.438 |
+| single-session-user | +0.786 | +0.429 | +0.786 | +0.786 |
+| single-session-assistant | +0.500 | +0.600 | +0.700 | +0.700 |
+| knowledge-update | +0.250 | +0.250 | +0.250 | +0.500 |
 | multi-session | +0.154 | +0.154 | +0.231 | +0.308 |
 | temporal-reasoning | +0.080 | +0.080 | +0.280 | +0.440 |
 
@@ -259,21 +277,23 @@ does not need many words:
 
 | arm | full | 40w | 25w | 15w | 8w |
 |---|---|---|---|---|---|
-| 7B hybrid | 0.440 | 0.429 | 0.352 | 0.341 | 0.231 |
-| 14B hybrid | 0.582 | 0.560 | 0.451 | 0.385 | 0.231 |
-| **14B − 7B** | **+0.142** | +0.131 | +0.099 | +0.044 | **0.000** |
+| 7B hybrid | 0.473 | 0.451 | 0.374 | 0.363 | 0.253 |
+| 14B hybrid | 0.593 | 0.571 | 0.462 | 0.396 | 0.242 |
+| **14B − 7B** | **+0.121** | +0.121 | +0.088 | +0.033 | **−0.011** |
 
-The 14B lead decays monotonically to zero. Token-F1, which penalises length
-rather than rewarding it, puts the same gap at **+0.011**. Scale is real; the
-14-point version of it is mostly verbosity. `scripts/make_report.py` prints this
-decay for every arm, so it cannot quietly stop being true.
+The 14B lead decays to zero and then slightly reverses. Token-F1, which
+penalises length rather than rewarding it, puts the same gap at **+0.007**.
+Scale is real; the 12-point version of it is mostly verbosity.
+`scripts/make_report.py` prints this decay for every arm, so it cannot quietly
+stop being true.
 
 ### Oracle is not a ceiling
 
 The oracle arm retrieves exactly the turns LongMemEval labels `has_answer`. That
 is a *smaller* prompt than a retriever builds — smaller on **59 of 100
-questions** — not a superset of one. So it is not an upper bound, and hybrid
-beat it at both 1.5B and 14B:
+questions** — not a superset of one. So it is not an upper bound: hybrid beat
+it at 14B and tied it exactly at 1.5B (0.352 each). The example below is one of
+the questions where oracle's smaller prompt is what loses it the answer:
 
 > **Q:** Where did I redeem the $5 coupon on coffee creamer? **Gold:** Target
 > **oracle** (949 tokens): *"…The specific location is not mentioned in your
@@ -388,7 +408,7 @@ reported number carries its own `n`.
 - Deterministic grading is stricter than a human on genuine paraphrase, so
   absolute accuracies here are a **lower bound**.
 - **The control arms bound what memory contributed, not what any *particular*
-  memory system would.** They say 75–85% of the accuracy here is attributable to
+  memory system would.** They say 76–85% of the accuracy here is attributable to
   retrieval rather than to priors or to spending tokens. They do not transfer to
   Mem0 or Zep, whose numbers are still *reported* rather than measured — running
   those through the same controls is the obvious next step and has not been done.
@@ -403,13 +423,13 @@ reported number carries its own `n`.
 - **Identical grading does not make every comparison safe, and this repo used to
   claim it did.** Containment rewards length, so it is fair across *retrievers
   at a fixed model* — same answerer, same verbosity — and unfair across *models
-  that differ in verbosity*. Measured: 14B's 14-point lead over 7B decays to
+  that differ in verbosity*. Measured: 14B's 12-point lead over 7B decays to
   zero as answers are capped toward gold length, and token-F1 puts the same gap
-  at 1 point. Read the length-decay table in [RESULTS.md](RESULTS.md) before
+  at under 1 point. Read the length-decay table in [RESULTS.md](RESULTS.md) before
   quoting any cross-model number here.
 - **The oracle arm is not an upper bound.** It retrieves only `has_answer`
   turns, which on 59 of 100 questions is a smaller prompt than a real retriever
-  builds, and hybrid beat it at two of four model sizes. Treat it as "gold
+  builds, and hybrid beat it at 14B and tied it at 1.5B. Treat it as "gold
   evidence only", not as a ceiling.
 - **Granularities are not comparable at a shared `k`.** Units differ ~40× in
   size, so equal `k` means unequal read cost — and the `random` floor itself

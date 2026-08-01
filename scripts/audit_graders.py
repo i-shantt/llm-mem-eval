@@ -46,7 +46,8 @@ def main() -> None:
     # The grader needs to know whether a case is an abstention question; kind
     # encodes that, since that is how the case was built.
     def det(c):
-        return grade(c.pred, c.gold, is_abstention=c.kind.endswith("abstention"))
+        return grade(c.pred, c.gold, is_abstention=c.kind.endswith("abstention"),
+                     question=c.question)
 
     report = {"n_examples": len(examples), "graders": {}}
     report["graders"]["deterministic"] = audit_grader(cases, det)

@@ -20,16 +20,16 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.5494505494505495,
+  "accuracy": 0.5714285714285714,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
-  "token_f1_mean": 0.18800226277814985,
+  "token_f1_mean": 0.1923864017014289,
   "accuracy_by_question_type": {
     "knowledge-update": {
       "n": 16,
-      "correct": 12,
-      "accuracy": 0.75
+      "correct": 13,
+      "accuracy": 0.8125
     },
     "multi-session": {
       "n": 26,
@@ -38,8 +38,8 @@
     },
     "single-session-assistant": {
       "n": 10,
-      "correct": 5,
-      "accuracy": 0.5
+      "correct": 6,
+      "accuracy": 0.6
     },
     "single-session-user": {
       "n": 14,
@@ -142,7 +142,7 @@
       "pred": "Certainly! The main refining processes at the Lake Charles Refinery include:\n\n1. Atmospheric distillation\n2. Fluid catalytic cracking (FCC)\n3. Alkylation\n4. Hydrotreating",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 2958,
@@ -1162,7 +1162,7 @@
       "pred": "You have a cocktail-making class on Fridays.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 1992,

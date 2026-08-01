@@ -2,13 +2,13 @@
   "n_examples": 500,
   "graders": {
     "deterministic": {
-      "n_cases": 3052,
-      "n_graded": 3052,
+      "n_cases": 3136,
+      "n_graded": 3136,
       "n_abstained": 0,
-      "accuracy": 0.9993446920052425,
+      "accuracy": 0.9993622448979592,
       "false_accept_rate": 0.0,
-      "false_reject_rate": 0.001141552511415525,
-      "false_reject_rate_hard": 0.0036231884057971015,
+      "false_reject_rate": 0.0010899182561307902,
+      "false_reject_rate_hard": 0.0031496062992125984,
       "false_accept_note": "known-wrong answers marked CORRECT; the LoCoMo audit measured up to 0.63 for its judge",
       "by_kind": {
         "correct_abstention": {
@@ -36,8 +36,8 @@
           "accuracy": 1.0
         },
         "hard_list_reorder": {
-          "n": 2,
-          "correct": 2,
+          "n": 1,
+          "correct": 1,
           "none": 0,
           "accuracy": 1.0
         },
@@ -52,6 +52,12 @@
           "correct": 150,
           "none": 0,
           "accuracy": 0.9868421052631579
+        },
+        "hard_plural": {
+          "n": 84,
+          "correct": 84,
+          "none": 0,
+          "accuracy": 1.0
         },
         "hard_unit_expanded": {
           "n": 35,
@@ -80,6 +86,12 @@
         "refusal_to_answerable": {
           "n": 360,
           "correct": 360,
+          "none": 0,
+          "accuracy": 1.0
+        },
+        "reordered_ordered_list": {
+          "n": 1,
+          "correct": 1,
           "none": 0,
           "accuracy": 1.0
         },

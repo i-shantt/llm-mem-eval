@@ -170,6 +170,53 @@ def test_grader_rejects_near_misses() -> None:
     print("  ok  grader rejects near-misses, abstains on abstractive gold")
 
 
+def test_grader_matches_regular_plurals() -> None:
+    """Both cases are real predictions that were scored wrong. The question
+    fixes the referent, so the plural carries no extra meaning."""
+    from memllm.eval.grade import grade
+
+    assert grade("You take a cocktail-making class on Fridays.", "Friday") is True
+    assert grade("Your new Samsung TV is 55 inches.", "55-inch") is True
+    assert grade("It lasted 3 days.", "3 day") is True
+
+    # Guards against collisions, which would be false accepts. Short tokens and
+    # the -ss/-us/-is endings are not plurals and must survive intact.
+    assert grade("It was a bus.", "bu") is False
+    assert grade("You took a class.", "cla") is False
+    # No -ies -> -y rule, so a singular ending in -ie still matches its plural.
+    assert grade("You watched movies.", "movie") is True
+    print("  ok  grader matches regular plurals without colliding")
+
+
+def test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question() -> None:
+    """Set comparison exists so an unordered list can be named in any order.
+    Applied to a question whose answer IS the order, it accepts the wrong
+    answer -- which it did, on a real 14B prediction, until the question was
+    passed in."""
+    from memllm.eval.grade import grade
+
+    gold = "JetBlue, Delta, United, American Airlines"
+    reordered = "JetBlue, Delta, American Airlines, and then United Airlines"
+    ordering_q = "What is the order of airlines I flew with from earliest to latest?"
+
+    assert grade(reordered, gold, question=ordering_q) is False
+    assert grade(gold, gold, question=ordering_q) is True
+
+    # Without an ordering question the set behaviour is unchanged: naming every
+    # item in a different order is still correct.
+    unordered_q = "What processes are used at the Lake Charles Refinery?"
+    unordered_gold = ("Atmospheric distillation, fluid catalytic cracking (FCC), "
+                      "alkylation, and hydrotreating.")
+    rotated = ("fluid catalytic cracking (FCC), alkylation, hydrotreating, "
+               "and atmospheric distillation")
+    assert grade(rotated, unordered_gold, question=unordered_q) is True
+
+    # Omitting the question keeps the older, more permissive behaviour, so no
+    # existing caller silently changes verdict.
+    assert grade(reordered, gold) is True
+    print("  ok  grader rejects a reordered answer to an ordering question")
+
+
 def test_grader_audit_has_zero_false_accepts() -> None:
     """Regression guard on the property the whole eval rests on.
 
@@ -193,7 +240,7 @@ def test_grader_audit_has_zero_false_accepts() -> None:
 
     report = audit_grader(
         cases,
-        lambda c: grade(c.pred, c.gold, c.kind.endswith("abstention")),
+        lambda c: grade(c.pred, c.gold, c.kind.endswith("abstention"), c.question),
     )
     assert report["false_accept_rate"] == 0.0, (
         f"grader accepts known-wrong answers: {report['false_accept_rate']}")
@@ -211,5 +258,7 @@ if __name__ == "__main__":
     test_embed_cache_replays_cost_not_disk_read()
     test_real_data_loads()
     test_grader_rejects_near_misses()
+    test_grader_matches_regular_plurals()
+    test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question()
     test_grader_audit_has_zero_false_accepts()
     print("all passed")

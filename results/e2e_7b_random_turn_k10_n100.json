@@ -25,7 +25,7 @@
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
-  "token_f1_mean": 0.06910140654880259,
+  "token_f1_mean": 0.0726913339160288,
   "accuracy_by_question_type": {
     "knowledge-update": {
       "n": 16,

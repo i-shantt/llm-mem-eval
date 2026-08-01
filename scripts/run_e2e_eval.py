@@ -142,7 +142,7 @@ def main() -> None:
         ledger.add_llm("read", gen.prompt_tokens, gen.completion_tokens)
 
         gold = str(ex.answer)
-        det = grade(gen.text, gold, ex.is_abstention)
+        det = grade(gen.text, gold, ex.is_abstention, ex.question)
         if det is None:
             n_not_gradable += 1
         else:

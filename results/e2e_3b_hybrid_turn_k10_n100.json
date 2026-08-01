@@ -20,11 +20,11 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.3076923076923077,
+  "accuracy": 0.31868131868131866,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
-  "token_f1_mean": 0.1712820574793838,
+  "token_f1_mean": 0.17183027263814082,
   "accuracy_by_question_type": {
     "knowledge-update": {
       "n": 16,
@@ -38,8 +38,8 @@
     },
     "single-session-assistant": {
       "n": 10,
-      "correct": 5,
-      "accuracy": 0.5
+      "correct": 6,
+      "accuracy": 0.6
     },
     "single-session-user": {
       "n": 14,
@@ -142,7 +142,7 @@
       "pred": "At the Lake Charles Refinery, some of the main processes that go on include:\n\n1. Atmospheric distillation: This is the first step in the refining process, where crude oil is heated and separated into different fractions based on their boiling points.\n2. Fluid catalytic cracking (FCC): This process breaks down heavier fractions of crude oil into lighter, more valuable products such as gasoline and diesel fuel.\n3. Alkylation: This process combines smaller molecules to form larger ones, creating high-octane gasoline components.\n4. Hydrotreating: This process removes impurities from the gasoline and diesel fractions to improve their quality.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 2739,

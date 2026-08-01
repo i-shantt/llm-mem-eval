@@ -108,17 +108,29 @@ Retrieve, answer with a local model, grade deterministically. Graded by normalis
 
 | model | retriever | granularity | accuracy | token-F1 | graded | not gradable | read tok/query | max prompt | num_ctx | truncated | valid |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| qwen2.5:1.5b-instruct | hybrid | turn | 0.352 | 0.201 | 91 | 9 | 2627 | 4961 | 8192 | 0 | ok |
-| qwen2.5:1.5b-instruct | oracle | turn | 0.341 | 0.189 | 91 | 9 | 2225 | 4481 | 8192 | 0 | ok |
-| qwen2.5:3b-instruct | hybrid | turn | 0.308 | 0.171 | 91 | 9 | 2629 | 4961 | 8192 | 0 | ok |
-| qwen2.5:3b-instruct | oracle | turn | 0.407 | 0.175 | 91 | 9 | 2235 | 4481 | 8192 | 0 | ok |
-| qwen2.5:7b-instruct | bm25 | turn | 0.396 | 0.173 | 91 | 9 | 2903 | 4894 | 8192 | 0 | ok |
-| qwen2.5:7b-instruct | hybrid | session | 0.044 | 0.052 | 91 | 9 | 4128 | 4098 | 8192 | 0 | **INVALID** |
-| qwen2.5:7b-instruct | hybrid | turn | 0.440 | 0.179 | 91 | 9 | 2639 | 4961 | 8192 | 0 | ok |
-| qwen2.5:7b-instruct | oracle | turn | 0.571 | 0.203 | 91 | 9 | 2242 | 4481 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | hybrid | session | 0.033 | 0.057 | 91 | 9 | 4147 | 4098 | 8192 | 0 | **INVALID** |
-| qwen2.5:14b-instruct | hybrid | turn | 0.582 | 0.190 | 91 | 9 | 2642 | 4961 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | oracle | turn | 0.549 | 0.188 | 91 | 9 | 2244 | 4481 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | hybrid | turn | 0.352 | 0.203 | 91 | 9 | 2627 | 4961 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | none | turn | 0.033 | 0.074 | 91 | 9 | 139 | 142 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | oracle | turn | 0.352 | 0.193 | 91 | 9 | 2225 | 4481 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | random | turn | 0.055 | 0.080 | 91 | 9 | 2484 | 5112 | 8192 | 1 | ok |
+| qwen2.5:1.5b-instruct | recency | turn | 0.066 | 0.081 | 91 | 9 | 2574 | 4354 | 8192 | 1 | ok |
+| qwen2.5:3b-instruct | hybrid | turn | 0.319 | 0.172 | 91 | 9 | 2629 | 4961 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | none | turn | 0.044 | 0.038 | 91 | 9 | 125 | 142 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | oracle | turn | 0.418 | 0.177 | 91 | 9 | 2235 | 4481 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | random | turn | 0.066 | 0.057 | 91 | 9 | 2475 | 5112 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | recency | turn | 0.077 | 0.068 | 91 | 9 | 2568 | 4354 | 8192 | 1 | ok |
+| qwen2.5:7b-instruct | bm25 | turn | 0.418 | 0.177 | 91 | 9 | 2903 | 4894 | 8192 | 1 | ok |
+| qwen2.5:7b-instruct | hybrid | session | 0.044 | 0.055 | 91 | 9 | 4128 | 4098 | 8192 | 0 | **INVALID** |
+| qwen2.5:7b-instruct | hybrid | turn | 0.473 | 0.186 | 91 | 9 | 2639 | 4961 | 8192 | 1 | ok |
+| qwen2.5:7b-instruct | none | turn | 0.055 | 0.048 | 91 | 9 | 135 | 142 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | oracle | turn | 0.593 | 0.208 | 91 | 9 | 2242 | 4481 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | random | turn | 0.066 | 0.073 | 91 | 9 | 2483 | 5112 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | recency | turn | 0.088 | 0.072 | 91 | 9 | 2568 | 4354 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | hybrid | session | 0.033 | 0.058 | 91 | 9 | 4147 | 4098 | 8192 | 1 | **INVALID** |
+| qwen2.5:14b-instruct | hybrid | turn | 0.593 | 0.193 | 91 | 9 | 2642 | 4961 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | none | turn | 0.044 | 0.060 | 91 | 9 | 146 | 142 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | oracle | turn | 0.571 | 0.192 | 91 | 9 | 2244 | 4481 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | random | turn | 0.044 | 0.072 | 91 | 9 | 2494 | 5112 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | recency | turn | 0.099 | 0.076 | 91 | 9 | 2580 | 4354 | 8192 | 0 | ok |
 
 > **`e2e_7b_hybrid_session_k10_n100` is not a valid measurement.** Every one of its 100 prompts was exactly 4098 tokens. Prompts do not naturally agree to the token; the server truncated them to a fixed size before the model read them, so the retrieved memory never reached it. Its accuracy of 0.044 measures the clamp, not the system.
 
@@ -130,10 +142,10 @@ Retrieve, answer with a local model, grade deterministically. Graded by normalis
 
 | model | oracle | hybrid | oracle - hybrid | 1 - oracle |
 |---|---|---|---|---|
-| qwen2.5:1.5b-instruct | 0.341 | 0.352 | -0.011 | 0.659 |
-| qwen2.5:3b-instruct | 0.407 | 0.308 | 0.099 | 0.593 |
-| qwen2.5:7b-instruct | 0.571 | 0.440 | 0.132 | 0.429 |
-| qwen2.5:14b-instruct | 0.549 | 0.582 | -0.033 | 0.451 |
+| qwen2.5:1.5b-instruct | 0.352 | 0.352 | 0.000 | 0.648 |
+| qwen2.5:3b-instruct | 0.418 | 0.319 | 0.099 | 0.582 |
+| qwen2.5:7b-instruct | 0.593 | 0.473 | 0.121 | 0.407 |
+| qwen2.5:14b-instruct | 0.571 | 0.593 | -0.022 | 0.429 |
 
 ### How much of this is the grader rewarding longer answers
 
@@ -142,14 +154,26 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 | arm | median words | full | 40w | 25w | 15w | 8w |
 |---|---|---|---|---|---|---|
 | 1.5b_hybrid_turn_k10_n100 | 14 | 0.352 | 0.352 | 0.319 | 0.308 | 0.198 |
-| 1.5b_oracle_turn_k10_n100 | 15 | 0.341 | 0.341 | 0.330 | 0.308 | 0.220 |
-| 3b_hybrid_turn_k10_n100 | 17 | 0.308 | 0.308 | 0.286 | 0.275 | 0.209 |
-| 3b_oracle_turn_k10_n100 | 23 | 0.407 | 0.385 | 0.352 | 0.341 | 0.253 |
-| 7b_bm25_turn_k10_n100 | 30 | 0.396 | 0.396 | 0.363 | 0.352 | 0.220 |
-| 7b_hybrid_turn_k10_n100 | 24 | 0.440 | 0.429 | 0.352 | 0.341 | 0.231 |
-| 7b_oracle_turn_k10_n100 | 28 | 0.571 | 0.549 | 0.495 | 0.418 | 0.275 |
-| 14b_hybrid_turn_k10_n100 | 32 | 0.582 | 0.560 | 0.451 | 0.385 | 0.231 |
-| 14b_oracle_turn_k10_n100 | 29 | 0.549 | 0.538 | 0.429 | 0.407 | 0.231 |
+| 1.5b_none_turn_k10_n100 | 27 | 0.033 | 0.033 | 0.033 | 0.022 | 0.022 |
+| 1.5b_oracle_turn_k10_n100 | 15 | 0.352 | 0.352 | 0.330 | 0.308 | 0.220 |
+| 1.5b_random_turn_k10_n100 | 24 | 0.055 | 0.044 | 0.055 | 0.044 | 0.044 |
+| 1.5b_recency_turn_k10_n100 | 22 | 0.066 | 0.066 | 0.066 | 0.066 | 0.055 |
+| 3b_hybrid_turn_k10_n100 | 17 | 0.319 | 0.308 | 0.286 | 0.275 | 0.209 |
+| 3b_none_turn_k10_n100 | 21 | 0.044 | 0.044 | 0.033 | 0.033 | 0.033 |
+| 3b_oracle_turn_k10_n100 | 23 | 0.418 | 0.385 | 0.352 | 0.341 | 0.253 |
+| 3b_random_turn_k10_n100 | 19 | 0.066 | 0.066 | 0.066 | 0.066 | 0.044 |
+| 3b_recency_turn_k10_n100 | 22 | 0.077 | 0.077 | 0.077 | 0.077 | 0.066 |
+| 7b_bm25_turn_k10_n100 | 30 | 0.418 | 0.407 | 0.374 | 0.363 | 0.231 |
+| 7b_hybrid_turn_k10_n100 | 24 | 0.473 | 0.451 | 0.374 | 0.363 | 0.253 |
+| 7b_none_turn_k10_n100 | 25 | 0.055 | 0.055 | 0.044 | 0.044 | 0.022 |
+| 7b_oracle_turn_k10_n100 | 28 | 0.604 | 0.571 | 0.516 | 0.429 | 0.286 |
+| 7b_random_turn_k10_n100 | 23 | 0.066 | 0.066 | 0.066 | 0.077 | 0.066 |
+| 7b_recency_turn_k10_n100 | 22 | 0.088 | 0.088 | 0.088 | 0.099 | 0.077 |
+| 14b_hybrid_turn_k10_n100 | 32 | 0.593 | 0.571 | 0.462 | 0.396 | 0.242 |
+| 14b_none_turn_k10_n100 | 34 | 0.044 | 0.044 | 0.044 | 0.044 | 0.011 |
+| 14b_oracle_turn_k10_n100 | 29 | 0.582 | 0.571 | 0.451 | 0.418 | 0.242 |
+| 14b_random_turn_k10_n100 | 36 | 0.044 | 0.044 | 0.044 | 0.011 | 0.011 |
+| 14b_recency_turn_k10_n100 | 33 | 0.099 | 0.099 | 0.110 | 0.066 | 0.044 |
 
 ### End-to-end accuracy by question type
 
@@ -164,15 +188,45 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 | single-session-user | 14 | 0.786 |
 | temporal-reasoning | 25 | 0.160 |
 
+**qwen2.5:1.5b-instruct / none / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.062 |
+| multi-session | 26 | 0.038 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.040 |
+
 **qwen2.5:1.5b-instruct / oracle / turn**
 
 | question type | n | accuracy |
 |---|---|---|
 | knowledge-update | 16 | 0.375 |
-| multi-session | 26 | 0.269 |
+| multi-session | 26 | 0.308 |
 | single-session-assistant | 10 | 0.500 |
 | single-session-user | 14 | 0.500 |
 | temporal-reasoning | 25 | 0.240 |
+
+**qwen2.5:1.5b-instruct / random / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.062 |
+| multi-session | 26 | 0.038 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.120 |
+
+**qwen2.5:1.5b-instruct / recency / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.188 |
+| multi-session | 26 | 0.038 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.080 |
 
 **qwen2.5:3b-instruct / hybrid / turn**
 
@@ -180,9 +234,19 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 |---|---|---|
 | knowledge-update | 16 | 0.438 |
 | multi-session | 26 | 0.269 |
-| single-session-assistant | 10 | 0.500 |
+| single-session-assistant | 10 | 0.600 |
 | single-session-user | 14 | 0.429 |
 | temporal-reasoning | 25 | 0.120 |
+
+**qwen2.5:3b-instruct / none / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.000 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.040 |
 
 **qwen2.5:3b-instruct / oracle / turn**
 
@@ -190,17 +254,37 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 |---|---|---|
 | knowledge-update | 16 | 0.500 |
 | multi-session | 26 | 0.346 |
-| single-session-assistant | 10 | 0.500 |
+| single-session-assistant | 10 | 0.600 |
 | single-session-user | 14 | 0.500 |
 | temporal-reasoning | 25 | 0.320 |
+
+**qwen2.5:3b-instruct / random / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.062 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.100 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.040 |
+
+**qwen2.5:3b-instruct / recency / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.188 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.040 |
 
 **qwen2.5:7b-instruct / bm25 / turn**
 
 | question type | n | accuracy |
 |---|---|---|
-| knowledge-update | 16 | 0.562 |
+| knowledge-update | 16 | 0.625 |
 | multi-session | 26 | 0.231 |
-| single-session-assistant | 10 | 0.500 |
+| single-session-assistant | 10 | 0.600 |
 | single-session-user | 14 | 0.714 |
 | temporal-reasoning | 25 | 0.240 |
 
@@ -218,21 +302,51 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 
 | question type | n | accuracy |
 |---|---|---|
-| knowledge-update | 16 | 0.438 |
+| knowledge-update | 16 | 0.500 |
 | multi-session | 26 | 0.346 |
-| single-session-assistant | 10 | 0.600 |
-| single-session-user | 14 | 0.714 |
+| single-session-assistant | 10 | 0.700 |
+| single-session-user | 14 | 0.786 |
 | temporal-reasoning | 25 | 0.320 |
+
+**qwen2.5:7b-instruct / none / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.000 |
+| multi-session | 26 | 0.077 |
+| single-session-assistant | 10 | 0.100 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.080 |
 
 **qwen2.5:7b-instruct / oracle / turn**
 
 | question type | n | accuracy |
 |---|---|---|
-| knowledge-update | 16 | 0.688 |
+| knowledge-update | 16 | 0.750 |
 | multi-session | 26 | 0.538 |
-| single-session-assistant | 10 | 0.700 |
+| single-session-assistant | 10 | 0.800 |
 | single-session-user | 14 | 0.571 |
 | temporal-reasoning | 25 | 0.480 |
+
+**qwen2.5:7b-instruct / random / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.062 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.071 |
+| temporal-reasoning | 25 | 0.040 |
+
+**qwen2.5:7b-instruct / recency / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.250 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.040 |
 
 **qwen2.5:14b-instruct / hybrid / session**
 
@@ -248,21 +362,51 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 
 | question type | n | accuracy |
 |---|---|---|
-| knowledge-update | 16 | 0.688 |
+| knowledge-update | 16 | 0.750 |
 | multi-session | 26 | 0.423 |
 | single-session-assistant | 10 | 0.700 |
 | single-session-user | 14 | 0.786 |
 | temporal-reasoning | 25 | 0.520 |
 
+**qwen2.5:14b-instruct / none / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.000 |
+| multi-session | 26 | 0.038 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.120 |
+
 **qwen2.5:14b-instruct / oracle / turn**
 
 | question type | n | accuracy |
 |---|---|---|
-| knowledge-update | 16 | 0.750 |
+| knowledge-update | 16 | 0.812 |
 | multi-session | 26 | 0.462 |
-| single-session-assistant | 10 | 0.500 |
+| single-session-assistant | 10 | 0.600 |
 | single-session-user | 14 | 0.643 |
 | temporal-reasoning | 25 | 0.480 |
+
+**qwen2.5:14b-instruct / random / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.062 |
+| multi-session | 26 | 0.038 |
+| single-session-assistant | 10 | 0.100 |
+| single-session-user | 14 | 0.071 |
+| temporal-reasoning | 25 | 0.000 |
+
+**qwen2.5:14b-instruct / recency / turn**
+
+| question type | n | accuracy |
+|---|---|---|
+| knowledge-update | 16 | 0.250 |
+| multi-session | 26 | 0.115 |
+| single-session-assistant | 10 | 0.000 |
+| single-session-user | 14 | 0.000 |
+| temporal-reasoning | 25 | 0.080 |
 
 ## Retrieval quality by question type
 

@@ -49,6 +49,38 @@ _NUMBER_WORDS = {
 _MONTHS_FULL = {"january", "february", "march", "april", "may", "june", "july",
                 "august", "september", "october", "november", "december"}
 
+# Sibilant stems take "-es" rather than "-s": inch/inches, box/boxes, dish/dishes.
+# A bare "s" is deliberately NOT in this list. It would read "cases" as "cas"+"es"
+# and fold it to "cas" while gold "case" stays "case" -- turning a match into a
+# miss. The audit caught exactly that on gold "Receiving the new phone case".
+# Doubled "ss" is safe and is what makes classes/class and glasses/glass work.
+_SIBILANT = ("ss", "x", "z", "ch", "sh")
+
+
+def _singularise(tok: str) -> str:
+    """Strip a regular plural "-s", conservatively.
+
+    Measured defect: gold "Friday" scored a prediction of "Fridays" wrong, and
+    gold "55-inch" scored "55 inches" wrong. Both are the same answer.
+
+    Everything here is a guard against a *collision*, because two different
+    words folding together is a false accept and this grader's whole claim is a
+    0.000 false-accept rate. Short tokens are exempt ("was" -> "wa", "bus" ->
+    "bu"), as are the "-ss"/"-us"/"-is" endings that are not plurals at all
+    (class, campus, analysis).
+
+    There is deliberately no "-ies" -> "-y" rule. It is correct for city/cities
+    but wrong for movie/movies, which it would fold to "movy" while the singular
+    stays "movie" -- turning a match into a miss. Plain "-s" stripping handles
+    movies correctly and merely fails to help cities, and a miss is the safe
+    direction to err.
+    """
+    if len(tok) <= 3 or not tok.endswith("s") or tok.endswith(("ss", "us", "is")):
+        return tok
+    if tok.endswith("es") and tok[:-2].endswith(_SIBILANT):
+        return tok[:-2]
+    return tok[:-1]
+
 # A grader that accepts "I don't know" as correct inflates every score, so
 # refusals are detected explicitly rather than left to fall through.
 _REFUSAL_PATTERNS = [
@@ -90,6 +122,7 @@ def normalize_tokens(text: str) -> list[str]:
     Punctuation removal collapses "$800" -> "800" and "10%" -> "10" so a model
     that writes "800 dollars" still matches. Ordinal stripping makes
     "February 14th" match "February 14", which is otherwise a spurious miss.
+    Number is stripped last, so "Fridays" matches gold "Friday".
     """
     text = str(text).lower().translate(_PUNCT)
     out = []
@@ -99,6 +132,8 @@ def normalize_tokens(text: str) -> list[str]:
         # Months collapse to their 3-letter prefix, so "february" == "feb".
         if tok in _MONTHS_FULL or tok == "sept":
             tok = tok[:3]
+        else:
+            tok = _singularise(tok)
         if tok and tok not in _ARTICLES:
             out.append(tok)
     return out
@@ -152,6 +187,15 @@ def _contains_span(pred: str, gold: str) -> bool:
     return any(p[i:i + len(g)] == g for i in range(len(p) - len(g) + 1))
 
 
+# Questions whose answer IS the ordering. Set comparison is invalid for these:
+# it accepts the right items in the wrong sequence, which is the wrong answer.
+# Kept narrow on purpose -- "first", "before" and "after" appear in all sorts of
+# questions, and a false trigger here only falls back to strict span matching,
+# whereas a missed trigger is a false accept.
+_ORDER_QUESTION = re.compile(
+    r"\b(order|sequence|chronological|earliest|latest)\b", re.I)
+
+
 def _set_items(gold: str) -> list[str]:
     """Items of an enumerated gold answer, or [] if it is prose.
 
@@ -166,7 +210,7 @@ def _set_items(gold: str) -> list[str]:
     return items
 
 
-def contains_answer(pred: str, gold: str) -> bool:
+def contains_answer(pred: str, gold: str, question: str | None = None) -> bool:
     """True if pred contains any answer the gold key accepts.
 
     Token-sequence containment rather than substring containment: a raw
@@ -178,9 +222,20 @@ def contains_answer(pred: str, gold: str) -> bool:
     processes demanded one specific ordering, so naming all four in any other
     order scored wrong. ALL items must appear, so this cannot accept a partial
     answer -- the audit's false-accept rate stays at zero.
+
+    `question` gates that set comparison off when the question asks for an
+    ordering, and omitting it keeps the old, more permissive behaviour. Passing
+    it matters: on "What is the order of airlines I flew with from earliest to
+    latest", gold "JetBlue, Delta, United, American Airlines", a 14B model
+    answered "JetBlue, Delta, American Airlines, and then United" -- the right
+    four airlines in the wrong order, which is simply the wrong answer -- and
+    set comparison accepted it. Found by re-grading stored predictions, not by
+    the constructed audit, which had no reordering case for an ordered gold.
     """
     if any(_contains_span(pred, alt) for alt in gold_alternatives(gold)):
         return True
+    if question is not None and _ORDER_QUESTION.search(question):
+        return False
     items = _set_items(gold)
     return bool(items) and all(_contains_span(pred, it) for it in items)
 
@@ -207,11 +262,16 @@ def is_extractive(gold: str) -> bool:
     return len(normalize_tokens(gold)) <= MAX_EXTRACTIVE_GOLD_TOKENS
 
 
-def grade(pred: str, gold: str, is_abstention: bool = False) -> bool | None:
+def grade(pred: str, gold: str, is_abstention: bool = False,
+          question: str | None = None) -> bool | None:
     """True=correct, False=incorrect, None=not deterministically gradable.
 
     None is a real answer, not a failure. Scoring an abstractive question with
     string matching produces a number that looks like accuracy and isn't.
+
+    `question` is optional so existing callers keep working, but callers that
+    have it should pass it -- see `contains_answer` for the false accept it
+    prevents on ordering questions.
     """
     if is_abstention or gold_signals_abstention(gold):
         # The task is to decline; the gold string is not the target.
@@ -220,4 +280,4 @@ def grade(pred: str, gold: str, is_abstention: bool = False) -> bool | None:
         return None
     if is_refusal(pred):
         return False
-    return contains_answer(pred, gold)
+    return contains_answer(pred, gold, question)

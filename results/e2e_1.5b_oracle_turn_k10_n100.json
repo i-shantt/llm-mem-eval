@@ -20,11 +20,11 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.34065934065934067,
+  "accuracy": 0.3516483516483517,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
-  "token_f1_mean": 0.18927844042442982,
+  "token_f1_mean": 0.1932655207937582,
   "accuracy_by_question_type": {
     "knowledge-update": {
       "n": 16,
@@ -33,8 +33,8 @@
     },
     "multi-session": {
       "n": 26,
-      "correct": 7,
-      "accuracy": 0.2692307692307692
+      "correct": 8,
+      "accuracy": 0.3076923076923077
     },
     "single-session-assistant": {
       "n": 10,
@@ -1447,7 +1447,7 @@
       "pred": "You have gotten 3 lunches from your chicken fajitas and a batch of lentil soup that lasted for 5 lunches, so in total you have had 8 meal meals from these two sources.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 1344,

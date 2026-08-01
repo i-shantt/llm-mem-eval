@@ -210,7 +210,11 @@ def e2e_section(arms: list[dict]) -> None:
               f"{a['token_f1_mean']:.3f} | {a['n_graded']} | "
               f"{a['n_not_gradable']} | {a['read_tokens_per_query']:.0f} | "
               f"{a.get('prompt_tokens_max','--')} | {c.get('num_ctx','--')} | "
-              f"{a.get('n_prompts_truncated', 0)}"
+              # `n_prompts_truncated` is only written when the backend itself
+              # noticed; `n_hit_token_cap` is the per-record flag and is the one
+              # that is always present. Reading only the former printed 0 for
+              # every arm while six of them had actually hit the cap.
+              f"{a.get('n_prompts_truncated', 0) or a.get('n_hit_token_cap', 0)}"
               f"{' | **INVALID**' if clamped else ' | ok'} |")
 
     for a, tok in suspect:

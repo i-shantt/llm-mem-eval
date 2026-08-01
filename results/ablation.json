@@ -63,20 +63,20 @@
   {
     "model": "ollama:qwen2.5:1.5b-instruct",
     "system": "e2e_1.5b_oracle_turn_k10_n100",
-    "system_accuracy": 0.34065934065934067,
+    "system_accuracy": 0.3516483516483517,
     "best_control": "recency",
     "control_accuracy": 0.06593406593406594,
-    "lift": 0.27472527472527475,
-    "ci_lo": 0.17582417582417584,
-    "ci_hi": 0.37362637362637363,
-    "p_value": 4.172325134277344e-07,
-    "attributable_fraction": 0.8064516129032259,
+    "lift": 0.2857142857142857,
+    "ci_lo": 0.18681318681318682,
+    "ci_hi": 0.38461538461538464,
+    "p_value": 2.1606683731079102e-07,
+    "attributable_fraction": 0.8124999999999999,
     "contingency": {
       "n": 91,
       "both": 5,
-      "system_only": 26,
+      "system_only": 27,
       "control_only": 1,
-      "neither": 59
+      "neither": 58
     },
     "per_type": {
       "knowledge-update": {
@@ -97,11 +97,11 @@
       },
       "multi-session": {
         "n": 26,
-        "system": 7,
+        "system": 8,
         "control": 1,
-        "system_acc": 0.2692307692307692,
+        "system_acc": 0.3076923076923077,
         "control_acc": 0.038461538461538464,
-        "lift": 0.23076923076923075
+        "lift": 0.2692307692307693
       },
       "temporal-reasoning": {
         "n": 25,
@@ -124,29 +124,29 @@
   {
     "model": "ollama:qwen2.5:14b-instruct",
     "system": "e2e_14b_hybrid_turn_k10_n100",
-    "system_accuracy": 0.5824175824175825,
+    "system_accuracy": 0.5934065934065934,
     "best_control": "recency",
     "control_accuracy": 0.0989010989010989,
-    "lift": 0.4835164835164835,
-    "ci_lo": 0.37362637362637363,
-    "ci_hi": 0.5934065934065934,
-    "p_value": 8.363087999896379e-12,
-    "attributable_fraction": 0.830188679245283,
+    "lift": 0.4945054945054945,
+    "ci_lo": 0.38461538461538464,
+    "ci_hi": 0.6043956043956044,
+    "p_value": 4.355626970209414e-12,
+    "attributable_fraction": 0.8333333333333334,
     "contingency": {
       "n": 91,
       "both": 7,
-      "system_only": 46,
+      "system_only": 47,
       "control_only": 2,
-      "neither": 36
+      "neither": 35
     },
     "per_type": {
       "knowledge-update": {
         "n": 16,
-        "system": 11,
+        "system": 12,
         "control": 4,
-        "system_acc": 0.6875,
+        "system_acc": 0.75,
         "control_acc": 0.25,
-        "lift": 0.4375
+        "lift": 0.5
       },
       "single-session-user": {
         "n": 14,
@@ -185,29 +185,29 @@
   {
     "model": "ollama:qwen2.5:14b-instruct",
     "system": "e2e_14b_oracle_turn_k10_n100",
-    "system_accuracy": 0.5494505494505495,
+    "system_accuracy": 0.5714285714285714,
     "best_control": "recency",
     "control_accuracy": 0.0989010989010989,
-    "lift": 0.45054945054945056,
-    "ci_lo": 0.34065934065934067,
-    "ci_hi": 0.5494505494505495,
-    "p_value": 1.000444171950221e-11,
-    "attributable_fraction": 0.82,
+    "lift": 0.4725274725274725,
+    "ci_lo": 0.3626373626373626,
+    "ci_hi": 0.5824175824175825,
+    "p_value": 2.6147972675971687e-12,
+    "attributable_fraction": 0.826923076923077,
     "contingency": {
       "n": 91,
       "both": 8,
-      "system_only": 42,
+      "system_only": 44,
       "control_only": 1,
-      "neither": 40
+      "neither": 38
     },
     "per_type": {
       "knowledge-update": {
         "n": 16,
-        "system": 12,
+        "system": 13,
         "control": 4,
-        "system_acc": 0.75,
+        "system_acc": 0.8125,
         "control_acc": 0.25,
-        "lift": 0.5
+        "lift": 0.5625
       },
       "single-session-user": {
         "n": 14,
@@ -235,31 +235,31 @@
       },
       "single-session-assistant": {
         "n": 10,
-        "system": 5,
+        "system": 6,
         "control": 0,
-        "system_acc": 0.5,
+        "system_acc": 0.6,
         "control_acc": 0.0,
-        "lift": 0.5
+        "lift": 0.6
       }
     }
   },
   {
     "model": "ollama:qwen2.5:3b-instruct",
     "system": "e2e_3b_oracle_turn_k10_n100",
-    "system_accuracy": 0.4065934065934066,
+    "system_accuracy": 0.4175824175824176,
     "best_control": "recency",
     "control_accuracy": 0.07692307692307693,
-    "lift": 0.32967032967032966,
-    "ci_lo": 0.23076923076923078,
-    "ci_hi": 0.42857142857142855,
-    "p_value": 1.862645149230957e-09,
-    "attributable_fraction": 0.8108108108108107,
+    "lift": 0.34065934065934067,
+    "ci_lo": 0.24175824175824176,
+    "ci_hi": 0.43956043956043955,
+    "p_value": 9.313225746154785e-10,
+    "attributable_fraction": 0.8157894736842105,
     "contingency": {
       "n": 91,
       "both": 7,
-      "system_only": 30,
+      "system_only": 31,
       "control_only": 0,
-      "neither": 54
+      "neither": 53
     },
     "per_type": {
       "knowledge-update": {
@@ -296,31 +296,31 @@
       },
       "single-session-assistant": {
         "n": 10,
-        "system": 5,
+        "system": 6,
         "control": 0,
-        "system_acc": 0.5,
+        "system_acc": 0.6,
         "control_acc": 0.0,
-        "lift": 0.5
+        "lift": 0.6
       }
     }
   },
   {
     "model": "ollama:qwen2.5:3b-instruct",
     "system": "e2e_3b_hybrid_turn_k10_n100",
-    "system_accuracy": 0.3076923076923077,
+    "system_accuracy": 0.31868131868131866,
     "best_control": "recency",
     "control_accuracy": 0.07692307692307693,
-    "lift": 0.23076923076923078,
-    "ci_lo": 0.14285714285714285,
-    "ci_hi": 0.32967032967032966,
-    "p_value": 5.7220458984375e-06,
-    "attributable_fraction": 0.75,
+    "lift": 0.24175824175824176,
+    "ci_lo": 0.15384615384615385,
+    "ci_hi": 0.34065934065934067,
+    "p_value": 2.9802322387695312e-06,
+    "attributable_fraction": 0.7586206896551725,
     "contingency": {
       "n": 91,
       "both": 6,
-      "system_only": 22,
+      "system_only": 23,
       "control_only": 1,
-      "neither": 62
+      "neither": 61
     },
     "per_type": {
       "knowledge-update": {
@@ -357,40 +357,40 @@
       },
       "single-session-assistant": {
         "n": 10,
-        "system": 5,
+        "system": 6,
         "control": 0,
-        "system_acc": 0.5,
+        "system_acc": 0.6,
         "control_acc": 0.0,
-        "lift": 0.5
+        "lift": 0.6
       }
     }
   },
   {
     "model": "ollama:qwen2.5:7b-instruct",
     "system": "e2e_7b_oracle_turn_k10_n100",
-    "system_accuracy": 0.5714285714285714,
+    "system_accuracy": 0.5934065934065934,
     "best_control": "recency",
     "control_accuracy": 0.08791208791208792,
-    "lift": 0.4835164835164835,
-    "ci_lo": 0.38461538461538464,
-    "ci_hi": 0.5824175824175825,
-    "p_value": 1.1368683772161603e-13,
-    "attributable_fraction": 0.8461538461538463,
+    "lift": 0.5054945054945055,
+    "ci_lo": 0.4065934065934066,
+    "ci_hi": 0.6043956043956044,
+    "p_value": 2.842170943040401e-14,
+    "attributable_fraction": 0.8518518518518519,
     "contingency": {
       "n": 91,
       "both": 8,
-      "system_only": 44,
+      "system_only": 46,
       "control_only": 0,
-      "neither": 39
+      "neither": 37
     },
     "per_type": {
       "knowledge-update": {
         "n": 16,
-        "system": 11,
+        "system": 12,
         "control": 4,
-        "system_acc": 0.6875,
+        "system_acc": 0.75,
         "control_acc": 0.25,
-        "lift": 0.4375
+        "lift": 0.5
       },
       "single-session-user": {
         "n": 14,
@@ -418,48 +418,48 @@
       },
       "single-session-assistant": {
         "n": 10,
-        "system": 7,
+        "system": 8,
         "control": 0,
-        "system_acc": 0.7,
+        "system_acc": 0.8,
         "control_acc": 0.0,
-        "lift": 0.7
+        "lift": 0.8
       }
     }
   },
   {
     "model": "ollama:qwen2.5:7b-instruct",
     "system": "e2e_7b_hybrid_turn_k10_n100",
-    "system_accuracy": 0.43956043956043955,
+    "system_accuracy": 0.4725274725274725,
     "best_control": "recency",
     "control_accuracy": 0.08791208791208792,
-    "lift": 0.3516483516483517,
-    "ci_lo": 0.24175824175824176,
-    "ci_hi": 0.46153846153846156,
-    "p_value": 6.677873898297548e-08,
-    "attributable_fraction": 0.8,
+    "lift": 0.38461538461538464,
+    "ci_lo": 0.27472527472527475,
+    "ci_hi": 0.4945054945054945,
+    "p_value": 1.0479197953827679e-08,
+    "attributable_fraction": 0.8139534883720931,
     "contingency": {
       "n": 91,
       "both": 5,
-      "system_only": 35,
+      "system_only": 38,
       "control_only": 3,
-      "neither": 48
+      "neither": 45
     },
     "per_type": {
       "knowledge-update": {
         "n": 16,
-        "system": 7,
+        "system": 8,
         "control": 4,
-        "system_acc": 0.4375,
+        "system_acc": 0.5,
         "control_acc": 0.25,
-        "lift": 0.1875
+        "lift": 0.25
       },
       "single-session-user": {
         "n": 14,
-        "system": 10,
+        "system": 11,
         "control": 0,
-        "system_acc": 0.7142857142857143,
+        "system_acc": 0.7857142857142857,
         "control_acc": 0.0,
-        "lift": 0.7142857142857143
+        "lift": 0.7857142857142857
       },
       "multi-session": {
         "n": 26,
@@ -479,40 +479,40 @@
       },
       "single-session-assistant": {
         "n": 10,
-        "system": 6,
+        "system": 7,
         "control": 0,
-        "system_acc": 0.6,
+        "system_acc": 0.7,
         "control_acc": 0.0,
-        "lift": 0.6
+        "lift": 0.7
       }
     }
   },
   {
     "model": "ollama:qwen2.5:7b-instruct",
     "system": "e2e_7b_bm25_turn_k10_n100",
-    "system_accuracy": 0.3956043956043956,
+    "system_accuracy": 0.4175824175824176,
     "best_control": "recency",
     "control_accuracy": 0.08791208791208792,
-    "lift": 0.3076923076923077,
-    "ci_lo": 0.2087912087912088,
-    "ci_hi": 0.4065934065934066,
-    "p_value": 5.774199962615967e-08,
-    "attributable_fraction": 0.7777777777777779,
+    "lift": 0.32967032967032966,
+    "ci_lo": 0.23076923076923078,
+    "ci_hi": 0.42857142857142855,
+    "p_value": 1.5366822481155396e-08,
+    "attributable_fraction": 0.7894736842105263,
     "contingency": {
       "n": 91,
       "both": 7,
-      "system_only": 29,
+      "system_only": 31,
       "control_only": 1,
-      "neither": 54
+      "neither": 52
     },
     "per_type": {
       "knowledge-update": {
         "n": 16,
-        "system": 9,
+        "system": 10,
         "control": 4,
-        "system_acc": 0.5625,
+        "system_acc": 0.625,
         "control_acc": 0.25,
-        "lift": 0.3125
+        "lift": 0.375
       },
       "single-session-user": {
         "n": 14,
@@ -540,11 +540,11 @@
       },
       "single-session-assistant": {
         "n": 10,
-        "system": 5,
+        "system": 6,
         "control": 0,
-        "system_acc": 0.5,
+        "system_acc": 0.6,
         "control_acc": 0.0,
-        "lift": 0.5
+        "lift": 0.6
       }
     }
   }

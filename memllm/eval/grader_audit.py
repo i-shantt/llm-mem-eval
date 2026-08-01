@@ -53,6 +53,8 @@ _NUM_WORDS = {
 _MONTHS = ["January", "February", "March", "April", "May", "June", "July",
            "August", "September", "October", "November", "December"]
 _UNIT_EXPANSIONS = [("$", "", " dollars"), ("%", "", " percent")]
+_WEEKDAYS = {"monday", "tuesday", "wednesday", "thursday", "friday",
+             "saturday", "sunday"}
 
 
 @dataclass
@@ -76,7 +78,7 @@ def _perturb_number(gold: str) -> str | None:
     return gold[:m.start()] + shifted + gold[m.end():]
 
 
-def _hard_positives(gold: str) -> list[tuple[str, str]]:
+def _hard_positives(gold: str, question: str = "") -> list[tuple[str, str]]:
     """Meaning-preserving rewrites of a gold answer, as (kind, text).
 
     Each is something a human grader accepts. Whether a string matcher accepts
@@ -104,6 +106,25 @@ def _hard_positives(gold: str) -> list[tuple[str, str]]:
     # Casing and stray punctuation: a grader that fails these is broken outright.
     out.append(("hard_case_punct", gold.upper() + " !!"))
 
+    # Number agreement. Found in real predictions, not by this audit: gold
+    # "Friday" against a prediction of "Fridays", and gold "55-inch" against
+    # "55 inches", were both scored wrong. The question fixes the referent, so
+    # the plural carries no extra meaning and a human accepts it.
+    # Only common count nouns qualify. Pluralising a proper noun ("Hawaiis",
+    # "Rosciolis") or a number word ("fours") is not a rewrite any human would
+    # accept, so scoring the grader against it would manufacture failures that
+    # say nothing about the grader. Weekdays are the one capitalised class that
+    # genuinely pluralises, and they are the case that started this.
+    tail = gold.rstrip(".!? ").split()
+    last = tail[-1] if tail else ""
+    eligible = (last.isalpha() and len(last) > 3 and not last.lower().endswith("s")
+                and last.lower() not in _NUM_WORDS.values()
+                and (last.islower() or last.lower() in _WEEKDAYS))
+    if eligible:
+        plural = last + ("es" if last.lower().endswith(("ss", "x", "z", "ch", "sh"))
+                         else "s")
+        out.append(("hard_plural", " ".join(tail[:-1] + [plural])))
+
     # Set-valued answers listed in a different order. Added after inspecting
     # real predictions: a gold of "atmospheric distillation, fluid catalytic
     # cracking, alkylation, and hydrotreating" is a SET, but token-sequence
@@ -111,8 +132,13 @@ def _hard_positives(gold: str) -> list[tuple[str, str]]:
     # in any other order is scored wrong. Every rewrite above varies surface
     # form only; this is the first that varies structure, which is where a
     # containment grader is actually weak.
+    # ...unless the question asks for the ordering, in which case a reordering
+    # is not a rewrite at all -- it is a different, wrong answer. That case is
+    # built as a NEGATIVE in `build_audit_cases` instead.
+    from memllm.eval.grade import _ORDER_QUESTION
+
     items = _list_items(gold)
-    if len(items) >= 3:
+    if len(items) >= 3 and not _ORDER_QUESTION.search(question):
         rotated = items[1:] + items[:1]
         out.append(("hard_list_reorder",
                     ", ".join(rotated[:-1]) + ", and " + rotated[-1]))
@@ -138,7 +164,8 @@ def build_audit_cases(examples, seed: int = 0, per_type: int = 60) -> list[Audit
     own answer key, recombined so the correct verdict is known.
     """
     from memllm.eval.grade import (
-        gold_signals_abstention, grade, is_extractive, normalize_tokens,
+        _ORDER_QUESTION, gold_signals_abstention, grade, is_extractive,
+        normalize_tokens,
     )
 
     def known_wrong(pred: str, gold: str) -> bool:
@@ -182,8 +209,19 @@ def build_audit_cases(examples, seed: int = 0, per_type: int = 60) -> list[Audit
         add(ex, f"The answer is {gold}.", True, "sentence")
         # Hard: meaning preserved, surface form changed. This is where a string
         # matcher earns or loses its false-reject rate.
-        for kind, text in _hard_positives(gold):
+        for kind, text in _hard_positives(gold, ex.question):
             add(ex, text, True, kind)
+
+        # The same rotation, for a question whose answer IS the ordering, is a
+        # known-WRONG answer. This bucket exists because re-grading stored
+        # predictions caught a real false accept the audit had no case for:
+        # every list case here was a positive, so nothing tested that the
+        # grader can still say no to a list.
+        ordered = _list_items(gold)
+        if len(ordered) >= 3 and _ORDER_QUESTION.search(ex.question):
+            rotated = ordered[1:] + ordered[:1]
+            add(ex, ", ".join(rotated[:-1]) + ", and " + rotated[-1],
+                False, "reordered_ordered_list")
 
         # --- known-wrong answers a grader must reject ---
         pool = by_type.get(ex.question_type, [])
