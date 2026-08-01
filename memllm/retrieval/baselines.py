@@ -76,7 +76,44 @@ class RecencyRetriever:
             return [(u.unit_id, float(-i)) for i, u in enumerate(ordered[:k])]
 
 
+class NoMemoryRetriever:
+    """Retrieves nothing. The control every memory paper omits.
+
+    A memory system's headline accuracy is meaningless without it: some
+    LongMemEval questions are answerable from world knowledge or leak their own
+    answer in the phrasing, and that fraction is credited to memory by default.
+    Whatever this arm scores is the floor the real system has to beat before any
+    of its accuracy can be attributed to remembering anything.
+
+    Pair with `--no-memory-prompt closed_book` so the model is asked the
+    question directly. Handing the normal template an empty excerpt block
+    measures induced refusal, not prior knowledge, and understates the floor.
+    """
+
+    name = "none"
+
+    def index(
+        self,
+        units: list[MemoryUnit],
+        ledger: CostLedger,
+        cache_key: str | None = None,
+    ) -> None:
+        with ledger.timer("write"):
+            pass
+
+    def search(
+        self, query: str, k: int, ledger: CostLedger,
+        question_date: str | None = None,
+    ) -> list[Hit]:
+        with ledger.timer("read"):
+            return []
+
+
 class RandomRetriever:
+    """Matched-budget noise. Separates 'memory helped' from 'more tokens
+    helped': it spends the same read budget as the real retriever on units
+    chosen without reference to the query."""
+
     name = "random"
 
     def __init__(self, seed: int = 0) -> None:

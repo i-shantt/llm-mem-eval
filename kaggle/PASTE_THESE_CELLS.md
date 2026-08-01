@@ -233,6 +233,42 @@ for size in LADDER[-2:]:
     arm(size, "hybrid", "session", k="1")
 ```
 
+## Cell 4b — the control arms (~45 min) — **run this even if you skip everything else**
+
+Without these, every accuracy in Cell 4 is an upper bound on what memory
+contributed, not a measurement of it. Some LongMemEval questions are answerable
+from world knowledge, and some leak their answer in the phrasing; both get
+credited to the retriever by default.
+
+Three controls, because they fail differently:
+
+- `none` — no memory at all, question asked directly. Measures prior knowledge.
+- `random` — same k, same read-token budget, units chosen without the query.
+  Separates "memory helped" from "more tokens helped".
+- `recency` — just keep the most recent k turns. The cheapest thing that works,
+  and the bar a real retriever has to clear to justify its index.
+
+`none` is fast (prompts are ~100 tokens). `random` and `recency` cost the same
+as a hybrid arm but skip the embedding model entirely.
+
+```python
+# Controls for the two rungs that matter most. Add "3b"/"1.5b" if time allows.
+for size in ["7b", "14b"]:
+    for retriever in ["none", "random", "recency"]:
+        arm(size, retriever, "turn")
+```
+
+## Cell 4c — memory-lift attribution (~1 min)
+
+```python
+!python scripts/run_ablation.py --results results
+```
+
+Read the `attrib` column: the share of each system's headline accuracy that
+survives its strongest control. A `*` means the lift is significant at p<0.05
+(exact McNemar) with a bootstrap CI excluding zero. A system whose lift is not
+significant has not been shown to be doing anything.
+
 ## Cell 5 — summary, truncation audit, and download (~2 min)
 
 ```python

@@ -46,6 +46,17 @@ not contain the answer, say you don't know.
 Question: {question}
 Answer concisely."""
 
+# The no-memory control has to be asked fairly. Feeding ANSWER_PROMPT an empty
+# excerpt block measures how readily the model refuses when told to ground in
+# nothing, which is not the same as what it knows -- and it biases the control
+# down, inflating whatever lift the real memory system appears to have.
+CLOSED_BOOK_PROMPT = """Today's date is {date}.
+
+Answer the user's question. If you do not know the answer, say you don't know.
+
+Question: {question}
+Answer concisely."""
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -71,6 +82,12 @@ def main() -> None:
                         "hardware needs more than the 300s default")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tag", default=None)
+    ap.add_argument("--no-memory-prompt", default="closed_book",
+                   choices=["closed_book", "empty_context"],
+                   help="how to prompt when retrieval returns nothing. "
+                        "closed_book asks the question directly and measures "
+                        "prior knowledge; empty_context keeps the grounding "
+                        "template and measures induced refusal instead")
     args = ap.parse_args()
 
     # Reuse the retrieval eval's builder so both paths stay identical.
@@ -113,9 +130,14 @@ def main() -> None:
             f"[{by_id[uid].session_date}] {by_id[uid].text}"
             for uid, _ in hits if uid in by_id
         )
-        prompt = ANSWER_PROMPT.format(
-            context=context, date=ex.question_date, question=ex.question
-        )
+        if not context and args.no_memory_prompt == "closed_book":
+            prompt = CLOSED_BOOK_PROMPT.format(
+                date=ex.question_date, question=ex.question
+            )
+        else:
+            prompt = ANSWER_PROMPT.format(
+                context=context, date=ex.question_date, question=ex.question
+            )
         gen = answerer.generate(prompt)
         ledger.add_llm("read", gen.prompt_tokens, gen.completion_tokens)
 

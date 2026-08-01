@@ -44,13 +44,14 @@ def build_retriever(name: str, args, cache=None):
             recency_weight=args.recency_weight,
             cache=cache,
         )
-    if name in ("oracle", "recency", "random"):
+    if name in ("oracle", "recency", "random", "none"):
         from memllm.retrieval import baselines
 
         cls = {
             "oracle": baselines.OracleRetriever,
             "recency": baselines.RecencyRetriever,
             "random": baselines.RandomRetriever,
+            "none": baselines.NoMemoryRetriever,
         }[name]
         return cls()
     raise ValueError(f"unknown retriever: {name}")
