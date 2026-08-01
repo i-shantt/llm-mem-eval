@@ -89,7 +89,13 @@ _REFUSAL_PATTERNS = [
     r"\bno\s+(?:information|mention|record|reference|details?)\b",
     r"\bnot\s+(?:mentioned|specified|provided|discussed|stated|available|included)\b",
     r"\bis(?:n't| not)\s+(?:mentioned|specified|provided|discussed|stated)\b",
-    r"\bdoes(?:n't| not)\s+(?:contain|mention|specify|say|include)\b",
+    # do/does, both contracted and not. Matching only "does not contain" left
+    # "the excerpts do not contain information" undetected, so a correct
+    # refusal on an abstention question was scored wrong -- and because the
+    # phrasing varies between arms, that showed up as a fake +1 for whichever
+    # arm happened to word it differently. Found by reading the questions a
+    # conditioner appeared to fix.
+    r"\bdo(?:es)?(?:n't| not)\s+(?:contain|mention|specify|say|include)\b",
     r"\bwas(?:n't| not)\s+(?:mentioned|discussed|specified)\b",
     r"\bnever\s+(?:mentioned|discussed|stated)\b",
     r"\bno\s+such\s+\w+\b",

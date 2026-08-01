@@ -20,7 +20,7 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.5714285714285714,
+  "accuracy": 0.5604395604395604,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
@@ -43,8 +43,8 @@
     },
     "single-session-user": {
       "n": 14,
-      "correct": 9,
-      "accuracy": 0.6428571428571429
+      "correct": 8,
+      "accuracy": 0.5714285714285714
     },
     "temporal-reasoning": {
       "n": 25,
@@ -1207,7 +1207,7 @@
       "pred": "The provided conversation excerpts do not mention your dog's breed directly. However, earlier in the conversation, you mentioned getting a new collar for Max, who is described as a Golden Retriever. Therefore, based on that information, your dog Max is a Golden Retriever.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": true,
+      "deterministic": false,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 3514,

@@ -2,18 +2,18 @@
   "n_examples": 500,
   "graders": {
     "deterministic": {
-      "n_cases": 3136,
-      "n_graded": 3136,
+      "n_cases": 3166,
+      "n_graded": 3166,
       "n_abstained": 0,
-      "accuracy": 0.9993622448979592,
+      "accuracy": 0.9993682880606444,
       "false_accept_rate": 0.0,
-      "false_reject_rate": 0.0010899182561307902,
+      "false_reject_rate": 0.0010723860589812334,
       "false_reject_rate_hard": 0.0031496062992125984,
       "false_accept_note": "known-wrong answers marked CORRECT; the LoCoMo audit measured up to 0.63 for its judge",
       "by_kind": {
         "correct_abstention": {
-          "n": 120,
-          "correct": 120,
+          "n": 150,
+          "correct": 150,
           "none": 0,
           "accuracy": 1.0
         },

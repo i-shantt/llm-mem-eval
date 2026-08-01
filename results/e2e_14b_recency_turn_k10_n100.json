@@ -21,7 +21,7 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.0989010989010989,
+  "accuracy": 0.08791208791208792,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
@@ -49,8 +49,8 @@
     },
     "temporal-reasoning": {
       "n": 25,
-      "correct": 2,
-      "accuracy": 0.08
+      "correct": 1,
+      "accuracy": 0.04
     }
   },
   "cost_total": {
@@ -233,7 +233,7 @@
       "pred": "I don't have information about which book you finished reading first between \"The Hate U Give\" and \"The Nightingale\". The excerpts provided do not contain this information.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": true,
+      "deterministic": false,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 1468,

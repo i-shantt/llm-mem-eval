@@ -33,8 +33,8 @@
     },
     "multi-session": {
       "n": 26,
-      "correct": 0,
-      "accuracy": 0.0
+      "correct": 1,
+      "accuracy": 0.038461538461538464
     },
     "single-session-assistant": {
       "n": 10,
@@ -48,8 +48,8 @@
     },
     "temporal-reasoning": {
       "n": 25,
-      "correct": 2,
-      "accuracy": 0.08
+      "correct": 1,
+      "accuracy": 0.04
     }
   },
   "cost_total": {
@@ -232,7 +232,7 @@
       "pred": "I don't have information about which book you finished reading first between \"The Hate U Give\" and \"The Nightingale.\" The provided excerpts do not contain this information.",
       "is_abstention": false,
       "extractive": true,
-      "deterministic": true,
+      "deterministic": false,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 4098,
@@ -292,7 +292,7 @@
       "pred": "I don't have information about the delivery time of your iPad case. The provided excerpts do not mention any details about purchasing or receiving an iPad case. If you provide more specific information, I can help you with a more accurate answer.",
       "is_abstention": true,
       "extractive": true,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 4098,

@@ -97,7 +97,7 @@ wrong.
 rebuilds the LoCoMo audit's method as a script: take a gold answer, substitute a
 different question's gold, perturb its numbers, replace it with a refusal — each
 result's correct verdict is known *by construction*, so no annotation is needed.
-Current numbers over 3,136 constructed cases:
+Current numbers over 3,166 constructed cases:
 
 | | rate |
 |---|---|
@@ -165,7 +165,7 @@ uninformative for that question shape.
 
 This is exactly the limitation the constructed audit is documented as unable to
 find: substituted and perturbed golds are *easy* negatives, and this is a hard
-one. The 0.000 false-accept rate over 3,136 constructed cases is still true and
+one. The 0.000 false-accept rate over 3,166 constructed cases is still true and
 still worth measuring. It just is not sufficient, which is why this repo labels
 real disagreements as well — and reports what that found rather than only the
 number that looks good.
@@ -199,7 +199,7 @@ judge). Full tables in [RESULTS.md](RESULTS.md).
 | 1.5B | 0.352 | 0.352 | — |
 | 3B | **0.418** | 0.319 | — |
 | 7B | **0.593** | 0.473 | 0.418 |
-| 14B | 0.571 | **0.593** | — |
+| 14B | 0.560 | **0.593** | — |
 
 Three findings. Two of them cost this repo a claim it had already made, which
 is the more useful half.
@@ -216,10 +216,10 @@ beats random but loses to "keep the last 10 turns" has shown nothing.
 
 | model | closed book | best control | hybrid | lift | 95% CI | attributable |
 |---|---|---|---|---|---|---|
-| 1.5B | 0.033 | 0.066 | 0.352 | +0.286 | [+0.187, +0.385] | 81% |
+| 1.5B | 0.033 | 0.077 | 0.352 | +0.275 | [+0.165, +0.385] | 78% |
 | 3B | 0.044 | 0.077 | 0.319 | +0.242 | [+0.154, +0.341] | 76% |
 | 7B | 0.055 | 0.088 | 0.473 | +0.385 | [+0.275, +0.495] | 81% |
-| 14B | 0.044 | 0.099 | 0.593 | +0.495 | [+0.385, +0.604] | 83% |
+| 14B | 0.044 | 0.088 | 0.593 | +0.505 | [+0.396, +0.615] | 85% |
 
 Every arm is significant at p < 0.0001 (exact McNemar on discordant pairs,
 paired bootstrap CI). **76–85% of every headline accuracy in this repo survives
@@ -240,21 +240,29 @@ Lift is not uniform across question types, and the gradient is the useful part:
 |---|---|---|---|---|
 | single-session-user | +0.786 | +0.429 | +0.786 | +0.786 |
 | single-session-assistant | +0.500 | +0.600 | +0.700 | +0.700 |
-| knowledge-update | +0.250 | +0.250 | +0.250 | +0.500 |
-| multi-session | +0.154 | +0.154 | +0.231 | +0.308 |
-| temporal-reasoning | +0.080 | +0.080 | +0.280 | +0.440 |
+| knowledge-update | +0.375 | +0.250 | +0.250 | +0.500 |
+| multi-session | +0.077 | +0.154 | +0.231 | +0.308 |
+| temporal-reasoning | +0.040 | +0.080 | +0.280 | +0.480 |
 
 Pure lookup is saturated at 1.5B: `single-session-user` gains +0.786 from
 memory on the smallest model, and 10× the parameters adds nothing. Reasoning
-over retrieved evidence is the opposite — `temporal-reasoning` gains +0.080 at
-1.5B and 3B, where the model holds the dates and still cannot compare them, and
-+0.440 at 14B from the *same* retrieval.
+over retrieved evidence is the opposite — `temporal-reasoning` gains +0.040 at
+1.5B and +0.080 at 3B, where the model holds the dates and still cannot compare
+them, and +0.480 at 14B from the *same* retrieval.
 
 For a project about cost that is the actionable result: **memory quality has a
 per-question-type model-capacity threshold, and below it, better memory is
 wasted money.** Paying for a retriever that nails temporal evidence is worth
-5.5× more at 14B than at 3B. No memory paper reports this, because reporting it
-requires the control arms.
+**12× more at 14B than at 1.5B**. No memory paper reports this, because
+reporting it requires the control arms.
+
+A companion repo,
+[llm-memory-conditioning](https://github.com/i-shantt/llm-memory-conditioning),
+tests the converse and finds it holds: doing the date arithmetic for a 1.5B
+model at render time — deterministically, with no LLM call — buys **+0.110
+accuracy (p = 0.006)**, and buys a 7B model nothing. The threshold is real in
+both directions. Below it, better memory is wasted; below it is also exactly
+where cheap conditioning pays.
 
 `knowledge-update` is also where memory matters least in relative terms —
 `recency` alone scores 0.250, since a recently-updated fact is in the recent

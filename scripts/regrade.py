@@ -67,13 +67,15 @@ def regrade(payload: dict) -> tuple[dict, list[dict]]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", default="results")
+    ap.add_argument("--pattern", default="e2e_*.json",
+                    help="which arms to re-grade; companion repos use cond_*.json")
     ap.add_argument("--write", action="store_true",
                     help="apply the re-grade; default is a dry run")
     args = ap.parse_args()
 
-    files = sorted(Path(args.results).glob("e2e_*.json"))
+    files = sorted(Path(args.results).glob(args.pattern))
     if not files:
-        sys.exit(f"no e2e arms under {args.results}/")
+        sys.exit(f"no arms matching {args.pattern} under {args.results}/")
 
     all_changed: list[dict] = []
     moved = 0

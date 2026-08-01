@@ -21,7 +21,7 @@
   },
   "n_examples": 100,
   "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
-  "accuracy": 0.04395604395604396,
+  "accuracy": 0.054945054945054944,
   "n_graded": 91,
   "n_not_gradable": 9,
   "not_gradable_note": "abstractive gold answers with no checkable surface form; excluded rather than scored as wrong",
@@ -49,8 +49,8 @@
     },
     "temporal-reasoning": {
       "n": 25,
-      "correct": 0,
-      "accuracy": 0.0
+      "correct": 1,
+      "accuracy": 0.04
     }
   },
   "cost_total": {
@@ -743,7 +743,7 @@
       "pred": "I don't have information about how many days before you bought your iPad you attended the Holiday Market based on the provided conversation history. The excerpts do not contain this specific detail.",
       "is_abstention": true,
       "extractive": false,
-      "deterministic": false,
+      "deterministic": true,
       "judge": null,
       "raw_verdict": "",
       "prompt_tokens": 2859,

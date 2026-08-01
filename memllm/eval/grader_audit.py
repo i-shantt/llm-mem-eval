@@ -37,6 +37,10 @@ REFUSALS = [
     # Added after a real 1.5B output phrased it this way and was scored wrong;
     # kept here so the audit regression-tests the fix.
     "I don't have enough information to determine that.",
+    # Plural subject, so "do not contain" rather than "does not contain". The
+    # patterns matched only the singular, which scored a correct refusal on an
+    # abstention question as wrong.
+    "I'm sorry, but the excerpts provided do not contain information about that.",
 ]
 
 # Rewrites that preserve meaning but change surface form. These exist because
