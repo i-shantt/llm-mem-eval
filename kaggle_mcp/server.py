@@ -343,7 +343,9 @@ def kaggle_push_notebook(
     # Kaggle may have named the kernel from the title instead of the requested
     # slug. Report the ref it actually created, or every later poll fails with
     # a permission error that looks like broken auth.
-    effective = str(getattr(resp, "ref", "") or "").strip() or ref
+    # resp.ref comes back as "/owner/slug"; the leading slash would otherwise
+    # make it compare unequal to ref and produce a bogus rename NOTE.
+    effective = str(getattr(resp, "ref", "") or "").strip().lstrip("/") or ref
     if effective == ref and title and _slugify(title) != _slugify(slug):
         effective = _qualify(_slugify(title), api)
 
