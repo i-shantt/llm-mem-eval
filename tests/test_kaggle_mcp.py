@@ -146,6 +146,70 @@ def test_push_ref_normalises_to_owner_slug(raw, expected):
     assert "/".join([s for s in raw.split("/") if s][-2:]) == expected
 
 
+class _DeadTokenApi:
+    """Constructs fine, reads username fine, 401s on any real request --
+    the state a rejected credential leaves the client in, whether the
+    rejection is transient or permanent."""
+
+    username = "someone"
+
+    def kernels_list(self, **kw):
+        raise RuntimeError("401 Client Error: Unauthorized for url: ...")
+
+
+class _LiveApi:
+    username = "someone"
+
+    def kernels_list(self, **kw):
+        return []
+
+
+def test_verify_auth_catches_a_dead_token():
+    problem = server._verify_auth(_DeadTokenApi())
+    assert problem, "a 401 must not be reported as healthy"
+    assert "kaggle auth login" in problem, "must say how to fix it"
+    assert "transient" in problem
+
+
+def test_verify_auth_passes_on_a_live_credential():
+    assert server._verify_auth(_LiveApi()) == ""
+
+
+def test_selftest_fails_when_the_token_is_dead(monkeypatch):
+    """The regression this exists for: selftest previously reported
+    'kaggle auth ok' while every real call returned 401, because it only
+    constructed the client and read an attribute."""
+    monkeypatch.setattr(server, "_api", lambda: _DeadTokenApi())
+    out = server.kaggle_selftest()
+    assert out.startswith("PROBLEMS FOUND")
+    assert "401" in out
+
+
+def test_selftest_passes_when_the_token_is_live(monkeypatch):
+    monkeypatch.setattr(server, "_api", lambda: _LiveApi())
+    out = server.kaggle_selftest()
+    assert "live request verified" in out
+
+
+def test_auth_status_reports_a_dead_token_as_unusable(monkeypatch):
+    monkeypatch.setattr(server, "_api", lambda: _DeadTokenApi())
+    out = server.kaggle_auth_status()
+    assert "NOT usable" in out
+
+
+def test_status_distinguishes_rejected_auth_from_a_wrong_slug(monkeypatch):
+    """Kaggle returns 'permission denied' for a rejected credential and blames
+    the slug, which sends the caller looking for a typo that isn't there."""
+    class _Api(_DeadTokenApi):
+        def kernels_status(self, ref):
+            raise ValueError("Permission 'kernels.get' was denied. "
+                             "The most likely cause is a wrong kernel slug.")
+    monkeypatch.setattr(server, "_api", lambda: _Api())
+    out = server.kaggle_status("whatever")
+    assert "CHECKED:" in out
+    assert "kaggle auth login" in out
+
+
 def test_prepend_code_lands_after_cell_zero(monkeypatch):
     """Cell 0 assigns the config names, so an override placed before it would
     simply be overwritten and the run would silently use the defaults."""

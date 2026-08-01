@@ -112,6 +112,32 @@ def _username(api) -> str:
     )
 
 
+def _verify_auth(api) -> str:
+    """Make one real authenticated request and report the outcome.
+
+    Constructing the client and reading api.username touches no network, so a
+    check that stops there passes with a dead credential. Kaggle's OAuth tokens
+    expire in a few hours; when one did, this server reported "auth ok" while
+    every actual call returned 401, and the resulting "permission denied" on a
+    kernel reads like a wrong slug rather than an expired login.
+
+    Returns "" on success, or a description of the failure.
+    """
+    try:
+        api.kernels_list(mine=True, page_size=1)
+        return ""
+    except Exception as e:  # noqa: BLE001
+        msg = f"{type(e).__name__}: {e}"
+        if "401" in msg or "Unauthorized" in msg:
+            # Observed 401s that cleared on their own minutes later, so this
+            # does not claim the token is expired -- retry first, and only
+            # re-authenticate if it persists.
+            return (f"credential rejected (401). This has been seen to be "
+                    f"transient: retry once before re-authenticating. If it "
+                    f"persists, run `kaggle auth login` again.\n    {msg}")
+        return f"authenticated request failed: {msg}"
+
+
 def _qualify(slug: str, api) -> str:
     return slug if "/" in slug else f"{_username(api)}/{slug}"
 
@@ -201,7 +227,10 @@ def kaggle_auth_status() -> str:
         user = _username(api)
     except RuntimeError as e:
         return f"Authenticated, but: {e}"
-    return f"Authenticated as {user}."
+    problem = _verify_auth(api)
+    if problem:
+        return f"NOT usable as {user}: {problem}"
+    return f"Authenticated as {user} (verified with a live request)."
 
 
 @mcp.tool()
@@ -252,7 +281,14 @@ def kaggle_selftest() -> str:
 
     try:
         api = _api()
-        lines.append(f"kaggle auth        ok, as {_username(api)}")
+        who = _username(api)
+        # Verified with a live request, not just a constructed client.
+        problem = _verify_auth(api)
+        if problem:
+            ok = False
+            lines.append(f"kaggle auth        FAILED for {who}: {problem}")
+        else:
+            lines.append(f"kaggle auth        ok, as {who} (live request verified)")
     except RuntimeError as e:
         ok = False
         lines.append(f"kaggle auth        FAILED\n{e}")
@@ -431,12 +467,26 @@ def kaggle_status(slug: str) -> str:
     Cheap; safe to poll. Prefer a few minutes between calls -- a memllm arm
     takes tens of minutes and polling faster only burns turns.
     """
+    api = None
     try:
         api = _api()
         ref = _qualify(slug, api)
         st = api.kernels_status(ref)
     except Exception as e:  # noqa: BLE001
-        return f"status failed: {type(e).__name__}: {e}"
+        msg = f"status failed: {type(e).__name__}: {e}"
+        # Kaggle blames the slug for what is usually an expired credential.
+        # Distinguish the two rather than passing its guess along.
+        if api is not None and any(
+            w in msg.lower() for w in ("denied", "401", "unauthorized")
+        ):
+            problem = _verify_auth(api)
+            msg += (
+                f"\n\nCHECKED: {problem}" if problem else
+                "\n\nCHECKED: credentials are live, so the slug really is wrong "
+                "or the kernel belongs to someone else. kaggle_list_kernels "
+                "shows the slugs you own."
+            )
+        return msg
     status = getattr(st, "status", None) or str(st)
     msg = getattr(st, "failure_message", None) or getattr(st, "failureMessage", None)
     return f"{ref}: {status}" + (f"\nfailure: {msg}" if msg else "")
