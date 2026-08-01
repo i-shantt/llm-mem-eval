@@ -103,7 +103,32 @@ def _hard_positives(gold: str) -> list[tuple[str, str]]:
 
     # Casing and stray punctuation: a grader that fails these is broken outright.
     out.append(("hard_case_punct", gold.upper() + " !!"))
+
+    # Set-valued answers listed in a different order. Added after inspecting
+    # real predictions: a gold of "atmospheric distillation, fluid catalytic
+    # cracking, alkylation, and hydrotreating" is a SET, but token-sequence
+    # containment demands one specific ordering, so a model that names all four
+    # in any other order is scored wrong. Every rewrite above varies surface
+    # form only; this is the first that varies structure, which is where a
+    # containment grader is actually weak.
+    items = _list_items(gold)
+    if len(items) >= 3:
+        rotated = items[1:] + items[:1]
+        out.append(("hard_list_reorder",
+                    ", ".join(rotated[:-1]) + ", and " + rotated[-1]))
     return out
+
+
+def _list_items(gold: str) -> list[str]:
+    """Split a gold answer that enumerates items. Conservative: returns [] when
+    the answer is prose, so ordinary answers are never treated as sets."""
+    body = re.sub(r"\s*\band\b\s*", ", ", gold.strip().rstrip("."))
+    items = [p.strip() for p in body.split(",") if p.strip()]
+    # Multi-clause prose also contains commas; require every item to be short
+    # and none to contain a verb-like trailing clause.
+    if len(items) < 3 or any(len(p.split()) > 4 for p in items):
+        return []
+    return items
 
 
 def build_audit_cases(examples, seed: int = 0, per_type: int = 60) -> list[AuditCase]:

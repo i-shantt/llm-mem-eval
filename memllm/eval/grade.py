@@ -152,14 +152,37 @@ def _contains_span(pred: str, gold: str) -> bool:
     return any(p[i:i + len(g)] == g for i in range(len(p) - len(g) + 1))
 
 
+def _set_items(gold: str) -> list[str]:
+    """Items of an enumerated gold answer, or [] if it is prose.
+
+    Deliberately narrow: 3+ comma/and-separated fragments, each at most four
+    words. Prose sentences contain commas too, and treating one as a set would
+    accept any answer that happened to mention its clauses.
+    """
+    body = re.sub(r"\s*\band\b\s*", ", ", str(gold).strip().rstrip("."))
+    items = [p.strip() for p in body.split(",") if p.strip()]
+    if len(items) < 3 or any(len(p.split()) > 4 for p in items):
+        return []
+    return items
+
+
 def contains_answer(pred: str, gold: str) -> bool:
     """True if pred contains any answer the gold key accepts.
 
     Token-sequence containment rather than substring containment: a raw
     substring test scores gold "20" as found inside pred "120 pages", which is
     wrong and would silently inflate every numeric answer.
+
+    Enumerated answers are compared as sets. The grader audit measured this
+    one at 0/2 before the special case existed: a gold listing four refining
+    processes demanded one specific ordering, so naming all four in any other
+    order scored wrong. ALL items must appear, so this cannot accept a partial
+    answer -- the audit's false-accept rate stays at zero.
     """
-    return any(_contains_span(pred, alt) for alt in gold_alternatives(gold))
+    if any(_contains_span(pred, alt) for alt in gold_alternatives(gold)):
+        return True
+    items = _set_items(gold)
+    return bool(items) and all(_contains_span(pred, it) for it in items)
 
 
 def token_f1(pred: str, gold: str) -> float:
