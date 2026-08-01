@@ -57,6 +57,20 @@ the ladder does not depend on it.
 
 ---
 
+## Cell 0 — run configuration
+
+Every later cell reads these. Kept in its own cell so a partial run can be
+configured without editing the cells that do the work — the MCP server's
+`prepend_code` overrides it by injecting an earlier assignment.
+
+```python
+# Model rungs to pull and evaluate. Trim this for a partial run: the control
+# arms only need the rungs whose systems you intend to attribute.
+SIZES = ["1.5b", "3b", "7b", "14b"]
+N = "100"          # stratified subset size
+CTX = "8192"       # ollama context window
+```
+
 ## Cell 1 — Ollama, disk/GPU diagnostics, and the model ladder (~15 min)
 
 ```python
@@ -87,16 +101,17 @@ for i in range(90):
 else:
     raise RuntimeError("ollama did not start -- is Internet enabled in the sidebar?")
 
-# The whole ladder is ~17 GB on disk; each rung loads into one card on its own.
-LADDER = ["qwen2.5:1.5b-instruct", "qwen2.5:3b-instruct",
-          "qwen2.5:7b-instruct", "qwen2.5:14b-instruct"]
+# The full ladder is ~17 GB on disk; each rung loads into one card on its own.
+# Only the rungs named in Cell 0 are pulled, so a control-only run does not
+# spend fifteen minutes downloading models it will never load.
+LADDER = [f"qwen2.5:{s}-instruct" for s in SIZES]
 for m in LADDER:
     print(f"pulling {m} ...", flush=True)
     subprocess.run(["ollama", "pull", m], check=True)
 
 # Load the largest rung and confirm it is fully on GPU. "100% GPU" is the only
 # acceptable answer -- any CPU share means it did not fit and will crawl.
-subprocess.run(["ollama", "run", "qwen2.5:14b-instruct", "hi"],
+subprocess.run(["ollama", "run", LADDER[-1], "hi"],
                capture_output=True, text=True, timeout=600)
 print(subprocess.run(["ollama", "ps"], capture_output=True, text=True).stdout)
 print(subprocess.run(["df", "-h", "/kaggle/working"],
@@ -123,11 +138,22 @@ subprocess.run(["pip", "install", "-q", "rank_bm25", "sentence-transformers",
 # the pushed code. Fail in three minutes rather than after three hours.
 help_text = subprocess.run(["python", "scripts/run_e2e_eval.py", "--help"],
                            capture_output=True, text=True).stdout
-for flag in ["--num-ctx", "--gen-timeout", "--max-new-tokens"]:
+for flag in ["--num-ctx", "--gen-timeout", "--max-new-tokens",
+             # The control arms need this; without it the no-memory prompt
+             # falls back to the grounding template and measures induced
+             # refusal instead of prior knowledge.
+             "--no-memory-prompt"]:
     assert flag in help_text, (
         f"{flag} missing -- the clone is stale. Run `git push origin main` "
         f"locally, then re-run this cell.")
-print("pre-flight: all required flags present")
+
+# The 'none' retriever and the attribution script are what make the control
+# arms interpretable. Checking here costs seconds; discovering it after the
+# 45-minute control run costs the run.
+assert os.path.exists("scripts/run_ablation.py"), \
+    "run_ablation.py missing -- the clone is stale"
+from memllm.retrieval.baselines import NoMemoryRetriever  # noqa: F401
+print("pre-flight: all required flags, the 'none' arm, and run_ablation present")
 
 from huggingface_hub import hf_hub_download
 hf_hub_download("xiaowu0162/longmemeval", "longmemeval_s",
@@ -174,15 +200,19 @@ for gran, k in BUDGET_K.items():
          "--tag", f"sweep_{gran}_n{N}"], f"retrieval sweep: {gran} (budget k={k})")
 ```
 
-## Cell 4 — the scaling ladder (~2.5–3 hours, resumable)
+## Cell 4a — the `arm()` helper (instant)
+
+Its own cell so the control arms in Cell 4b can run without dragging in the
+three-hour ladder. Cell 4's resume check only skips arms whose results file
+already exists, and on a fresh Kaggle instance none do — so including Cell 4
+just to define `arm()` would re-run everything.
 
 ```python
 import subprocess, pathlib
-N = "100"
-LADDER = ["1.5b", "3b", "7b", "14b"]   # drop "14b" if Cell 1 showed CPU offload
 
-def arm(size, retriever, gran, k="10", ctx="8192"):
+def arm(size, retriever, gran, k="10", ctx=None):
     """One end-to-end arm. Skipped if it already has a results file."""
+    ctx = ctx or CTX
     tag = f"e2e_{size}_{retriever}_{gran}_k{k}_n{N}"
     out = pathlib.Path(f"results/{tag}.json")
     if out.exists():
@@ -204,15 +234,19 @@ def arm(size, retriever, gran, k="10", ctx="8192"):
     print(r.stdout[-4000:], flush=True)
     if r.returncode != 0:
         print("STDERR:", r.stderr[-3000:], flush=True)
+```
 
+## Cell 4 — the scaling ladder (~2.5–3 hours, resumable)
+
+```python
 # --- the ladder: oracle first, so a timeout still leaves a complete curve ---
 # Oracle removes retrieval entirely, so this curve is pure model capacity.
-for size in LADDER:
+for size in SIZES:
     arm(size, "oracle", "turn")
 
 # Same ladder with real retrieval. The gap between the two curves at each rung
 # is the cost of retrieval at that model size.
-for size in LADDER:
+for size in SIZES:
     arm(size, "hybrid", "turn")
 
 # --- 7B controls for the truncation question (~25 min) ---
@@ -227,7 +261,7 @@ arm("7b", "bm25", "turn")
 # and measured the clamp, not the system. k is now set per granularity so all
 # three arms read ~2600 tokens, which is the only comparison that means
 # anything for a project about cost.
-for size in LADDER[-2:]:
+for size in SIZES[-2:]:
     arm(size, "hybrid", "turn", k="12")
     arm(size, "hybrid", "user_turn", k="48")
     arm(size, "hybrid", "session", k="1")

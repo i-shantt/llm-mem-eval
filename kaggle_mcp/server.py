@@ -220,6 +220,7 @@ def kaggle_push_notebook(
     enable_internet: bool = True,
     is_private: bool = True,
     accelerator: str = "",
+    prepend_code: str = "",
 ) -> str:
     """Build a notebook from the cells document and push it to Kaggle.
 
@@ -245,6 +246,11 @@ def kaggle_push_notebook(
             output under your account.
         accelerator: optional explicit accelerator string passed to the Kaggle
             API (e.g. "nvidiaTeslaT4"). Leave blank for the account default.
+        prepend_code: python inserted as the FIRST cell, before Cell 0. Use it
+            to narrow a run without editing the document, e.g.
+            'SIZES = ["7b", "14b"]' so Cell 1 pulls two models instead of four.
+            Cell 0 would overwrite it, so the override is re-applied in a cell
+            emitted immediately after Cell 0.
 
     Returns the kernel ref and URL, or the API error.
     """
@@ -277,7 +283,20 @@ def kaggle_push_notebook(
 
     work = Path(tempfile.mkdtemp(prefix="kaggle_push_"))
     try:
-        nb = _notebook([c["code"] for c in chosen])
+        sources = [c["code"] for c in chosen]
+        if prepend_code.strip():
+            # Cell 0 assigns the config names, so an override placed before it
+            # would simply be overwritten. Insert directly after Cell 0 when it
+            # is present; otherwise it goes first.
+            after0 = next(
+                (i + 1 for i, c in enumerate(chosen)
+                 if c["name"].lower().startswith("cell 0")), 0
+            )
+            sources.insert(
+                after0, "# --- override injected by kaggle_push_notebook ---\n"
+                + prepend_code.strip()
+            )
+        nb = _notebook(sources)
         (work / "notebook.ipynb").write_text(json.dumps(nb, indent=1))
         meta = {
             "id": ref,
