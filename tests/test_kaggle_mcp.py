@@ -134,6 +134,18 @@ def test_slugify_is_bounded():
     assert len(server._slugify("word " * 60)) <= 50
 
 
+@pytest.mark.parametrize("raw,expected", [
+    ("/code/ishantchintapatla/memllm-controls", "ishantchintapatla/memllm-controls"),
+    ("/ishantchintapatla/memllm-controls", "ishantchintapatla/memllm-controls"),
+    ("ishantchintapatla/memllm-controls", "ishantchintapatla/memllm-controls"),
+])
+def test_push_ref_normalises_to_owner_slug(raw, expected):
+    """Kaggle returns a URL path, not the bare owner/slug the other endpoints
+    take. Observed as '/code/owner/slug'; a naive lstrip('/') left 'code/'
+    behind and produced a 404 URL."""
+    assert "/".join([s for s in raw.split("/") if s][-2:]) == expected
+
+
 def test_prepend_code_lands_after_cell_zero(monkeypatch):
     """Cell 0 assigns the config names, so an override placed before it would
     simply be overwritten and the run would silently use the defaults."""
