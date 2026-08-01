@@ -205,6 +205,62 @@ def kaggle_auth_status() -> str:
 
 
 @mcp.tool()
+def kaggle_selftest() -> str:
+    """Check every prerequisite at once and report what is broken.
+
+    Run this first in a new session, or when something fails in a way that
+    does not obviously point at its cause. Covers auth, the repo paths this
+    server resolves against, the cells document, and write access to results/.
+    """
+    lines: list[str] = []
+    ok = True
+
+    lines.append(f"repo root          {REPO}")
+    lines.append(f"python             {sys.executable}")
+
+    try:
+        import mcp as _m  # noqa: F401
+        import kaggle as _k  # noqa: F401
+        lines.append("deps               mcp + kaggle importable")
+    except Exception as e:  # noqa: BLE001
+        ok = False
+        lines.append(f"deps               MISSING: {e}. Reinstall with "
+                     f"'pip install -r kaggle_mcp/requirements.txt' into "
+                     f"{sys.executable}")
+
+    if DEFAULT_CELLS.exists():
+        n = len(_parse_cells(DEFAULT_CELLS.read_text()))
+        lines.append(f"cells document     {n} cells at {DEFAULT_CELLS.name}")
+        if n == 0:
+            ok = False
+            lines.append("                   PARSED ZERO CELLS -- heading style "
+                         "changed; a push would upload an empty notebook")
+    else:
+        ok = False
+        lines.append(f"cells document     MISSING at {DEFAULT_CELLS}")
+
+    results = REPO / "results"
+    try:
+        results.mkdir(exist_ok=True)
+        probe = results / ".selftest"
+        probe.write_text("ok")
+        probe.unlink()
+        lines.append(f"results/ writable  {results}")
+    except Exception as e:  # noqa: BLE001
+        ok = False
+        lines.append(f"results/ writable  NO: {e}")
+
+    try:
+        api = _api()
+        lines.append(f"kaggle auth        ok, as {_username(api)}")
+    except RuntimeError as e:
+        ok = False
+        lines.append(f"kaggle auth        FAILED\n{e}")
+
+    return ("ALL CHECKS PASSED\n" if ok else "PROBLEMS FOUND\n") + "\n".join(lines)
+
+
+@mcp.tool()
 def kaggle_list_cells(cells_file: str = "") -> str:
     """List the named cells available in the notebook source document.
 
@@ -429,7 +485,13 @@ def kaggle_fetch_results(
     except RuntimeError as e:
         return str(e)
 
+    # Claude Code spawns this server with an arbitrary working directory, so a
+    # relative dest is resolved against the repo rather than the cwd. Otherwise
+    # a session started from $HOME silently downloads results to ~/results and
+    # the attribution runs against a stale set.
     out = Path(dest)
+    if not out.is_absolute():
+        out = REPO / out
     out.mkdir(parents=True, exist_ok=True)
     before = {p.name for p in out.glob("*")}
 

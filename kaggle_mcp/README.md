@@ -25,6 +25,7 @@ echoes a credential — `kaggle_auth_status` reports only the resolved username.
 
 | tool | does |
 |---|---|
+| `kaggle_selftest` | check auth, deps, paths and write access in one call |
 | `kaggle_auth_status` | check auth, print setup instructions if missing |
 | `kaggle_list_cells` | list the `## Cell ...` headings available to push |
 | `kaggle_push_notebook` | assemble selected cells into a notebook and push |
@@ -34,7 +35,35 @@ echoes a credential — `kaggle_auth_status` reports only the resolved username.
 | `kaggle_fetch_results` | download outputs into `results/` |
 | `kaggle_list_kernels` | list your kernels, most recent first |
 
+## Troubleshooting
+
+**The server does not appear in the MCP list.** Scope and restart, in that
+order. `claude mcp add` without `--scope user` registers the server for the
+*current directory's* project only, so a session started anywhere else will not
+see it. Check where it landed:
+
+```bash
+python3 -c "import json;d=json.load(open('$HOME/.claude.json'));\
+print('user:',list(d.get('mcpServers',{})));\
+print({p:list(v.get('mcpServers',{})) for p,v in d.get('projects',{}).items() if v.get('mcpServers')})"
+```
+
+It must appear under `user:`. Then **restart Claude Code** — servers registered
+mid-session do not load into that session, only into later ones. A restart that
+happened *before* the registration does not count.
+
+**Anything else:** call `kaggle_selftest`. It reports auth, dependency imports,
+the resolved repo root, cell parsing, and write access in one call.
+
 ## Notes
+
+- **This server runs from `.venv`.** The registered command points at
+  `.venv/bin/python`, so rebuilding that venv without reinstalling
+  `kaggle_mcp/requirements.txt` breaks the server at startup — which surfaces
+  only as "failed to connect". `kaggle_selftest` names the cause.
+- **Relative paths resolve against the repo, not the cwd.** Claude Code spawns
+  the server with an arbitrary working directory, so `dest="results"` always
+  means `<repo>/results`, never `$PWD/results`.
 
 - **Kernels push private by default.** `is_private=False` publishes the code and
   its output under your account.
