@@ -111,3 +111,34 @@ def test_auth_failure_is_reported_not_raised(monkeypatch):
 
 def test_auth_help_never_asks_for_a_token_in_chat():
     assert "not paste" in server._AUTH_HELP.lower()
+
+
+def test_slugify_reproduces_kaggle_title_derivation():
+    """Observed against a real push: Kaggle named the kernel from the title and
+    only warned that it disagreed with the requested id, so polling the
+    requested slug failed with a permission error resembling broken auth."""
+    assert (server._slugify("memllm: memory-lift control arms")
+            == "memllm-memory-lift-control-arms")
+
+
+def test_slugify_is_idempotent_on_a_clean_slug():
+    for s in ("memllm-controls", "abc", "a1-b2"):
+        assert server._slugify(s) == s
+
+
+def test_slugify_collapses_runs_and_strips_edges():
+    assert server._slugify("  A  B__C!!  ") == "a-b-c"
+
+
+def test_slugify_is_bounded():
+    assert len(server._slugify("word " * 60)) <= 50
+
+
+def test_prepend_code_lands_after_cell_zero(monkeypatch):
+    """Cell 0 assigns the config names, so an override placed before it would
+    simply be overwritten and the run would silently use the defaults."""
+    cells = [{"name": "Cell 0 — run configuration", "code": "SIZES = ['a']"},
+             {"name": "Cell 1 — setup", "code": "use(SIZES)"}]
+    after0 = next((i + 1 for i, c in enumerate(cells)
+                   if c["name"].lower().startswith("cell 0")), 0)
+    assert after0 == 1

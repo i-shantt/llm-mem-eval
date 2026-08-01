@@ -74,7 +74,7 @@ CTX = "8192"       # ollama context window
 ## Cell 1 — Ollama, disk/GPU diagnostics, and the model ladder (~15 min)
 
 ```python
-import subprocess, time, urllib.request, os, json
+import subprocess, time, urllib.request, os, json, shutil
 
 # Ollama defaults to /root/.ollama, which is small on Kaggle. Putting the model
 # store on the working volume is what makes multi-GB pulls survive.
@@ -86,6 +86,13 @@ print(subprocess.run(["df", "-h", "/root", "/kaggle/working"],
                      capture_output=True, text=True).stdout)
 print(subprocess.run(["nvidia-smi", "--query-gpu=index,name,memory.total",
                       "--format=csv"], capture_output=True, text=True).stdout)
+
+# The Ollama installer unpacks a zstd-compressed tarball and the Kaggle image
+# ships without zstd, so the install dies ~10s in with "This version requires
+# zstd for extraction". Installing it first is the whole fix.
+subprocess.run("apt-get update -qq && apt-get install -y -qq zstd",
+               shell=True, check=False)
+assert shutil.which("zstd"), "zstd unavailable; the ollama installer will fail"
 
 subprocess.run("curl -fsSL https://ollama.com/install.sh | sh",
                shell=True, check=True)

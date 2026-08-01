@@ -116,6 +116,19 @@ def _qualify(slug: str, api) -> str:
     return slug if "/" in slug else f"{_username(api)}/{slug}"
 
 
+def _slugify(title: str) -> str:
+    """Reproduce Kaggle's title -> slug derivation.
+
+    Kaggle names a NEW kernel from its title, not from the `id` in the
+    metadata; it only warns that the two disagree. A push with slug
+    'memllm-controls' and title 'memllm: memory-lift control arms' therefore
+    lands at 'memllm-memory-lift-control-arms', and polling the requested slug
+    returns a permission error that reads like an auth problem.
+    """
+    s = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    return re.sub(r"-{2,}", "-", s)[:50].strip("-")
+
+
 # --------------------------------------------------------------------------
 # notebook assembly
 # --------------------------------------------------------------------------
@@ -326,13 +339,26 @@ def kaggle_push_notebook(
     err = getattr(resp, "error", None)
     if err:
         return f"push rejected by Kaggle: {err}"
+
+    # Kaggle may have named the kernel from the title instead of the requested
+    # slug. Report the ref it actually created, or every later poll fails with
+    # a permission error that looks like broken auth.
+    effective = str(getattr(resp, "ref", "") or "").strip() or ref
+    if effective == ref and title and _slugify(title) != _slugify(slug):
+        effective = _qualify(_slugify(title), api)
+
     included = ", ".join(c["name"] for c in chosen)
+    note = ""
+    if effective != ref:
+        note = (f"  NOTE: requested '{slug}' but Kaggle derived the slug from "
+                f"the title; the kernel is '{effective.split('/')[-1]}'\n")
     return (
-        f"pushed {ref}\n"
+        f"pushed {effective}\n"
+        f"{note}"
         f"  cells: {included}\n"
         f"  gpu={enable_gpu} internet={enable_internet} private={is_private}\n"
-        f"  url: https://www.kaggle.com/code/{ref.replace('/', '/')}\n"
-        f"Poll with kaggle_status('{slug}')."
+        f"  url: https://www.kaggle.com/code/{effective}\n"
+        f"Poll with kaggle_status('{effective.split('/')[-1]}')."
     )
 
 
