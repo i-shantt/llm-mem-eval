@@ -165,6 +165,11 @@ print("pre-flight: all required flags, the 'none' arm, and run_ablation present"
 from huggingface_hub import hf_hub_download
 hf_hub_download("xiaowu0162/longmemeval", "longmemeval_s",
                 repo_type="dataset", local_dir="data/raw")
+# 15 MB, and it is what tests/test_harness.py runs the grader audit against.
+# Without it that test skips, so the pre-flight would pass while the property
+# every accuracy number depends on went unchecked.
+hf_hub_download("xiaowu0162/longmemeval", "longmemeval_oracle",
+                repo_type="dataset", local_dir="data/raw")
 
 for cmd in (["python", "tests/test_harness.py"],
             ["python", "scripts/audit_graders.py"]):
