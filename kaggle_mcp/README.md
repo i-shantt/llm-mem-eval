@@ -31,7 +31,7 @@ echoes a credential — `kaggle_auth_status` reports only the resolved username.
 | `kaggle_push_notebook` | assemble selected cells into a notebook and push |
 | `kaggle_status` | queued / running / complete / error |
 | `kaggle_wait` | block until terminal, capped at 30 min per call |
-| `kaggle_logs` | tail the execution log — where a failed arm explains itself |
+| `kaggle_logs` | tail the execution log — **only after the run ends**, see below |
 | `kaggle_fetch_results` | download outputs into `results/` |
 | `kaggle_list_kernels` | list your kernels, most recent first |
 
@@ -51,6 +51,17 @@ print({p:list(v.get('mcpServers',{})) for p,v in d.get('projects',{}).items() if
 It must appear under `user:`. Then **restart Claude Code** — servers registered
 mid-session do not load into that session, only into later ones. A restart that
 happened *before* the registration does not count.
+
+**`kaggle_logs` returns "(empty log)" while the kernel is running.** This is
+Kaggle's behaviour, not a bug here: the log is published when the run reaches a
+terminal state, so there is no partial output to follow and no way to watch
+progress mid-run. Poll `kaggle_status` until it is terminal, *then* read the
+log. Building a watcher that greps a running kernel's log for a progress marker
+does not work — the marker cannot appear until the run is already over.
+
+Because of that, make a run self-reporting: put pre-flight assertions early so a
+bad clone or a missing flag kills the kernel in minutes, and the log you finally
+read explains itself.
 
 **Anything else:** call `kaggle_selftest`. It reports auth, dependency imports,
 the resolved repo root, cell parsing, and write access in one call.

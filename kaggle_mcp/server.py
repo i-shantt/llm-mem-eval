@@ -498,6 +498,13 @@ def kaggle_logs(slug: str, tail_lines: int = 120) -> str:
 
     This is where a failed arm explains itself -- OOM, a stale clone missing a
     flag, or Ollama falling back to CPU.
+
+    IMPORTANT: Kaggle only publishes the log once the kernel reaches a terminal
+    state. A RUNNING kernel returns "(empty log)", not partial output, so this
+    cannot be used to follow progress and polling it mid-run tells you nothing.
+    Watch `kaggle_status` for a terminal state, then read the log. Learned by
+    watching an empty log for 45 minutes waiting for a marker that could not
+    appear until the run was over.
     """
     try:
         api = _api()
