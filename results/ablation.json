@@ -1,0 +1,307 @@
+[
+  {
+    "model": "ollama:qwen2.5:14b-instruct",
+    "system": "e2e_14b_hybrid_turn_k10_n100",
+    "system_accuracy": 0.5824175824175825,
+    "best_control": "recency",
+    "control_accuracy": 0.0989010989010989,
+    "lift": 0.4835164835164835,
+    "ci_lo": 0.37362637362637363,
+    "ci_hi": 0.5934065934065934,
+    "p_value": 8.363087999896379e-12,
+    "attributable_fraction": 0.830188679245283,
+    "contingency": {
+      "n": 91,
+      "both": 7,
+      "system_only": 46,
+      "control_only": 2,
+      "neither": 36
+    },
+    "per_type": {
+      "knowledge-update": {
+        "n": 16,
+        "system": 11,
+        "control": 4,
+        "system_acc": 0.6875,
+        "control_acc": 0.25,
+        "lift": 0.4375
+      },
+      "single-session-user": {
+        "n": 14,
+        "system": 11,
+        "control": 0,
+        "system_acc": 0.7857142857142857,
+        "control_acc": 0.0,
+        "lift": 0.7857142857142857
+      },
+      "multi-session": {
+        "n": 26,
+        "system": 11,
+        "control": 3,
+        "system_acc": 0.4230769230769231,
+        "control_acc": 0.11538461538461539,
+        "lift": 0.3076923076923077
+      },
+      "temporal-reasoning": {
+        "n": 25,
+        "system": 13,
+        "control": 2,
+        "system_acc": 0.52,
+        "control_acc": 0.08,
+        "lift": 0.44
+      },
+      "single-session-assistant": {
+        "n": 10,
+        "system": 7,
+        "control": 0,
+        "system_acc": 0.7,
+        "control_acc": 0.0,
+        "lift": 0.7
+      }
+    }
+  },
+  {
+    "model": "ollama:qwen2.5:14b-instruct",
+    "system": "e2e_14b_oracle_turn_k10_n100",
+    "system_accuracy": 0.5494505494505495,
+    "best_control": "recency",
+    "control_accuracy": 0.0989010989010989,
+    "lift": 0.45054945054945056,
+    "ci_lo": 0.34065934065934067,
+    "ci_hi": 0.5494505494505495,
+    "p_value": 1.000444171950221e-11,
+    "attributable_fraction": 0.82,
+    "contingency": {
+      "n": 91,
+      "both": 8,
+      "system_only": 42,
+      "control_only": 1,
+      "neither": 40
+    },
+    "per_type": {
+      "knowledge-update": {
+        "n": 16,
+        "system": 12,
+        "control": 4,
+        "system_acc": 0.75,
+        "control_acc": 0.25,
+        "lift": 0.5
+      },
+      "single-session-user": {
+        "n": 14,
+        "system": 9,
+        "control": 0,
+        "system_acc": 0.6428571428571429,
+        "control_acc": 0.0,
+        "lift": 0.6428571428571429
+      },
+      "multi-session": {
+        "n": 26,
+        "system": 12,
+        "control": 3,
+        "system_acc": 0.46153846153846156,
+        "control_acc": 0.11538461538461539,
+        "lift": 0.34615384615384615
+      },
+      "temporal-reasoning": {
+        "n": 25,
+        "system": 12,
+        "control": 2,
+        "system_acc": 0.48,
+        "control_acc": 0.08,
+        "lift": 0.39999999999999997
+      },
+      "single-session-assistant": {
+        "n": 10,
+        "system": 5,
+        "control": 0,
+        "system_acc": 0.5,
+        "control_acc": 0.0,
+        "lift": 0.5
+      }
+    }
+  },
+  {
+    "model": "ollama:qwen2.5:7b-instruct",
+    "system": "e2e_7b_oracle_turn_k10_n100",
+    "system_accuracy": 0.5714285714285714,
+    "best_control": "recency",
+    "control_accuracy": 0.08791208791208792,
+    "lift": 0.4835164835164835,
+    "ci_lo": 0.38461538461538464,
+    "ci_hi": 0.5824175824175825,
+    "p_value": 1.1368683772161603e-13,
+    "attributable_fraction": 0.8461538461538463,
+    "contingency": {
+      "n": 91,
+      "both": 8,
+      "system_only": 44,
+      "control_only": 0,
+      "neither": 39
+    },
+    "per_type": {
+      "knowledge-update": {
+        "n": 16,
+        "system": 11,
+        "control": 4,
+        "system_acc": 0.6875,
+        "control_acc": 0.25,
+        "lift": 0.4375
+      },
+      "single-session-user": {
+        "n": 14,
+        "system": 8,
+        "control": 0,
+        "system_acc": 0.5714285714285714,
+        "control_acc": 0.0,
+        "lift": 0.5714285714285714
+      },
+      "multi-session": {
+        "n": 26,
+        "system": 14,
+        "control": 3,
+        "system_acc": 0.5384615384615384,
+        "control_acc": 0.11538461538461539,
+        "lift": 0.423076923076923
+      },
+      "temporal-reasoning": {
+        "n": 25,
+        "system": 12,
+        "control": 1,
+        "system_acc": 0.48,
+        "control_acc": 0.04,
+        "lift": 0.44
+      },
+      "single-session-assistant": {
+        "n": 10,
+        "system": 7,
+        "control": 0,
+        "system_acc": 0.7,
+        "control_acc": 0.0,
+        "lift": 0.7
+      }
+    }
+  },
+  {
+    "model": "ollama:qwen2.5:7b-instruct",
+    "system": "e2e_7b_hybrid_turn_k10_n100",
+    "system_accuracy": 0.43956043956043955,
+    "best_control": "recency",
+    "control_accuracy": 0.08791208791208792,
+    "lift": 0.3516483516483517,
+    "ci_lo": 0.24175824175824176,
+    "ci_hi": 0.46153846153846156,
+    "p_value": 6.677873898297548e-08,
+    "attributable_fraction": 0.8,
+    "contingency": {
+      "n": 91,
+      "both": 5,
+      "system_only": 35,
+      "control_only": 3,
+      "neither": 48
+    },
+    "per_type": {
+      "knowledge-update": {
+        "n": 16,
+        "system": 7,
+        "control": 4,
+        "system_acc": 0.4375,
+        "control_acc": 0.25,
+        "lift": 0.1875
+      },
+      "single-session-user": {
+        "n": 14,
+        "system": 10,
+        "control": 0,
+        "system_acc": 0.7142857142857143,
+        "control_acc": 0.0,
+        "lift": 0.7142857142857143
+      },
+      "multi-session": {
+        "n": 26,
+        "system": 9,
+        "control": 3,
+        "system_acc": 0.34615384615384615,
+        "control_acc": 0.11538461538461539,
+        "lift": 0.23076923076923075
+      },
+      "temporal-reasoning": {
+        "n": 25,
+        "system": 8,
+        "control": 1,
+        "system_acc": 0.32,
+        "control_acc": 0.04,
+        "lift": 0.28
+      },
+      "single-session-assistant": {
+        "n": 10,
+        "system": 6,
+        "control": 0,
+        "system_acc": 0.6,
+        "control_acc": 0.0,
+        "lift": 0.6
+      }
+    }
+  },
+  {
+    "model": "ollama:qwen2.5:7b-instruct",
+    "system": "e2e_7b_bm25_turn_k10_n100",
+    "system_accuracy": 0.3956043956043956,
+    "best_control": "recency",
+    "control_accuracy": 0.08791208791208792,
+    "lift": 0.3076923076923077,
+    "ci_lo": 0.2087912087912088,
+    "ci_hi": 0.4065934065934066,
+    "p_value": 5.774199962615967e-08,
+    "attributable_fraction": 0.7777777777777779,
+    "contingency": {
+      "n": 91,
+      "both": 7,
+      "system_only": 29,
+      "control_only": 1,
+      "neither": 54
+    },
+    "per_type": {
+      "knowledge-update": {
+        "n": 16,
+        "system": 9,
+        "control": 4,
+        "system_acc": 0.5625,
+        "control_acc": 0.25,
+        "lift": 0.3125
+      },
+      "single-session-user": {
+        "n": 14,
+        "system": 10,
+        "control": 0,
+        "system_acc": 0.7142857142857143,
+        "control_acc": 0.0,
+        "lift": 0.7142857142857143
+      },
+      "multi-session": {
+        "n": 26,
+        "system": 6,
+        "control": 3,
+        "system_acc": 0.23076923076923078,
+        "control_acc": 0.11538461538461539,
+        "lift": 0.11538461538461539
+      },
+      "temporal-reasoning": {
+        "n": 25,
+        "system": 6,
+        "control": 1,
+        "system_acc": 0.24,
+        "control_acc": 0.04,
+        "lift": 0.19999999999999998
+      },
+      "single-session-assistant": {
+        "n": 10,
+        "system": 5,
+        "control": 0,
+        "system_acc": 0.5,
+        "control_acc": 0.0,
+        "lift": 0.5
+      }
+    }
+  }
+]

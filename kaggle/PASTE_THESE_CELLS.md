@@ -298,8 +298,10 @@ Three controls, because they fail differently:
 as a hybrid arm but skip the embedding model entirely.
 
 ```python
-# Controls for the two rungs that matter most. Add "3b"/"1.5b" if time allows.
-for size in ["7b", "14b"]:
+# Reads SIZES from Cell 0 rather than hardcoding rungs: a run configured for
+# one pair of models must not pull those and then evaluate a different pair,
+# which fails at the first arm because the model was never fetched.
+for size in SIZES:
     for retriever in ["none", "random", "recency"]:
         arm(size, retriever, "turn")
 ```
