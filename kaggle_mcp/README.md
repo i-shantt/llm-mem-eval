@@ -52,6 +52,14 @@ It must appear under `user:`. Then **restart Claude Code** — servers registere
 mid-session do not load into that session, only into later ones. A restart that
 happened *before* the registration does not count.
 
+**A fetch that tries to download gigabytes is pulling the Ollama models.**
+Everything under `/kaggle/working` is kernel output, and the notebook puts the
+model store there because `/root` is too small for multi-GB pulls. So the models
+ship with the results, and a plain fetch can die on a 4.7 GB `IncompleteRead`.
+Delete the model directory in the last cell, and pass `pattern="cond_"` to fetch
+only what you want. **`pattern` is a prefix match, not a glob** — `"cond_"`
+works, `"cond_*.json"` matches nothing and quietly returns only the log.
+
 **`kaggle_logs` returns "(empty log)" while the kernel is running.** This is
 Kaggle's behaviour, not a bug here: the log is published when the run reaches a
 terminal state, so there is no partial output to follow and no way to watch

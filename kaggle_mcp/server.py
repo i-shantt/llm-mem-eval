@@ -530,7 +530,10 @@ def kaggle_fetch_results(
     Args:
         slug: kernel slug.
         dest: local directory, default results/. Created if absent.
-        pattern: optional filename filter passed to the Kaggle API.
+        pattern: optional filename filter passed to the Kaggle API as
+            `file_pattern`. It matches a PREFIX, not a glob -- "cond_" selects
+            every cond_*.json, while "cond_*.json" matches nothing and silently
+            returns just the log. Always pass a prefix.
         overwrite: replace files that already exist locally. Default False so a
             re-fetch cannot silently clobber a result you have already analysed.
 
