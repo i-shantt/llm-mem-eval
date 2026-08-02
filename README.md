@@ -1,17 +1,63 @@
 # memllm — what does LLM memory actually cost?
 
-Every LLM memory system advertises token savings measured on the **read path**:
-tokens per query. Almost none report the **write path** — the cost of building
-the memory in the first place. That is where the money is.
+*Start here. Companion repo:
+[llm-memory-conditioning](https://github.com/i-shantt/llm-memory-conditioning),
+which builds a system on top of what this one measured.*
 
-For a single benchmark instance, published numbers put verbatim retrieval at
-roughly **$0.01 and zero LLM calls**, and Mem0 at **~$0.50 with 1000+ LLM
-calls** (~1.5M tokens) to construct its memory. Yet the headline comparison is
-usually "1,764 tokens per query vs 26,031 for full context — 90% savings."
+---
 
-Those two facts belong in the same table. This repo puts them there.
+## In one minute
+
+AI assistants forget between sessions. Products like Mem0 and Zep fix that by
+building a **memory** — they read your conversation history with an AI model,
+extract facts, and store them so a later question can be answered cheaply.
+
+Everyone advertises the same number: **tokens per query**. How little it costs to
+*use* the memory. Almost nobody reports what it cost to *build* it.
+
+That is where the money is. Building the memory for one conversation takes over a
+thousand AI calls; using it takes none. So the advertised saving only arrives
+after you have asked the same conversation enough questions to pay the build cost
+back.
+
+**Measured: about 4,630 questions against one conversation.** No personal
+assistant ever reaches that. A plain search index with no AI build step is
+**49.7× cheaper per query than sending the whole conversation**, and it never has
+a bill to repay.
+
+```mermaid
+flowchart LR
+    A[Conversation] -->|"WRITE PATH<br/>1000+ AI calls<br/>paid once, up front"| B[(Memory)]
+    B -->|"READ PATH<br/>the number everyone<br/>advertises"| C[Answer]
+    style A fill:#7f1d1d,color:#fff
+    style B fill:#1e3a5f,color:#fff
+```
+
+The second question this repo asks is whether memory systems deserve their
+accuracy at all. A benchmark question like *"what did I say my favourite film
+was?"* can sometimes be answered by guessing, or from the phrasing alone. So
+every result here is re-run against three controls: no memory, **random** text of
+the same length, and "just keep the last few messages."
+
+**76–85% of the accuracy survives those controls** (p < 0.0001). That is a real
+number that most papers do not publish, because publishing it risks the headline.
+
+**Everything below is the evidence**, including the parts where the results
+contradicted claims this repo had already made. Jump to
+[the cost curve](#the-headline) · [memory lift](#how-much-of-that-is-memory) ·
+[honest limits](#honest-limits).
+
+---
 
 ## The headline
+
+For a single benchmark instance, published numbers put verbatim retrieval at
+roughly **$0.01 and zero LLM calls**, and Mem0 at **~$0.50 with 1000+ LLM calls**
+(~1.5M tokens) to construct its memory. Yet the comparison the field actually
+makes is "1,764 tokens per query vs 26,031 for full context — 90% savings",
+which reports only the second of those two facts.
+
+Both belong in the same table. This plot puts them there.
 
 ![cost curve](results/cost_curve.png)
 
