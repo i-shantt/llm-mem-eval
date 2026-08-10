@@ -495,3 +495,10 @@ reported number carries its own `n`.
   Those disagreements are the only cases a human label would inform; agreement
   cases teach you nothing. If you want human validation, label those (a few per
   hundred) rather than the whole set.
+
+## License
+
+[MIT](LICENSE), covering the code and the measurements in `results/`.
+LongMemEval is a separate dataset under its own terms and is not redistributed
+here. The *reported* figures in `data/published_costs.json` belong to the papers
+each entry cites and are quoted, with attribution, for comparison.
