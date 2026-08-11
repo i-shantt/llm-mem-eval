@@ -131,8 +131,27 @@ class Example:
 
 
 def load_examples(path: str | Path, limit: int | None = None) -> list[Example]:
-    """Load a LongMemEval split (longmemeval_s / _m / _oracle)."""
-    with open(path) as f:
+    """Load a LongMemEval split (longmemeval_s / _m / _oracle).
+
+    The splits are a deliberate non-vendored download, so a missing file is the
+    likeliest failure on a clean clone -- and the first command anyone runs is
+    one that needs it. A bare FileNotFoundError names a path and says nothing
+    about where the file comes from, so raise the download instead.
+    """
+    p = Path(path)
+    if not p.is_file():
+        raise SystemExit(
+            f"LongMemEval is not downloaded -- no file at {p}\n\n"
+            f"Fetch it with:\n\n"
+            f"    pip install huggingface_hub\n"
+            f"    python -c \"from huggingface_hub import hf_hub_download; \\\n"
+            f"      hf_hub_download('xiaowu0162/longmemeval', '{p.name}', \\\n"
+            f"      repo_type='dataset', local_dir='{p.parent}')\"\n\n"
+            f"longmemeval_s is ~278 MB; longmemeval_oracle is ~15 MB and is\n"
+            f"enough for the grader audit. tests/ and scripts/make_report.py\n"
+            f"need neither -- they run from the stored arms in results/."
+        )
+    with open(p) as f:
         raw = json.load(f)
     if limit is not None:
         raw = raw[:limit]

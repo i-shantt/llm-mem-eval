@@ -64,3 +64,18 @@ def test_dropping_the_question_really_does_change_a_stored_arm():
     )
     for name, with_q, without_q in differing:
         assert without_q > with_q, f"{name}: dropping the question should only be more lenient"
+
+
+def test_a_missing_split_explains_the_download_instead_of_raising():
+    """The likeliest failure on a clean clone, and the least self-explanatory:
+    `open()` on an absent 278 MB download says only that a path is missing."""
+    from memllm.data.loader import load_examples
+
+    with pytest.raises(SystemExit) as e:
+        load_examples("data/raw/definitely_not_downloaded")
+
+    msg = str(e.value)
+    assert "hf_hub_download" in msg, "must name the way to get the file"
+    assert "xiaowu0162/longmemeval" in msg, "must name the dataset"
+    assert "definitely_not_downloaded" in msg, "must name the split requested"
+    assert "results/" in msg, "must say what still works without it"

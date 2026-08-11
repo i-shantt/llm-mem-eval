@@ -42,11 +42,18 @@ jobs:
       - name: Harness invariants
         run: python tests/test_harness.py
 
+      # Against the oracle split, so --data is explicit: audit_graders defaults
+      # to longmemeval_s, which is the 278 MB download this job does not take.
+      # The constructed case count differs a little between splits (3,094 here
+      # against 3,166 committed) because some case kinds are built from the
+      # loaded turns; the rate is the assertion, not the count. --out keeps it
+      # off the committed artifact so the RESULTS.md diff below stays clean.
       - name: The grader still accepts no known-wrong answer
         run: |
-          python scripts/audit_graders.py
+          python scripts/audit_graders.py \
+            --data data/raw/longmemeval_oracle --out /tmp/grader_audit_ci.json
           python -c "import json,sys; \
-            r=json.load(open('results/grader_audit.json'))['graders']['deterministic']; \
+            r=json.load(open('/tmp/grader_audit_ci.json'))['graders']['deterministic']; \
             sys.exit(0 if r['false_accept_rate']==0.0 else 'false accepts: %s' % r['false_accept_rate'])"
 
       # RESULTS.md is generated, and the README says so. That only means
