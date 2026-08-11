@@ -1,5 +1,8 @@
 # memllm — what does LLM memory actually cost?
 
+[![tests](https://github.com/i-shantt/memllm/actions/workflows/tests.yml/badge.svg)](https://github.com/i-shantt/memllm/actions/workflows/tests.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 *Start here. Companion repo:
 [llm-memory-conditioning](https://github.com/i-shantt/llm-memory-conditioning),
 which builds a system on top of what this one measured.*
@@ -20,9 +23,9 @@ thousand AI calls; using it takes none. So the advertised saving only arrives
 after you have asked the same conversation enough questions to pay the build cost
 back.
 
-**Measured: about 4,630 questions against one conversation.** No personal
+**Measured: about 4,570 questions against one conversation.** No personal
 assistant ever reaches that. A plain search index with no AI build step is
-**49.7× cheaper per query than sending the whole conversation**, and it never has
+**49.6× cheaper per query than sending the whole conversation**, and it never has
 a bill to repay.
 
 ```mermaid
@@ -65,9 +68,9 @@ Read-path-only accounting is the `n → ∞` limit of this plot, which flatters
 exactly the systems that spend the most up front. Measured on LongMemEval
 (n=100, turn granularity, top-10 retrieved):
 
-> **Mem0's cheaper read path only repays its write path after ~4,630 queries
+> **Mem0's cheaper read path only repays its write path after ~4,571 queries
 > against the same conversation.** No personal assistant ever reaches that.
-> Meanwhile a zero-LLM-write-path retriever is **49.7× cheaper per query than
+> Meanwhile a zero-LLM-write-path retriever is **49.6× cheaper per query than
 > full context** — at $0.00031/query against $0.01561.
 
 And that retriever earns its accuracy rather than inheriting it: against
@@ -298,17 +301,31 @@ them, and +0.480 at 14B from the *same* retrieval.
 
 For a project about cost that is the actionable result: **memory quality has a
 per-question-type model-capacity threshold, and below it, better memory is
-wasted money.** Paying for a retriever that nails temporal evidence is worth
-**12× more at 14B than at 1.5B**. No memory paper reports this, because
-reporting it requires the control arms.
+wasted money.** No memory paper reports this, because reporting it requires the
+control arms.
+
+**Say that with the right number.** An earlier version of this section priced
+the threshold as "worth 12× more at 14B than at 1.5B", from 0.480 ÷ 0.040. That
+ratio is 12 questions divided by *one* question, on a 25-question slice: one
+more question at the 1.5B end would have made it 6×, one fewer would have made
+it infinite. The ratio is noise even though the effect is not.
+
+The effect stated properly is a paired test on that slice. Comparing 14B against
+1.5B on the same 25 `temporal-reasoning` questions with the same retrieval, 14B
+answers 11 that 1.5B misses and misses 2 that 1.5B answers — **p = 0.023**. The
+gradient across all four rungs (1, 2, 7, 12 questions gained over control) is
+monotonic. The capacity threshold is real; only its price tag was made up of one
+question.
 
 A companion repo,
 [llm-memory-conditioning](https://github.com/i-shantt/llm-memory-conditioning),
-tests the converse and finds it holds: doing the date arithmetic for a 1.5B
-model at render time — deterministically, with no LLM call — buys **+0.110
-accuracy (p = 0.006)**, and buys a 7B model nothing. The threshold is real in
-both directions. Below it, better memory is wasted; below it is also exactly
-where cheap conditioning pays.
+tested the converse — deterministically doing the date arithmetic for a small
+model at render time — and **it did not hold.** That repo first measured +0.110
+(p = 0.006) on a 100-question sample and then found it collapsed to +0.007
+(p = 0.79) when re-run on all 500 questions; the sample had drawn an unusually
+weak baseline. Cheap conditioning below the threshold is a reasonable idea and
+this pair of repos is evidence against it, not for it. The 100-question caveat
+below applies to this repo for the same reason.
 
 `knowledge-update` is also where memory matters least in relative terms —
 `recency` alone scores 0.250, since a recently-updated fact is in the recent
@@ -320,7 +337,7 @@ control arms present it refuses to report a lift and marks every system
 
 ### Scale helps, and the grader exaggerates by how much
 
-End-to-end accuracy rises from 0.352 to 0.582 across ~10× of parameters, so
+End-to-end accuracy rises from 0.352 to 0.593 across ~9× of parameters, so
 model capacity is the largest single term. But answer length rises with it too
 (median 14 → 32 words), and containment grading marks an answer correct if the
 gold span appears *anywhere* in it. Longer answers get more chances.
@@ -332,10 +349,10 @@ does not need many words:
 | arm | full | 40w | 25w | 15w | 8w |
 |---|---|---|---|---|---|
 | 7B hybrid | 0.473 | 0.451 | 0.374 | 0.363 | 0.253 |
-| 14B hybrid | 0.593 | 0.571 | 0.462 | 0.396 | 0.242 |
-| **14B − 7B** | **+0.121** | +0.121 | +0.088 | +0.033 | **−0.011** |
+| 14B hybrid | 0.593 | 0.571 | 0.462 | 0.407 | 0.253 |
+| **14B − 7B** | **+0.121** | +0.121 | +0.088 | +0.044 | **+0.000** |
 
-The 14B lead decays to zero and then slightly reverses. Token-F1, which
+The 14B lead decays to exactly zero. Token-F1, which
 penalises length rather than rewarding it, puts the same gap at **+0.007**.
 Scale is real; the 12-point version of it is mostly verbosity.
 `scripts/make_report.py` prints this decay for every arm, so it cannot quietly
@@ -362,8 +379,8 @@ or "gold-context" arm as a ceiling is making this mistake.
 
 ### Granularity has to be priced, not just measured
 
-Retrieval units differ ~40× in size — a turn averages 213 tokens, a user turn
-54, a whole session 2,187. Comparing granularities at a shared `k` therefore
+Retrieval units differ ~40× in size — a turn averages 210 tokens, a user turn
+54, a whole session 2,164 (`scripts/measure_token_stats.py --granularity`). Comparing granularities at a shared `k` therefore
 compares a 2,600-token prompt against a 22,000-token one, which is not a
 comparison at all. Two symptoms, both measured here:
 
@@ -433,9 +450,29 @@ reported number carries its own `n`.
 
 ## Honest limits
 
+- **Everything here is 100 questions, and 100 questions can lie.** Each arm is a
+  stratified sample of LongMemEval, 91 of them gradable, giving a confidence
+  interval of roughly ±0.08 per arm. That is wide enough to invent a large
+  effect: the companion repo measured +0.132 at p = 0.002 on this same
+  100-question draw and watched it fall to +0.007 when re-run on all 500,
+  because the sample had drawn an unusually weak baseline. **The main results
+  here are far too large for that to explain them** — the memory lift is +0.242
+  to +0.505 at p ≤ 3e-06, three to six times the sampling noise, and the
+  retrieval gaps are larger still. The numbers to distrust are the small ones:
+  every per-question-type row sits on n=10–26, where one question is worth 0.04
+  to 0.10, and none of those cells has been replicated at full scale.
 - Comparisons against Mem0, Zep, A-Mem and similar use **their published
   numbers**, not our re-runs of their code. Tables label each number as
   *reported* or *measured*. Reimplementing those systems is out of scope.
+- **The regression tests for the two hardest grader defects are one case each.**
+  `hard_list_reorder` and `reordered_ordered_list` are n=1 in the audit. Both
+  were added after a real false accept got through, and a single constructed
+  case is thin cover for a defect class that has already caused one.
+- **The LoCoMo audit figures (6.4% of the answer key wrong, judge false-accept
+  up to 0.63) are quoted without a citation.** Every other external number in
+  this repo is pinned to a paper and table in `data/published_costs.json`. These
+  two are not, and they are load-bearing — they are the argument for the whole
+  judge-free design. Treat them as unverified until that entry exists.
 - Retrieval quality is not answer quality. A system can retrieve the right turn
   and still answer wrong. That is what the end-to-end arm is for.
 - `has_answer` is LongMemEval's own labelling, inheriting whatever errors it

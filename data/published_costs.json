@@ -11,7 +11,6 @@
     "numbers) and are NOT directly comparable to each other or to our measured",
     "numbers. Label the benchmark on every number you display."
   ],
-
   "_removed": [
     {
       "claim": "verbatim RAG costs ~$0.01 with no LLM calls while Mem0 costs $0.50+ with 1000+ LLM calls per instance",
@@ -25,7 +24,6 @@
       "note": "Mem0's own Table 2 reports 72.90 +/- 0.19 for the full-context baseline. The 70.71 figure came from a secondary discussion, not a primary table."
     }
   ],
-
   "locomo_read_path": {
     "_source": "Mem0, arXiv 2504.19413, Table 2",
     "_benchmark": "LoCoMo",
@@ -38,18 +36,17 @@
         "tokens_per_query": 1764,
         "llm_judge_score": 66.88,
         "llm_judge_stderr": 0.15,
-        "p95_latency_s": 1.440
+        "p95_latency_s": 1.44
       },
       {
         "name": "full-context",
         "tokens_per_query": 26031,
-        "llm_judge_score": 72.90,
+        "llm_judge_score": 72.9,
         "llm_judge_stderr": 0.19,
         "p95_latency_s": 17.117
       }
     ]
   },
-
   "locomo_construction_tokens": {
     "_source": "RecMem, arXiv 2605.16045, Table 8 ('Construction tokens across different memory systems')",
     "_benchmark": "LoCoMo",
@@ -57,12 +54,20 @@
     "_verified": true,
     "_note": "Secondary source for Mem0 and A-Mem: these are RecMem's measurements of its competitors, not those systems' own reported figures. Mem0's own paper does not report this at all, so no primary source exists.",
     "systems": [
-      {"name": "Mem0", "construction_tokens": 1520800},
-      {"name": "A-Mem", "construction_tokens": 1459900},
-      {"name": "RecMem", "construction_tokens": 193200}
+      {
+        "name": "Mem0",
+        "construction_tokens": 1520800
+      },
+      {
+        "name": "A-Mem",
+        "construction_tokens": 1459900
+      },
+      {
+        "name": "RecMem",
+        "construction_tokens": 193200
+      }
     ]
   },
-
   "longmemeval_construction_energy": {
     "_source": "Agent Memory: Characterization and System Implications of Stateful Long-Horizon Workloads, arXiv 2606.06448, Tables 1 and 3",
     "_benchmark": "LongMemEval, 300 queries",
@@ -70,11 +75,50 @@
     "_verified": true,
     "_note": "Same benchmark this repo uses, so the relative ordering is the most comparable published evidence available. The paper states construction dominates the agent lifecycle, and classifies BM25/embedRAG as Paradigm II: deterministic indexing with no LLM calls.",
     "systems": [
-      {"name": "embedRAG", "energy_kj": 495, "construction_llm_calls": null, "paradigm": "II (no LLM calls)"},
-      {"name": "BM25", "energy_kj": 582, "construction_llm_calls": null, "paradigm": "II (no LLM calls)"},
-      {"name": "GraphRAG", "energy_kj": 2082, "construction_llm_calls": 3215, "paradigm": "III (LLM-mediated extraction)"},
-      {"name": "Mem0", "energy_kj": 4878, "construction_llm_calls": null, "paradigm": "III (LLM-mediated extraction)"},
-      {"name": "Letta", "energy_kj": 15429, "construction_llm_calls": 18394, "paradigm": "IV (agentic control flow)"}
+      {
+        "name": "embedRAG",
+        "energy_kj": 495,
+        "construction_llm_calls": null,
+        "paradigm": "II (no LLM calls)"
+      },
+      {
+        "name": "BM25",
+        "energy_kj": 582,
+        "construction_llm_calls": null,
+        "paradigm": "II (no LLM calls)"
+      },
+      {
+        "name": "GraphRAG",
+        "energy_kj": 2082,
+        "construction_llm_calls": 3215,
+        "paradigm": "III (LLM-mediated extraction)"
+      },
+      {
+        "name": "Mem0",
+        "energy_kj": 4878,
+        "construction_llm_calls": null,
+        "paradigm": "III (LLM-mediated extraction)"
+      },
+      {
+        "name": "Letta",
+        "energy_kj": 15429,
+        "construction_llm_calls": 18394,
+        "paradigm": "IV (agentic control flow)"
+      }
     ]
-  }
+  },
+  "_needs_source": [
+    {
+      "claim": "the LoCoMo audit found 6.4% of its answer key wrong and its LLM judge accepting up to 63% of intentionally wrong answers",
+      "used_in": [
+        "README.md",
+        "memllm/eval/judge.py",
+        "memllm/eval/grade.py",
+        "scripts/validate_judge.py",
+        "results/grader_audit.json"
+      ],
+      "status": "UNVERIFIED - no paper and table recorded",
+      "note": "This is the justification for the entire judge-free design, so it is the last claim that should be uncited. It has not been through the check every entry above passed. Either pin it to a paper and table or stop quoting the numbers."
+    }
+  ]
 }

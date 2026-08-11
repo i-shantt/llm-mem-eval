@@ -1,0 +1,59 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      # Not requirements.txt: that pulls torch and sentence-transformers for the
+      # dense retriever, which is ~2 GB and which nothing checked here touches.
+      # Every test and both report scripts run on these four.
+      - run: pip install pytest rank_bm25 tiktoken numpy
+
+      - name: Tests
+        run: python -m pytest tests/ -q
+
+      # 15 MB, against longmemeval_s's 278 MB. It is what lets the grader audit
+      # actually run here: the 0.000 false-accept rate is the guarantee every
+      # accuracy number in this repo depends on, so it should be re-measured on
+      # every push rather than trusted from a committed JSON.
+      - name: Fetch the oracle split (15 MB)
+        run: |
+          pip install -q huggingface_hub
+          python -c "from huggingface_hub import hf_hub_download; \
+            hf_hub_download('xiaowu0162/longmemeval','longmemeval_oracle', \
+            repo_type='dataset', local_dir='data/raw')"
+
+      # A script rather than a pytest module. Asserts the label-integrity and
+      # cost-accounting invariants the whole repo rests on, and with the split
+      # present its two data-dependent checks run instead of skipping.
+      - name: Harness invariants
+        run: python tests/test_harness.py
+
+      - name: The grader still accepts no known-wrong answer
+        run: |
+          python scripts/audit_graders.py
+          python -c "import json,sys; \
+            r=json.load(open('results/grader_audit.json'))['graders']['deterministic']; \
+            sys.exit(0 if r['false_accept_rate']==0.0 else 'false accepts: %s' % r['false_accept_rate'])"
+
+      # RESULTS.md is generated, and the README says so. That only means
+      # anything if it is still what the generator produces -- a grader change
+      # silently made the report disagree with the arms it was reporting on,
+      # and this is the check that would have caught it the same day.
+      - name: RESULTS.md still regenerates from the stored arms
+        run: |
+          python scripts/make_report.py > RESULTS.md
+          git diff --exit-code -- RESULTS.md

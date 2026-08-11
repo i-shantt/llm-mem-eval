@@ -175,8 +175,16 @@ def length_bias_section(arms: list[dict]) -> None:
         med = sorted(len(r["pred"].split()) for r in R)[len(R) // 2]
         cells = []
         for cap in CAPS:
+            # The question has to go in. Without it `grade` re-enables set
+            # comparison, which accepts a reordered list on an ordering
+            # question -- the second false accept this repo documents fixing.
+            # Dropping it here made the `full` column disagree with the arm's
+            # own stored accuracy on both oracle arms (0.571 against 0.560 at
+            # 14B, 0.604 against 0.593 at 7B), so the row auditing the headline
+            # was graded more leniently than the headline itself.
             g = [grade(" ".join(r["pred"].split()[:cap]) if cap else r["pred"],
-                       r["gold"], r["is_abstention"]) for r in R]
+                       r["gold"], r["is_abstention"], r.get("question"))
+                 for r in R]
             g = [x for x in g if x is not None]
             cells.append(f"{sum(g)/len(g):.3f}" if g else "--")
         print(f"| {a['_tag'][4:]} | {med} | " + " | ".join(cells) + " |")
