@@ -1,10 +1,10 @@
 """Cost instrumentation, split by write path vs read path.
 
 This is the point of the project. Published memory systems report read-path
-tokens per query and omit the write path, where the cost actually lives (Mem0
-spends ~1.5M tokens and 1000+ LLM calls constructing memory for one LoCoMo
-instance). We account for both, separately, so total cost can be plotted
-against query volume.
+tokens per query and omit the write path, where the cost actually lives (Mem0's
+memory construction runs ~1.5M tokens for one LoCoMo instance -- a figure only
+RecMem's Table 8 reports, since Mem0's own paper is silent on it). We account
+for both, separately, so total cost can be plotted against query volume.
 """
 
 from __future__ import annotations

@@ -18,10 +18,10 @@ extract facts, and store them so a later question can be answered cheaply.
 Everyone advertises the same number: **tokens per query**. How little it costs to
 *use* the memory. Almost nobody reports what it cost to *build* it.
 
-That is where the money is. Building the memory for one conversation takes over a
-thousand AI calls; using it takes none. So the advertised saving only arrives
-after you have asked the same conversation enough questions to pay the build cost
-back.
+That is where the money is. Building the memory for one conversation costs about
+1.5 million tokens of AI work; using it costs none. So the advertised saving only
+arrives after you have asked the same conversation enough questions to pay the
+build cost back.
 
 **Measured: about 4,570 questions against one conversation.** No personal
 assistant ever reaches that. A plain search index with no AI build step is
@@ -30,7 +30,7 @@ a bill to repay.
 
 ```mermaid
 flowchart LR
-    A[Conversation] -->|"WRITE PATH<br/>1000+ AI calls<br/>paid once, up front"| B[(Memory)]
+    A[Conversation] -->|"WRITE PATH<br/>~1.5M tokens of AI work<br/>paid once, up front"| B[(Memory)]
     B -->|"READ PATH<br/>the number everyone<br/>advertises"| C[Answer]
     style A fill:#7f1d1d,color:#fff
     style B fill:#1e3a5f,color:#fff
@@ -54,13 +54,19 @@ contradicted claims this repo had already made. Jump to
 
 ## The headline
 
-For a single benchmark instance, published numbers put verbatim retrieval at
-roughly **$0.01 and zero LLM calls**, and Mem0 at **~$0.50 with 1000+ LLM calls**
-(~1.5M tokens) to construct its memory. Yet the comparison the field actually
+Mem0's own paper reports **no write-path cost at all**. The only published figure
+for it is a competitor's measurement: **~1.5M construction tokens per
+conversation** (RecMem, Table 8), which at gpt-4o-mini prompt prices is **$0.23**
+paid before the first question is asked. Yet the comparison the field actually
 makes is "1,764 tokens per query vs 26,031 for full context — 90% savings",
-which reports only the second of those two facts.
+which reports only the read path.
 
-Both belong in the same table. This plot puts them there.
+For the class as a whole, published construction call counts are large where
+anyone reports them: **GraphRAG 3,215 LLM calls and Letta 18,394** on
+LongMemEval (arXiv 2606.06448). Mem0's is simply not published.
+
+The write path and the read path belong in the same table. This plot puts them
+there.
 
 ![cost curve](results/cost_curve.png)
 
