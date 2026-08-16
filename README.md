@@ -65,19 +65,21 @@ architecture.
 
 ```mermaid
 flowchart TB
-    subgraph EXTRACT["LLM-extracted memory: one LLM call per message pair, plus one per extracted fact"]
+    subgraph EXTRACT["LLM-extracted memory — e.g. Mem0"]
         direction LR
         P["message pair"] --> E["extraction<br/>LLM call"]
         E --> F["candidate facts"]
-        F --> U["update LLM call<br/>ADD / UPDATE / DELETE / NOOP"]
+        F --> U["update LLM call<br/>per fact<br/>ADD / UPDATE / DELETE / NOOP"]
         U --> DB[("memory store")]
     end
 
-    subgraph INDEX["Search index: zero LLM calls"]
+    subgraph INDEX["Search index — this repo, zero LLM calls"]
         direction LR
         T["turns"] --> TK["tokenize + embed"]
         TK --> IX[("BM25 + vector index")]
     end
+
+    EXTRACT ~~~ INDEX
 ```
 
 In Mem0 as described in the 2025 paper, ingesting a message pair prompts an LLM
