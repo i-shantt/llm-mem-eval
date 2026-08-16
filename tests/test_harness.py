@@ -228,8 +228,8 @@ def test_grader_audit_has_zero_false_accepts() -> None:
 
     # Skip rather than fail when the split is absent, matching
     # test_real_data_loads. A fresh clone that downloaded only longmemeval_s
-    # was aborting the whole Kaggle pre-flight here, which reads as a broken
-    # grader rather than a missing 15 MB file.
+    # was aborting the whole run here, which reads as a broken grader rather
+    # than a missing 15 MB file.
     if not DATA.exists():
         print(f"  skip grader audit ({DATA} not downloaded)")
         return
