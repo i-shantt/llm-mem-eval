@@ -245,9 +245,10 @@ leaves zero, so it cannot quietly stop being true.
 **Where the audit stops being enough.** Constructed negatives are *easy*
 negatives. The clearest demonstration is a false accept it could not catch: on
 *"Which group did I join first, 'Page Turners' or 'Marketing Professionals'?"*
-(gold `Page Turners`), a model answered that it joined *Marketing Professionals*
-first — and containment accepted it, because the gold string appears in the
-sentence asserting the opposite. On a two-alternative question both candidates
+(gold `Page Turners`), the 7B hybrid arm answered that it joined *Marketing
+Professionals* first, then named Page Turners later in the same answer — and
+containment accepted it, because the gold string is present in a sentence
+asserting the opposite. On a two-alternative question both candidates
 appear in almost any answer, which makes containment nearly uninformative for
 that question shape. A 0.000 false-accept rate over constructed cases is
 *necessary* for trusting a grader, not *sufficient*.
@@ -332,8 +333,9 @@ A companion repo,
 tested the converse — doing the date arithmetic deterministically for a small
 model at render time — and **it did not hold**. It first measured +0.132
 (p = 0.002) on a 100-question sample, then found it collapsed to +0.007
-(p = 0.79) across all 500; the sample had drawn an unusually weak baseline. That
-is the clearest available warning about this repo's own sample size.
+(p = 0.79) across all 500 questions; the sample had drawn an unusually weak
+baseline. That is the clearest available warning about this repo's own sample
+size.
 
 ---
 
@@ -500,13 +502,14 @@ reported number carries its own `n`.
   stratified sample, 91 of them gradable, giving roughly ±0.10 per arm near
   p = 0.5. That is wide enough to invent a large effect — the companion repo
   measured +0.132 at p = 0.002 on this same draw and watched it fall to +0.007
-  at n=500. The main results here are too large for that to explain (lift +0.242
+  across all 500 (446 gradable). The main results here are too large for that to
+  explain (lift +0.242
   to +0.505 at p ≤ 1.1e-05, three to five times the sampling noise), but **every
   per-question-type row sits on n=6–26**, where one question is worth 0.04 to
   0.17, and none of those cells has been replicated at full scale. The
   `single-session-preference` slice is n=6 and should not be quoted at all.
-- **No memory product was re-run here.** Mem0, Zep, A-Mem and RecMem figures are
-  quoted from publications, and the cost comparison mixes benchmarks — Mem0's
+- **No memory product was re-run here.** Every Mem0, A-Mem and RecMem figure is
+  quoted from a publication, and the cost comparison mixes benchmarks — Mem0's
   read path is measured on LoCoMo, this repo's on LongMemEval. Reimplementing
   those systems is out of scope, and doing it is the obvious next step.
 - **The control arms bound what memory contributed *here*, not what any
