@@ -39,13 +39,15 @@ def main() -> None:
     ap.add_argument("--results", default="results/sweep_turn_n100.json")
     ap.add_argument("--k", type=int, default=10,
                    help="how many retrieved units get sent to the LLM")
-    ap.add_argument("--token-stats", default="results/token_stats.json",
+    ap.add_argument("--token-stats", default="results/token_stats_turn.json",
                    help="produced by scripts/measure_token_stats.py")
     ap.add_argument("--avg-unit-tokens", type=float, default=None,
                    help="override the measured mean tokens per retrieved turn")
     ap.add_argument("--full-context-tokens", type=float, default=None,
                    help="override the measured full-context token count")
-    ap.add_argument("--max-queries", type=int, default=1000)
+    # The break-even this figure exists to show lands near 4k queries. A 1e3
+    # axis cut it off, so the only visible crossover was an incidental one.
+    ap.add_argument("--max-queries", type=int, default=20000)
     ap.add_argument("--out", default="results/cost_curve.png")
     args = ap.parse_args()
 
@@ -55,6 +57,14 @@ def main() -> None:
     stats_path = Path(args.token_stats)
     if stats_path.exists():
         ts = json.loads(stats_path.read_text())
+        # The retrieved-token cost below multiplies k by the mean unit size, so
+        # feeding it session statistics would price ten sessions as ten turns.
+        if ts.get("granularity") != "turn":
+            raise SystemExit(
+                f"{stats_path} was measured at {ts.get('granularity')!r} "
+                "granularity, but this figure reports top-k turns. Run "
+                "scripts/measure_token_stats.py --granularity turn."
+            )
         measured_unit = ts["tokens_per_unit"]["mean"]
         measured_full = ts["tokens_per_example_full_context"]["mean"]
         print(f"using measured token stats from {stats_path} "
@@ -81,7 +91,12 @@ def main() -> None:
 
     published = json.loads(Path("data/published_costs.json").read_text())
     # Read path from Mem0's own Table 2; construction tokens from RecMem's
-    # Table 8, because Mem0's paper reports no write-path cost at all.
+    # Table 1, because Mem0's paper reports no write-path cost at all.
+    #
+    # `construction_tokens` is deliberately the gpt-4o-mini column of that
+    # table, matching PROMPT_PRICE_PER_1M below. RecMem also reports a
+    # gpt-4.1-mini column that is 23% larger; pricing that one at gpt-4o-mini
+    # rates would overstate Mem0's build cost and inflate the break-even.
     read_block = published["locomo_read_path"]
     build_block = published["locomo_construction_tokens"]
     mem0_read_tokens = next(
@@ -124,16 +139,34 @@ def main() -> None:
                  "write path paid once + read path paid per query",
                  fontsize=11)
     ax.grid(alpha=0.25, which="both", lw=0.5)
+
+    # Mark the crossover the surrounding text quotes, so the figure actually
+    # shows the claim it is cited for.
+    if mem0_read_per_query < ours_read_per_query:
+        n_even = mem0_write / (ours_read_per_query - mem0_read_per_query)
+        if ns[0] <= n_even <= ns[-1]:
+            ax.axvline(n_even, color="#555", lw=1.0, ls=":", zorder=0)
+            ax.annotate(
+                f"break-even\n~{n_even:,.0f} queries",
+                xy=(n_even, ours_write + n_even * ours_read_per_query),
+                xytext=(6, -28), textcoords="offset points",
+                fontsize=8, color="#333",
+            )
+
     ax.legend(fontsize=8, loc="upper left", framealpha=0.9)
 
+    # Below the axes rather than inside them: at README width an in-plot note
+    # sat on top of the curves it was qualifying.
     note = (
-        "Mem0 line uses REPORTED LoCoMo numbers (unverified) and a different\n"
-        "benchmark; shown for shape, not for head-to-head comparison."
+        "The Mem0 line combines that paper's reported read path with a "
+        "competitor's measurement of its construction\ncost, both on LoCoMo "
+        "rather than LongMemEval. It shows the shape of the amortisation "
+        "curve, not a\nhead-to-head result. Sources in data/published_costs.json."
     )
-    ax.text(0.98, 0.03, note, transform=ax.transAxes, fontsize=7,
-            ha="right", va="bottom", color="#555")
+    fig.text(0.012, 0.005, note, fontsize=7.5, ha="left", va="bottom",
+             color="#444", linespacing=1.5)
 
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.09, 1, 1))
     Path(args.out).parent.mkdir(exist_ok=True)
     fig.savefig(args.out, dpi=160)
     print(f"wrote {args.out}")

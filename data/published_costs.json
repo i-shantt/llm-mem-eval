@@ -48,77 +48,134 @@
     ]
   },
   "locomo_construction_tokens": {
-    "_source": "RecMem, arXiv 2605.16045, Table 8 ('Construction tokens across different memory systems')",
+    "_source": "RecMem, arXiv 2605.16045, Table 1",
     "_benchmark": "LoCoMo",
     "_unit": "construction tokens per conversation",
     "_verified": true,
     "_note": "Secondary source for Mem0 and A-Mem: these are RecMem's measurements of its competitors, not those systems' own reported figures. Mem0's own paper does not report this at all, so no primary source exists.",
+    "_extraction_model_matters": "Table 1 reports each system under two extraction models. Pair the token count with the price of the SAME model. This repo prices at gpt-4o-mini, so it uses the gpt-4o-mini column; quoting the gpt-4.1-mini token count at gpt-4o-mini prices would overstate the build cost by 23%.",
     "systems": [
       {
         "name": "Mem0",
-        "construction_tokens": 1520800
+        "construction_tokens": 1233500,
+        "construction_tokens_gpt41mini": 1520800
       },
       {
         "name": "A-Mem",
-        "construction_tokens": 1459900
+        "construction_tokens": 1143300,
+        "construction_tokens_gpt41mini": 1459930
+      },
+      {
+        "name": "MemoryOS",
+        "construction_tokens": 429700,
+        "construction_tokens_gpt41mini": 400700
       },
       {
         "name": "RecMem",
-        "construction_tokens": 193200
+        "construction_tokens": 202400,
+        "construction_tokens_gpt41mini": 193200
+      }
+    ]
+  },
+  "longmemeval_construction_tokens": {
+    "_source": "RecMem, arXiv 2605.16045, Table 2",
+    "_benchmark": "LongMemEval-S",
+    "_unit": "construction tokens per conversation",
+    "_verified": true,
+    "_note": "Same benchmark this repo measures on, so this is the most directly comparable published construction figure for Mem0 that exists. Still a competitor's measurement, not Mem0's own.",
+    "systems": [
+      {
+        "name": "Mem0",
+        "construction_tokens": 1626540
       }
     ]
   },
   "longmemeval_construction_energy": {
-    "_source": "Agent Memory: Characterization and System Implications of Stateful Long-Horizon Workloads, arXiv 2606.06448, Tables 1 and 3",
-    "_benchmark": "LongMemEval, 300 queries",
-    "_unit": "kilojoules, end-to-end",
+    "_source": "Agent Memory: Characterization and System Implications of Stateful Long-Horizon Workloads, arXiv 2606.06448, Table 3",
+    "_benchmark": "LongMemEval_S, Qwen3-32B answering, 300 queries",
+    "_unit": "kilojoules end-to-end; llm_calls covers construction + 300 QA calls",
     "_verified": true,
-    "_note": "Same benchmark this repo uses, so the relative ordering is the most comparable published evidence available. The paper states construction dominates the agent lifecycle, and classifies BM25/embedRAG as Paradigm II: deterministic indexing with no LLM calls.",
+    "_note": "Same benchmark this repo uses, so the relative ordering is the most comparable published evidence available. The paper's Section 4.2 is titled 'Construction Dominates the Agent Lifecycle'. It classifies BM25/embedRAG as Paradigm II: deterministic indexing with no LLM calls.",
+    "_reading_the_calls_column": "Table 3's Calls column is construction + 300 QA. BM25's 300 is therefore one call per query and zero construction. Subtract 300 to approximate construction calls: Mem0 ~4,238, GraphRAG ~2,915, Letta ~18,094.",
+    "_accuracy_caveat": "Table 3 also reports accuracy, where Mem0 scores 32.0 against BM25's 47.0. That is a different generator and setup from Mem0's own paper and is not a like-for-like restatement of it.",
     "systems": [
       {
         "name": "embedRAG",
         "energy_kj": 495,
-        "construction_llm_calls": null,
+        "llm_calls_total": 610,
+        "accuracy": 39.8,
         "paradigm": "II (no LLM calls)"
       },
       {
         "name": "BM25",
         "energy_kj": 582,
-        "construction_llm_calls": null,
+        "llm_calls_total": 300,
+        "accuracy": 47.0,
         "paradigm": "II (no LLM calls)"
+      },
+      {
+        "name": "HippoRAG v2",
+        "energy_kj": 1339,
+        "llm_calls_total": 2743,
+        "accuracy": 44.3,
+        "paradigm": "III (LLM-mediated extraction)"
       },
       {
         "name": "GraphRAG",
         "energy_kj": 2082,
-        "construction_llm_calls": 3215,
+        "llm_calls_total": 3215,
+        "accuracy": 46.0,
         "paradigm": "III (LLM-mediated extraction)"
       },
       {
         "name": "Mem0",
         "energy_kj": 4878,
-        "construction_llm_calls": null,
+        "llm_calls_total": 4538,
+        "accuracy": 32.0,
+        "paradigm": "III (LLM-mediated extraction)"
+      },
+      {
+        "name": "A-Mem",
+        "energy_kj": 14864,
+        "llm_calls_total": 19230,
+        "accuracy": 42.7,
         "paradigm": "III (LLM-mediated extraction)"
       },
       {
         "name": "Letta",
         "energy_kj": 15429,
-        "construction_llm_calls": 18394,
+        "llm_calls_total": 18394,
+        "accuracy": 27.7,
         "paradigm": "IV (agentic control flow)"
       }
     ]
   },
-  "_needs_source": [
-    {
-      "claim": "the LoCoMo audit found 6.4% of its answer key wrong and its LLM judge accepting up to 63% of intentionally wrong answers",
-      "used_in": [
-        "README.md",
-        "memllm/eval/judge.py",
-        "memllm/eval/grade.py",
-        "scripts/validate_judge.py",
-        "results/grader_audit.json"
-      ],
-      "status": "UNVERIFIED - no paper and table recorded",
-      "note": "This is the justification for the entire judge-free design, so it is the last claim that should be uncited. It has not been through the check every entry above passed. Either pin it to a paper and table or stop quoting the numbers."
+  "judge_reliability": {
+    "_source": "Same Ranking, Different Winner: How Scoring Targets Shape LLM Memory Benchmarks, arXiv 2605.24060",
+    "_benchmark": "LoCoMo and LongMemEval-S",
+    "_verified": true,
+    "_note": "Peer-reviewable evidence that judged scores on these benchmarks are sensitive to a free choice the grader makes. This is the citation the judge-free design rests on.",
+    "findings": {
+      "queries_whose_ndcg_changes_with_scoring_target": "83.4-94.0%",
+      "semantic_audit_cases": 1902,
+      "relaxed_source_linked_credit_justified": "29.2%"
     }
-  ]
+  },
+  "locomo_answer_key_audit": {
+    "_source": "Penfield Labs, 'We audited LoCoMo', 2026",
+    "_url": "https://penfieldlabs.substack.com/p/we-audited-locomo-64-of-the-answer",
+    "_benchmark": "LoCoMo",
+    "_verified": false,
+    "_source_type": "non-peer-reviewed vendor blog post, not a paper",
+    "_note": "Previously quoted in this repo as though it were a paper. It is a vendor audit with public artifacts. Cite it only with that label, and never as the sole support for a claim. This repo's own measured judge result (below) is stronger evidence and needs no external source.",
+    "claims": {
+      "answer_key_error_rate": "6.4% (99 of 1540 questions)",
+      "judge_false_accept_rate": "62.81%"
+    }
+  },
+  "_measured_here_not_published": {
+    "_note": "For contrast with everything above: the grader error rates this repo reports are measured by scripts/audit_graders.py and re-measured by CI on every push. They are not quoted from anyone.",
+    "deterministic_grader_false_accept_rate": 0.0,
+    "constructed_cases": 3166
+  }
 }
