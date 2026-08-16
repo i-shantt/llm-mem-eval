@@ -156,12 +156,44 @@
     "_url": "https://mem0.ai/blog/mem0-the-token-efficient-memory-algorithm",
     "_source_type": "vendor blog post, not peer reviewed",
     "_verified": false,
-    "_note": "Recorded because the 2025 paper no longer describes Mem0's default path. Extraction is single-pass and ADD-only -- UPDATE and DELETE are gone, superseded facts coexist -- and retrieval fuses semantic, keyword and entity matching. That makes the write path cheaper than the paper's two-phase design, though still at least one LLM call per message pair. Quoted in README.md as Mem0's own reported figures, not as a measurement by this repo.",
+    "_note": "Recorded because the 2025 paper no longer describes Mem0's default path. Extraction is single-pass and ADD-only -- UPDATE and DELETE are gone, superseded facts coexist -- and retrieval fuses semantic, keyword and entity matching. Quoted in README.md as Mem0's own reported figures, not as a measurement by this repo.",
+    "_scores_are_managed_platform": "Mem0's own benchmark README states these scores reflect the managed platform, which 'includes proprietary optimizations not available in the open-source SDK', and that open-source users should expect directionally similar but not identical numbers. Do not compare any open-source measurement to these figures.",
+    "_answerer_and_judge": "The mem0ai/memory-benchmarks README documents the retrieval budget (--top-k, default 200, with a 10/20/50/200 sweep) and the --answerer-model / --judge-model flags, and warns that 'Benchmark scores are not absolute numbers'. Their OSS extraction-model ablation holds the embedder (Qwen 600M), Qdrant, and GPT-5 as answerer and judge fixed.",
     "reported": {
       "longmemeval_score": 94.4,
       "longmemeval_tokens_per_query": 6787,
       "locomo_score": 92.5,
       "locomo_tokens_per_query": 6956
+    },
+    "oss_extraction_model_ablation": {
+      "_source": "mem0ai/memory-benchmarks README, OSS results table",
+      "_verified": true,
+      "_note": "Read this table by column, not by its extremes. Overall spans only 2.4 points (91.0 to 88.6). The temporal-reasoning column spans 14.2 points (94.7 to 80.5), but the ordering does NOT track model size -- Gemma 4 31B beats GPT-OSS-120B by 11.2 points on that same column. Any citation must name the category and the model pair.",
+      "longmemeval_by_extraction_model": {
+        "GPT-5": {"overall": 91.0, "knowledge_update": 91.0, "temporal_reasoning": 94.7, "multi_session": 83.5},
+        "GPT-OSS-120B": {"overall": 89.8, "knowledge_update": 89.5, "temporal_reasoning": 80.5, "multi_session": 79.7},
+        "Llama 4 Maverick": {"overall": 88.6, "knowledge_update": 93.6, "temporal_reasoning": 90.2, "multi_session": 84.2},
+        "Gemma 4 31B": {"overall": 88.6, "knowledge_update": 94.9, "temporal_reasoning": 91.7, "multi_session": 78.9}
+      }
+    }
+  },
+  "mem0_v3_source_facts": {
+    "_source": "mem0ai source at git tag v2.0.18 (mem0/memory/main.py, mem0/configs/prompts.py, mem0/llms/openai.py)",
+    "_source_type": "the shipped implementation, read directly at a pinned tag",
+    "_verified": true,
+    "_note": "These are properties of published code, not measurements by this repo and not claims from the blog. They are what results/write_cost_model.json is computed from. Pinned to a tag because main moves.",
+    "facts": {
+      "add_is_add_only": "main.py imports ADDITIVE_EXTRACTION_PROMPT and generate_additive_extraction_prompt, does NOT import get_update_memory_messages or DEFAULT_UPDATE_MEMORY_PROMPT, and hardcodes 'event': 'ADD'. The 2025 paper's per-fact ADD/UPDATE/DELETE/NOOP call is not on the ingestion path.",
+      "llm_calls_per_add": 1,
+      "llm_calls_per_add_note": "One generate_response at main.py:956, inside the block commented '=== V3 PHASED BATCH PIPELINE ==='. Independent of how many messages the call carries -- which makes the write cost a function of the caller's batching granularity.",
+      "system_prompt_tokens": 7671,
+      "system_prompt_note": "ADDITIVE_EXTRACTION_PROMPT, 33,653 characters, measured with tiktoken cl100k_base. Sent in full as the system message on every add() (main.py:942, 958). For comparison the superseded DEFAULT_UPDATE_MEMORY_PROMPT is 1,137 tokens.",
+      "last_k_messages": 10,
+      "existing_memories_top_k": 10,
+      "resent_context_note": "Each call re-sends the last 10 session messages (get_last_messages(..., limit=10), main.py:919) and the top 10 similar existing memories (main.py:925). Both are hardcoded in v3.",
+      "default_extraction_model": "gpt-5-mini",
+      "default_extraction_model_note": "mem0/llms/openai.py sets self.config.model = 'gpt-5-mini' when unset; the provider default is 'openai' (mem0/llms/configs.py). Cheap and hosted, not frontier and not local -- though ollama, vllm and lmstudio are supported providers.",
+      "temporal_params_are_platform_only": "add(timestamp=...) and search(reference_date=...) raise ValueError in OSS with a 'Platform-only' message, so conversation timestamps cannot be supplied through the documented parameter."
     }
   },
   "judge_reliability": {

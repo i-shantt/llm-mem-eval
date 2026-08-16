@@ -217,6 +217,36 @@ def test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question() -> 
     print("  ok  grader rejects a reordered answer to an ordering question")
 
 
+def test_write_policy_preserves_unit_contract() -> None:
+    """Store contracts that fail silently rather than loudly.
+
+    A store with non-contiguous `unit_id`s still runs and still produces
+    numbers; they are just wrong, because retrievers return ids that
+    `score_example` intersects against a set built from the same list. A store
+    whose `session_date` does not parse turns the recency control into a no-op
+    with no error. Both belong here for the same reason the evidence-label test
+    does: nothing else would catch them.
+    """
+    from memllm.write import (
+        ExtractiveSelectionPolicy,
+        TruncatedVerbatimPolicy,
+        VerbatimPolicy,
+        check_store,
+    )
+
+    ex = _toy_example()
+    for policy in (VerbatimPolicy("turn"),
+                   TruncatedVerbatimPolicy(0.5, "recency"),
+                   ExtractiveSelectionPolicy(0.5)):
+        led = CostLedger()
+        units = policy.build(ex, led)
+        check_store(units)
+        assert [u.unit_id for u in units] == list(range(len(units))), policy.name
+        assert led.read.llm_calls == 0, f"{policy.name} billed the read path"
+        assert led.write.llm_calls == 0, f"{policy.name} should call no LLM"
+    print("  ok  write policies preserve the store contract")
+
+
 def test_grader_audit_has_zero_false_accepts() -> None:
     """Regression guard on the property the whole eval rests on.
 
@@ -260,5 +290,6 @@ if __name__ == "__main__":
     test_grader_rejects_near_misses()
     test_grader_matches_regular_plurals()
     test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question()
+    test_write_policy_preserves_unit_contract()
     test_grader_audit_has_zero_false_accepts()
     print("all passed")

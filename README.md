@@ -1,19 +1,105 @@
-# memllm — measuring both halves of what LLM memory costs
+# memllm — measuring LLM memory systems without a judge
 
 [![tests](https://github.com/i-shantt/memllm/actions/workflows/tests.yml/badge.svg)](https://github.com/i-shantt/memllm/actions/workflows/tests.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-An evaluation harness for long-term memory systems that accounts for the cost of
-**building** a memory as well as the cost of **using** it, and that measures
-retrieval and answer quality without an LLM judge.
+An evaluation harness for long-term memory systems. It measures retrieval and
+answer quality **without an LLM judge**, using LongMemEval's per-turn gold
+labels, and it accounts for the cost of **building** a memory as well as the cost
+of **using** it.
 
 Built on [LongMemEval](https://arxiv.org/abs/2410.10813): 500 questions, each
 with its own ~490-turn, ~104K-token conversation history.
 
-**If you have five minutes:** [`memllm/cost.py`](memllm/cost.py) is the idea in
-120 lines. [`memllm/eval/ablation.py`](memllm/eval/ablation.py) is the part most
-likely to be useful to someone else. [`RESULTS.md`](RESULTS.md) is every table,
-regenerated from run artifacts rather than typed by hand.
+Six instruments, each answering a question the aggregate score cannot:
+
+| | |
+|---|---|
+| [benchmark audit](#what-longmemeval-actually-asks) | which questions is a retrieval metric even meaningful for? |
+| [cost accounting](#the-measurement-gap) | what does the write path cost, separately from the read path? |
+| [retrieval metrics](#retrieval-quality) | how good is retrieval, scored against gold labels rather than a judge? |
+| [answer survival](#answer-survival-what-a-write-path-keeps) | did the write path keep the answer at all? |
+| [grader audit](#grading-without-a-judge) | how often is the grader itself wrong? |
+| [control ladder](#how-much-of-the-accuracy-is-actually-memory) | how much of the accuracy is memory, and how much is the model already knowing? |
+
+**If you have five minutes:** [`scripts/audit_benchmark.py`](scripts/audit_benchmark.py)
+is the most reusable finding. [`memllm/eval/ablation.py`](memllm/eval/ablation.py)
+is the part most likely to be useful in someone else's harness.
+[`RESULTS.md`](RESULTS.md) is every table, regenerated from run artifacts rather
+than typed by hand. [`RUNNING.md`](RUNNING.md) is what is committed here but
+deliberately **not** run.
+
+---
+
+## What LongMemEval actually asks
+
+Before any number below. Every retrieval metric on this benchmark — including
+this repo's — is reported as one aggregate over 500 questions. That aggregate is
+only meaningful for questions whose answer is actually *present* in the turns the
+benchmark labels as evidence. Measuring that is a few seconds of deterministic
+work, and nobody appears to have published it
+([`scripts/audit_benchmark.py`](scripts/audit_benchmark.py) →
+[`results/benchmark_audit.json`](results/benchmark_audit.json)):
+
+| question type | n | gold answer verbatim in its evidence turns |
+|---|---|---|
+| single-session-user | 64 | 0.906 |
+| knowledge-update | 70 | 0.843 |
+| single-session-assistant | 50 | 0.700 |
+| **temporal-reasoning** | 118 | **0.271** |
+| **multi-session** | 114 | **0.105** |
+
+(416 of the 500 are scored here; 30 are abstention questions with no span to find
+by construction, and 54 have abstractive gold answers with no checkable surface
+form — the same rule `grade()` uses to return "not gradable".)
+
+**LongMemEval-S is two benchmarks stapled together.** 184 of those 416 questions
+are verbatim needle-finding. The other 232 are not: 66% of multi-session gold
+answers are bare numerals — they are *counts*, computed across sessions, not
+spans to be retrieved.
+
+Restricting to golds of two or more tokens, so chance matches do not dominate,
+each answer has one of three fates:
+
+| question type | n | in labelled evidence | verbatim but unlabelled | nowhere verbatim |
+|---|---|---|---|---|
+| single-session-user | 42 | 0.881 | 0.000 | 0.119 |
+| knowledge-update | 31 | 0.839 | 0.032 | 0.129 |
+| single-session-assistant | 37 | 0.595 | 0.027 | 0.378 |
+| temporal-reasoning | 99 | 0.232 | 0.152 | **0.616** |
+| multi-session | 41 | 0.098 | 0.293 | **0.610** |
+
+The third column matters: it separates *"the task needs synthesis"* from *"the
+annotation is coarse"*. For the single-session types the annotation is tight —
+0.000 and 0.027 of answers sit in an unlabelled turn. For the two synthesis types
+about 61% of answers exist **nowhere** in 104K tokens. That is the task, not the
+labelling.
+
+Hand-classifying 20 of the temporal-reasoning misses
+([`data/tr_miss_labels.json`](data/tr_miss_labels.json), regenerate with
+[`scripts/sample_tr_misses.py`](scripts/sample_tr_misses.py)) says the same
+thing from the other direction: 10 are date arithmetic ("38 days"), 6 are
+ordering two events, 3 are paraphrase and 1 is a surface-form mismatch
+("June 3rd" against "the 3rd of June"). So about a fifth of the misses would
+yield to a better string matcher — a perfect one would lift temporal-reasoning to
+roughly 0.39, not to the 0.88 seen on single-session-user. These are one
+annotator's labels with no second rater, offered as an explanation of a measured
+number rather than as validated annotation; each is checkable against the quoted
+evidence in seconds.
+
+**What follows from this, stated non-adversarially.** Mem0 reports 97.0 on the
+temporal-reasoning category at top-k 200. This audit says 27.1% of
+temporal-reasoning answers are verbatim-present in their evidence. Those are
+perfectly compatible — and that is the point. A high score on that category
+*cannot* be explained by retrieving the right span, because for most of those
+questions there is no right span. Whatever is producing it is reading and
+computing, not retrieving. An aggregate retrieval metric over all 500 questions
+mixes two tasks that behave nothing alike, and this repo's own headline
+`any_hit@10` of 0.907 is subject to exactly the same caveat.
+
+One bookkeeping note: this audit covers all 500 questions, while the retrieval
+and end-to-end arms below are a stratified n=100. They are different question
+sets, so the audit bounds how those numbers should be *read*, not their values.
 
 ---
 
@@ -65,12 +151,18 @@ architecture.
 
 ```mermaid
 flowchart TB
-    subgraph EXTRACT["LLM-extracted memory — e.g. Mem0"]
+    subgraph PAPER["Mem0 as published in 2025 — two LLM calls per message pair"]
         direction LR
         P["message pair"] --> E["extraction<br/>LLM call"]
         E --> F["candidate facts"]
         F --> U["update LLM call<br/>per fact<br/>ADD / UPDATE / DELETE / NOOP"]
         U --> DB[("memory store")]
+    end
+
+    subgraph V3["Mem0 as shipped in 2026 — one LLM call per add(), ADD-only"]
+        direction LR
+        B["whatever messages<br/>the caller batches"] --> X["extraction LLM call<br/>7.7K-token system prompt<br/>+ last 10 messages<br/>+ top 10 memories"]
+        X --> DB2[("memory store<br/>superseded facts coexist")]
     end
 
     subgraph INDEX["Search index — this repo, zero LLM calls"]
@@ -79,7 +171,7 @@ flowchart TB
         TK --> IX[("BM25 + vector index")]
     end
 
-    EXTRACT ~~~ INDEX
+    PAPER ~~~ V3 ~~~ INDEX
 ```
 
 In Mem0 as described in the 2025 paper, ingesting a message pair prompts an LLM
@@ -103,13 +195,57 @@ Two points of accuracy:
   collapses ingestion into a *single-pass, ADD-only* extraction — UPDATE and
   DELETE are gone from the default path, and a superseded fact simply coexists
   with the one replacing it — with retrieval fusing semantic, keyword and entity
-  matching in parallel. They report LongMemEval 94.4 at ~6,787 tokens per query.
+  matching in parallel. They report LongMemEval 94.4 at ~6,787 tokens per query,
+  for the **managed platform**, which their benchmark README says includes
+  optimisations absent from the open-source SDK.
 
-That change matters here in two directions. It cuts the write path substantially,
-since the per-fact update call disappears — though one extraction call per
-message pair remains, so the write path becomes cheaper, not free. And the
-retrieval it moves to, lexical and semantic signals rank-fused, is the same
-family as the hybrid baseline measured below.
+The retrieval it moves to — lexical and semantic signals rank-fused — is the same
+family as the hybrid baseline measured below. That is a point of agreement, and
+it is why the comparison in this repo is between *write paths*, not retrievers.
+
+### What one `add()` actually costs
+
+Read at tag `v2.0.18`, the shipped ingestion path makes **one LLM call per
+`add()`, regardless of how many messages that call carries**
+(`mem0/memory/main.py:956`, inside `=== V3 PHASED BATCH PIPELINE ===`). The
+per-fact update call is genuinely gone.
+
+That removes the write path's dependence on the number of extracted facts, and
+replaces it with a dependence on something the *caller* chooses. Three terms go
+into each call, and only one of them is invariant:
+
+| term | size | scales with |
+|---|---|---|
+| `ADDITIVE_EXTRACTION_PROMPT`, sent in full every call | **7,671 tokens** | number of calls |
+| last 10 session messages + top 10 memories, re-sent every call | ~2,400 tokens | number of calls |
+| the new messages themselves | the conversation | nothing — each turn is carried once |
+
+So an agent that calls `add()` after every turn and a batch job that calls it
+once per session run identical code and do not pay remotely the same amount.
+Modelled over all 500 LongMemEval conversations
+([`scripts/model_write_cost.py`](scripts/model_write_cost.py) →
+[`results/write_cost_model.json`](results/write_cost_model.json)):
+
+| `add()` batching | calls | tokens | of which system prompt | break-even vs this repo |
+|---|---|---|---|---|
+| per turn | 494 | 5.32M | 71% | ~16,000 queries |
+| per message pair | 247 | 2.71M | 70% | ~8,100 queries |
+| **per session** | 48 | 0.61M | 60% | ~1,800 queries |
+
+**An earlier version of this section said "one extraction call per message pair
+remains." That was wrong** — it described the 2025 paper, not the shipped code —
+and the correction cuts both ways. Batched by session, v3 costs roughly a third
+of the 1.63M tokens a competitor measured for the pre-v3 pipeline on this
+benchmark. Called per message pair, it costs more than that, because the system
+prompt grew from 1,137 tokens to 7,671.
+
+Two honest qualifications. This is a **model, not a measurement** — call counts
+and the prompt size are exact, but the length of a stored memory and of the
+emitted JSON are assumed, and the artifact carries a sensitivity range showing
+they move the total by ~9% against the 8.8× swing from batching. And that 7.7K
+prefix is identical on every call, which is what prefix caching exists for; the
+artifact prices both, and caching roughly halves the high-call-count rows without
+changing their ordering.
 
 ---
 
@@ -217,6 +353,120 @@ The weakest slice for BM25 is `single-session-preference` (MRR 0.158),
 consistent with preference questions not being lexically similar to the turns
 that answer them — but that slice is **n=6**, so treat it as a hypothesis worth
 testing at full scale rather than a result.
+
+---
+
+## Answer survival: what a write path keeps
+
+A retriever can only find what the write path kept. Survival asks the narrowest
+possible question about a store — **is the answer still in there at all?** — with
+no retrieval and no generation, which makes it a ceiling on both. A store that
+dropped the answer cannot be rescued by a better retriever or a bigger reader.
+
+**Read this first: the metric runs on the easy half of the benchmark.** Its
+eligible subset is the three question types whose answers are spans, which
+excludes temporal-reasoning and multi-session — exactly where an extraction write
+path should lose the most, and where Mem0's own extraction-model ablation shows
+its largest category swing. Survival cannot measure the case that motivates it.
+That is a limitation of the instrument, not a choice about what to report: you
+cannot ask whether a store preserved an answer that was never text.
+
+**And the test is biased against extraction, by construction.** "User is allergic
+to peanuts" survives; "User discussed dietary restrictions" does not, even where
+the second might have been enough for the reader. The `soft` variant (all gold
+tokens present in one record, order ignored) narrows that gap and does not close
+it, so any claim below has to hold under both. The bias is disclosed rather than
+corrected, because correcting it needs a judge.
+
+### The chance floor, which is large
+
+Survival is measured with the same audited containment function used for
+grading. At store scale that function matches by accident far more than it does
+on a single prediction, so every rate is reported beside a **placebo null**:
+the same test run against gold answers borrowed from other questions of the same
+type and length. On the verbatim store:
+
+| gold length | n | survival | chance null |
+|---|---|---|---|
+| 1 token | 74 | 1.000 | **0.661** |
+| 2–3 tokens | 71 | 0.958 | 0.225 |
+| 4+ tokens | 39 | 0.487 | 0.046 |
+
+A one-token gold like `3` or `Target` is found in a 104K-token store two thirds
+of the time by accident, so a rate computed over that bucket measures store size,
+not memory. **The headline therefore excludes one-token golds (110 of 184
+questions remain) and reports chance-corrected survival**, `(s − null) / (1 − null)`,
+bootstrapped as the whole ratio rather than the numerator alone. These choices
+were fixed on the control arm before any other store existed.
+
+### What the controls show
+
+Every arm here is verbatim text and calls no LLM. They differ only in how a fixed
+token budget is spent: `truncated` keeps **some turns, complete**; `leadk` keeps
+**every turn, shortened** to its lead sentences. Same budget, opposite strategy.
+
+| write policy | store tokens | records | survival | null | **corrected** |
+|---|---|---|---|---|---|
+| verbatim (whole conversation) | 104,110 | 497 | 0.791 | 0.162 | **0.751** |
+| lead-k @ 50% | 52,193 | 497 | 0.736 | 0.120 | **0.700** |
+| truncate-recent @ 50% | 52,053 | 253 | 0.545 | 0.108 | **0.490** |
+| lead-k @ 25% | 26,020 | 497 | 0.564 | 0.081 | **0.525** |
+| truncate-random @ 25% (3 seeds) | 26,026 | ~130 | 0.309–0.400 | 0.080 | **0.244–0.348** |
+| truncate-recent @ 25% | 26,026 | 128 | 0.309 | 0.065 | **0.261** |
+| lead-k @ 10% | 10,410 | 411 | 0.282 | 0.049 | **0.245** |
+| truncate-recent @ 10% | 10,409 | 54 | 0.182 | 0.037 | **0.150** |
+
+Paired against the full store on the questions both scored (McNemar plus a paired
+bootstrap — the same functions the memory-lift ablation uses):
+
+| policy | survival difference vs verbatim | 95% CI | p |
+|---|---|---|---|
+| **lead-k @ 50%** | **−0.055** | [−0.100, −0.018] | 0.031 |
+| truncate-recent @ 50% | −0.245 | [−0.327, −0.164] | 1.5e-08 |
+| lead-k @ 25% | −0.227 | [−0.309, −0.155] | 6.0e-08 |
+| truncate-recent @ 25% | −0.482 | [−0.573, −0.391] | 2.2e-16 |
+
+Three things follow.
+
+1. **How the budget is spent matters more than how big it is.** At an identical
+   50% budget, keeping every turn's lead sentences loses 5.5 points of survival
+   against the full conversation; keeping half the turns intact loses 24.5. Lead-k
+   at **25%** (0.525 corrected) beats truncation at **50%** (0.490) — better
+   survival for half the tokens.
+2. **A recency prior does not help on these questions.** Truncate-recent at 25%
+   (0.261) sits inside the spread of three random seeds (0.244–0.348). That
+   ±0.05 seed spread is the honest noise floor for this whole table, and the
+   lead-k-versus-truncation gap at the same budget is about five times it.
+3. **Compression alone is expensive, but not the way a naive reading suggests.**
+   Survival does not fall proportionally with budget — it falls much faster for
+   deep-and-narrow stores and much slower for broad-and-shallow ones.
+
+### What this predicts for an LLM extraction store, and why it is not measured here
+
+An extracted memory store is broad and shallow: many short records covering the
+whole conversation, which is structurally what `leadk` is. So this table predicts
+that a well-behaved extraction store should sit **near the lead-k curve**, and
+that most of its survival loss would be explained by *being small*, not by the
+LLM having rewritten anything.
+
+That prediction is recorded before the fact deliberately, because it is the
+outcome favourable to extraction-based systems. If a real extraction arm lands on
+the curve, the honest conclusion is "the loss is compression, not extraction".
+Only a store sitting clearly *below* the curve at its own token budget would show
+the rewriting itself to be lossy.
+
+**No LLM extraction arm was run**, so this stays a prediction. An adapter that
+runs Mem0's own open-source v3 ingestion is committed at
+[`memllm/write/mem0_adapter.py`](memllm/write/mem0_adapter.py), with a preflight
+for the four ways mem0 silently degrades and a workaround for the conversation-date
+contamination in [issue #3944](https://github.com/mem0ai/mem0/issues/3944).
+[`RUNNING.md`](RUNNING.md) explains why it has not been run: an open 7B extractor
+with a 33M-parameter embedder is a configuration Mem0 has already said in writing
+is not the one their published numbers describe, and a weak result from it would
+be read as evidence about their architecture rather than about that choice.
+
+Full tables in [RESULTS.md](RESULTS.md); artifacts in
+[`results/survival/`](results/survival/).
 
 ---
 
@@ -444,15 +694,22 @@ session.
 memllm/
   cost.py                    write/read cost ledger + amortisation
   data/loader.py             LongMemEval loading, turn/user_turn/session units
-  retrieval/
+  retrieval/                 the READ half
     base.py                  Retriever protocol + reciprocal rank fusion
     bm25.py                  lexical baseline, zero LLM calls
     dense.py                 bge-small-en-v1.5 (33M params), local
     hybrid.py                BM25 + dense via RRF
     baselines.py             oracle, recency, random, closed-book
     embed_cache.py           disk cache that replays true compute cost
+  write/                     the WRITE half: conversation -> store
+    base.py                  WritePolicy protocol + store contracts
+    verbatim.py              store the turns unchanged (the ceiling control)
+    truncated.py             verbatim turns to a fraction of the token budget
+    extractive.py            lead-k sentences per turn: breadth, not depth
+    mem0_adapter.py          Mem0 OSS v3 ingestion -- committed, NOT run
   eval/
     retrieval_metrics.py     judge-free metrics from has_answer labels
+    survival.py              did the write path keep the answer? + chance floor
     grade.py                 deterministic answer grading
     grader_audit.py          grader error rates from constructed cases
     ablation.py              memory-lift attribution, McNemar, bootstrap
@@ -460,6 +717,10 @@ memllm/
   generate/backends.py       local answer generation (transformers / ollama)
 
 scripts/
+  audit_benchmark.py         what fraction of answers are spans at all
+  sample_tr_misses.py        regenerate the hand-labelled temporal sample
+  model_write_cost.py        Mem0 v3 write cost vs caller batching
+  run_survival_eval.py       survival for a set of write policies
   run_retrieval_eval.py      run any set of retrievers, emit results/*.json
   run_e2e_eval.py            retrieve -> answer -> grade, with cost accounting
   run_ablation.py            memory-lift attribution against the controls
@@ -472,6 +733,9 @@ scripts/
 
 tests/
   test_harness.py            label integrity + cost accounting invariants
+  test_survival.py           the metric, its chance floor, its correction
+  test_write_policies.py     store contracts that otherwise fail silently
+  test_mem0_adapter.py       the cost shim, without needing mem0 installed
   test_ablation.py           the statistics
   test_report.py             the report agrees with the arms it reports on
 ```
@@ -488,6 +752,18 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
 
 ./.venv/bin/python -m pytest tests/ -q
 ./.venv/bin/python tests/test_harness.py
+
+# benchmark audit + the v3 write-cost model: seconds, no GPU, no API key
+./.venv/bin/python scripts/audit_benchmark.py
+./.venv/bin/python scripts/sample_tr_misses.py
+./.venv/bin/python scripts/model_write_cost.py
+
+# answer survival: the write-path ruler and its controls (~30 min, CPU)
+./.venv/bin/python scripts/run_survival_eval.py --policies \
+    verbatim_turn truncated_recency_50 truncated_recency_25 \
+    truncated_recency_10 truncated_recency_5 \
+    truncated_random_25_s0 truncated_random_25_s1 truncated_random_25_s2 \
+    leadk_50 leadk_25 leadk_10 leadk_5
 
 # retrieval + the cost figure
 ./.venv/bin/python scripts/run_retrieval_eval.py --limit 100 \
@@ -529,11 +805,47 @@ reported number carries its own `n`.
   `single-session-preference` slice is n=6 and should not be quoted at all.
 - **No memory product was re-run here.** Every Mem0, A-Mem and RecMem figure is
   quoted from a publication, and the cost comparison mixes benchmarks — Mem0's
-  read path is measured on LoCoMo, this repo's on LongMemEval. Reimplementing
-  those systems is out of scope, and doing it is the obvious next step.
+  read path is measured on LoCoMo, this repo's on LongMemEval. An adapter that
+  runs Mem0's own OSS ingestion is committed at
+  [`memllm/write/mem0_adapter.py`](memllm/write/mem0_adapter.py) and has
+  deliberately **not** been run; [`RUNNING.md`](RUNNING.md) says why and what it
+  would take.
 - **The control arms bound what memory contributed *here*, not what any
   particular product would.** Running Mem0 through this same control ladder is
   the experiment I would most like to do and have not done.
+- **Survival is measured on the easy half of the benchmark.** Its eligible subset
+  is the three types whose answers are spans, which excludes temporal-reasoning
+  and multi-session — exactly the types where an extraction write path should lose
+  the most, and where Mem0's own extraction-model ablation shows the largest
+  category swing. The instrument cannot measure the case that motivates it. This
+  is stated at the top of the survival section too, because it is the first thing
+  a reader should know about that number.
+- **Survival's containment test is biased against extraction, by construction.**
+  "User is allergic to peanuts" survives; "User discussed dietary restrictions"
+  does not, even where the latter might have been enough for the reader. The
+  `soft` variant narrows the gap and does not close it, which is why any claimed
+  survival gap is required to hold under both. The direction of the bias is
+  disclosed rather than corrected, because it cannot be corrected without a judge.
+- **The two-alternative false accept applies to the write path too.** A record
+  containing the gold string inside a sentence asserting the opposite — "not Page
+  Turners, actually Chapter One" — counts as survived. It is the same defect the
+  grader audit documents, relocated, and the constructed audit does not cover it
+  at store scale. The placebo null bounds accidental matches; it does not bound
+  this one.
+- **The grader audit's 0.000 false-accept rate covers constructed negatives**,
+  which are easy negatives, and the reordered-list case above was found by
+  re-grading stored predictions rather than by the audit. Survival inherits that
+  caveat and should not be read as inheriting a stronger guarantee than the
+  grading section claims.
+- **The v3 write-cost table is a model, not a measurement.** Call counts, the
+  7,671-token system prompt and the content tokens are exact; the length of a
+  stored memory, the emitted JSON and the template overhead are assumed. The
+  artifact carries a sensitivity range — they move the total by ~9% against the
+  8.8× swing from batching — but no Mem0 ingestion was actually run to check it.
+- **The temporal-reasoning classification is one annotator's labels**, with no
+  second rater and therefore no agreement statistic. Each label is checkable
+  against the evidence quoted beside it in
+  [`data/tr_miss_labels.json`](data/tr_miss_labels.json).
 - **A refusal that names both candidates can be scored correct.** On
   two-alternative questions ("A or B?") the gold string appears inside answers
   that decline entirely, and containment accepts them. Three such records exist

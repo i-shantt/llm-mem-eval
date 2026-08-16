@@ -40,7 +40,23 @@ class Turn:
 
 @dataclass
 class MemoryUnit:
-    """One retrievable item. `is_evidence` is the gold label."""
+    """One retrievable item. `is_evidence` is the gold label.
+
+    Also the store format for `memllm.write` policies, so a store produced by
+    any write path -- verbatim turns, truncated turns, LLM-extracted facts --
+    flows into every existing retriever and metric unchanged. Two contracts a
+    policy must honour, both of which fail silently rather than loudly:
+
+    - `unit_id` must be contiguous unique ints from 0. `Hit` is `(unit_id,
+      score)`, `RandomRetriever` samples the list, and `score_example` builds an
+      id set; duplicate ids merge evidence without an error.
+    - `session_date` must parse under `parse_date`, or `RecencyRetriever` sorts
+      every unit to `(0, 0, 0)` and the recency control silently becomes a no-op.
+
+    `provenance` and `meta` are defaulted so no existing construction site
+    changes: they carry source turn indices and policy-specific fields (a mem0
+    memory id, its created_at) for stores that can supply them.
+    """
 
     unit_id: int
     text: str
@@ -49,6 +65,8 @@ class MemoryUnit:
     session_index: int
     is_evidence: bool
     roles: tuple[str, ...] = ()
+    provenance: tuple[int, ...] = ()
+    meta: dict = field(default_factory=dict)
 
     @property
     def date_key(self) -> tuple[int, int, int]:

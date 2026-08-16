@@ -102,6 +102,43 @@ The same retrievers, over the same conversations, cut into turns, user turns, or
 | user_turn | multi-session | 0.958 | 0.851 | 0.107 |
 | user_turn | single-session-preference | 0.833 | 0.694 | 0.139 |
 
+## Answer survival, by write policy
+
+Did the write path keep the answer at all? Measured over the store with no retrieval, so it is a ceiling on retrieval and on accuracy. `null` is the chance floor, measured by re-running survival against gold answers borrowed from other questions of the same type and length; `corrected` is (survival - null) / (1 - null). Raw survival alone is not interpretable, so it is never shown without both.
+
+Restricted to golds of two or more normalised tokens: one-token answers match a 100K-token store by accident about two thirds of the time.
+
+| write policy | store tokens | records | survival | null | corrected | 95% CI |
+|---|---|---|---|---|---|---|
+| verbatim_turn | 104,110 | 497 | 0.791 | 0.162 | **0.751** | [0.662, 0.835] |
+| leadk_50pct | 52,193 | 497 | 0.736 | 0.120 | **0.700** | [0.607, 0.791] |
+| truncated_recency_50pct | 52,053 | 253 | 0.545 | 0.108 | **0.490** | [0.391, 0.594] |
+| truncated_random_25pct_s1 | 26,026 | 129 | 0.400 | 0.080 | **0.348** | [0.250, 0.449] |
+| truncated_random_25pct_s2 | 26,026 | 130 | 0.309 | 0.086 | **0.244** | [0.151, 0.338] |
+| truncated_random_25pct_s0 | 26,026 | 130 | 0.345 | 0.075 | **0.292** | [0.199, 0.389] |
+| truncated_recency_25pct | 26,026 | 128 | 0.309 | 0.065 | **0.261** | [0.173, 0.355] |
+| leadk_25pct | 26,020 | 497 | 0.564 | 0.081 | **0.525** | [0.426, 0.624] |
+| leadk_10pct | 10,410 | 411 | 0.282 | 0.049 | **0.245** | [0.157, 0.336] |
+| truncated_recency_10pct | 10,409 | 54 | 0.182 | 0.037 | **0.150** | [0.080, 0.227] |
+| leadk_5pct | 5,205 | 207 | 0.136 | 0.027 | **0.112** | [0.050, 0.181] |
+| truncated_recency_5pct | 5,204 | 29 | 0.118 | 0.021 | **0.099** | [0.042, 0.162] |
+
+Paired against `verbatim_turn`, on the questions both scored. McNemar plus a paired bootstrap, the same functions the memory-lift ablation uses.
+
+| comparison | difference | 95% CI | McNemar p |
+|---|---|---|---|
+| truncated_recency_50pct vs verbatim_turn | -0.245 | [-0.327, -0.164] | 1.49e-08 |
+| truncated_recency_25pct vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
+| truncated_recency_10pct vs verbatim_turn | -0.609 | [-0.700, -0.518] | 1.36e-20 |
+| truncated_recency_5pct vs verbatim_turn | -0.673 | [-0.755, -0.582] | 1.06e-22 |
+| truncated_random_25pct_s0 vs verbatim_turn | -0.445 | [-0.536, -0.355] | 3.55e-15 |
+| truncated_random_25pct_s1 vs verbatim_turn | -0.391 | [-0.482, -0.300] | 2.27e-13 |
+| truncated_random_25pct_s2 vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
+| leadk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
+| leadk_25pct vs verbatim_turn | -0.227 | [-0.309, -0.155] | 5.96e-08 |
+| leadk_10pct vs verbatim_turn | -0.509 | [-0.600, -0.418] | 2.78e-17 |
+| leadk_5pct vs verbatim_turn | -0.655 | [-0.736, -0.564] | 4.24e-22 |
+
 ## End-to-end answer accuracy
 
 Retrieve, answer with a local model, grade deterministically. Graded by normalised token-span containment, never by an LLM judge; abstractive gold answers with no checkable surface form are excluded rather than scored wrong, which is the `not gradable` column.

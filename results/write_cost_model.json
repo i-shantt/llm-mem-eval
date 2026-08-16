@@ -1,0 +1,119 @@
+{
+  "mem0_version": "2.0.18",
+  "source": "mem0/memory/main.py and mem0/configs/prompts.py at tag v2.0.18",
+  "benchmark": "LongMemEval-S",
+  "n_conversations": 500,
+  "_session_count_note": "Session granularity averages ~48 calls, not the ~50 you get from len(haystack_sessions). The split contains 1,230 empty sessions and 15 conversations reuse a session id; an empty session triggers no add() call, so 48 is the right figure for a call count.",
+  "_break_even_note": "break_even_queries_tokens = write tokens / (this repo's read tokens per query - Mem0's reported read tokens per query) = total / (2097 - 1764). It ignores the 8x price premium on output tokens, so it is a floor. The point is not the number: it is that under v3 there is no single break-even, because the write cost is set by the caller's batching.",
+  "exact_inputs": {
+    "system_prompt_tokens": 7671,
+    "last_k_messages": 10,
+    "existing_memories_top_k": 10,
+    "llm_calls_per_add": 1,
+    "note": "v3 is ADD-only; the paper's per-fact update call is gone, so calls no longer scale with the number of extracted facts."
+  },
+  "assumed_inputs": {
+    "mem_tokens_each": 30,
+    "mem_tokens_range": [
+      15,
+      60
+    ],
+    "completion_tokens_per_call": 300,
+    "completion_tokens_range": [
+      100,
+      800
+    ],
+    "template_overhead_tokens": 200,
+    "note": "None of these can be measured without running the extractor. See `sensitivity`: they move the total by far less than the batching choice does."
+  },
+  "prices_usd_per_1m": {
+    "input": 0.25,
+    "cached_input": 0.025,
+    "output": 2.0,
+    "note": "gpt-5-mini list rates, mem0's OSS default model. Not verifiable from a primary source in this repo, so the analysis rests on the ratio between granularities, which is price-independent."
+  },
+  "per_conversation": {
+    "per_turn": {
+      "n_calls": 493.86,
+      "prompt_tokens": 5168490.588,
+      "completion_tokens": 148158,
+      "system_prompt_tokens": 3788400.06,
+      "resent_context_tokens": 1029029.342,
+      "new_content_tokens": 104131.186,
+      "total_tokens": 5316648.588,
+      "usd_uncached": 1.588438647,
+      "usd_cached": 0.7377746085000001,
+      "share_system_prompt": 0.7125541583753814,
+      "share_resent_context": 0.1935484967583868,
+      "share_new_content": 0.01958586960872878,
+      "break_even_queries_tokens": 15965.911675675678
+    },
+    "per_pair": {
+      "n_calls": 247.182,
+      "prompt_tokens": 2638351.748,
+      "completion_tokens": 74154.6,
+      "system_prompt_tokens": 1896133.122,
+      "resent_context_tokens": 514496.44,
+      "new_content_tokens": 104131.186,
+      "total_tokens": 2712506.348,
+      "usd_uncached": 0.8078971370000001,
+      "usd_cached": 0.38299315955,
+      "share_system_prompt": 0.6990336164182868,
+      "share_resent_context": 0.18967566301894603,
+      "share_new_content": 0.038389287485641674,
+      "break_even_queries_tokens": 8145.664708708709
+    },
+    "per_session": {
+      "n_calls": 47.738,
+      "prompt_tokens": 592877.318,
+      "completion_tokens": 14321.4,
+      "system_prompt_tokens": 366198.198,
+      "resent_context_tokens": 98678.934,
+      "new_content_tokens": 104131.186,
+      "total_tokens": 607198.718,
+      "usd_uncached": 0.1768621295,
+      "usd_cached": 0.09619350995,
+      "share_system_prompt": 0.6030944847943502,
+      "share_resent_context": 0.16251505656176302,
+      "share_new_content": 0.17149441017100436,
+      "break_even_queries_tokens": 1823.4195735735736
+    },
+    "per_conversation": {
+      "n_calls": 1,
+      "prompt_tokens": 112302.186,
+      "completion_tokens": 300,
+      "system_prompt_tokens": 7671,
+      "resent_context_tokens": 0,
+      "new_content_tokens": 104131.186,
+      "total_tokens": 112602.186,
+      "usd_uncached": 0.0286755465,
+      "usd_cached": 0.0286755465,
+      "share_system_prompt": 0.0681247875596305,
+      "share_resent_context": 0.0,
+      "share_new_content": 0.9247705546320388,
+      "break_even_queries_tokens": 338.1447027027027
+    }
+  },
+  "sensitivity_at_per_session": {
+    "low": {
+      "mem_tokens_each": 15,
+      "completion_tokens_per_call": 100,
+      "total_tokens": 590490.418
+    },
+    "mid": {
+      "mem_tokens_each": 30,
+      "completion_tokens_per_call": 300,
+      "total_tokens": 607198.718
+    },
+    "high": {
+      "mem_tokens_each": 60,
+      "completion_tokens_per_call": 800,
+      "total_tokens": 645389.118
+    }
+  },
+  "headline": {
+    "call_count_span": "48 calls per conversation at session granularity vs 494 at turn granularity",
+    "token_span_ratio": 8.756027360387149,
+    "reading": "v3's write cost is set by how the caller batches, not by the conversation. The same library, same model and same conversation span roughly an order of magnitude depending on whether add() is called per turn or per session, because the 7.7K-token system prompt and the 10-message resent window are paid once per call."
+  }
+}

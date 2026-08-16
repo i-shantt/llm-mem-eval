@@ -110,7 +110,19 @@ _ENCODER = None
 
 
 def count_tokens(text: str) -> int:
-    """Token count via tiktoken cl100k_base, with a 4-chars/token fallback."""
+    """Token count via tiktoken cl100k_base, with a 4-chars/token fallback.
+
+    `disallowed_special=()` is required, not cosmetic. 21 turns in LongMemEval-S
+    contain a literal `assistant<|end_header_id|>` -- chat-template leakage from
+    whichever model generated the haystack -- and tiktoken raises on strings
+    containing special-token text unless told to encode them as ordinary text.
+    Encoding them as ordinary text is the correct behaviour here: they are
+    conversation content being measured, not control tokens being sent.
+
+    Without this, any pass over the full 500-question split dies partway. It
+    went unnoticed because every stored artifact was built from a stratified
+    n=100 subset that happens to miss all 21.
+    """
     global _ENCODER
     if _ENCODER is None:
         try:
@@ -121,4 +133,4 @@ def count_tokens(text: str) -> int:
             _ENCODER = False
     if _ENCODER is False:
         return max(1, len(text) // 4)
-    return len(_ENCODER.encode(text))
+    return len(_ENCODER.encode(text, disallowed_special=()))

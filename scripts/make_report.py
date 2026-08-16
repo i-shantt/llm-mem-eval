@@ -282,6 +282,57 @@ def e2e_section(arms: list[dict]) -> None:
             print(f"| {qtype} | {v['n']} | {v['accuracy']:.3f} |")
 
 
+def survival_section(results_dir: Path) -> None:
+    """Answer survival per write policy, if the sweep has been run.
+
+    Reads results/survival/, a subdirectory, because `load_all` globs
+    results/*.json non-recursively and folds anything carrying a "metrics" key
+    into the retrieval table.
+    """
+    paths = sorted((results_dir / "survival").glob("survival_*.json"))
+    if not paths:
+        return
+    stores = [json.loads(p.read_text()) for p in paths]
+
+    print("\n## Answer survival, by write policy\n")
+    print("Did the write path keep the answer at all? Measured over the store "
+          "with no retrieval, so it is a ceiling on retrieval and on accuracy. "
+          "`null` is the chance floor, measured by re-running survival against "
+          "gold answers borrowed from other questions of the same type and "
+          "length; `corrected` is (survival - null) / (1 - null). Raw survival "
+          "alone is not interpretable, so it is never shown without both.\n")
+    print("Restricted to golds of two or more normalised tokens: one-token "
+          "answers match a 100K-token store by accident about two thirds of "
+          "the time.\n")
+    print("| write policy | store tokens | records | survival | null | "
+          "corrected | 95% CI |")
+    print("|---|---|---|---|---|---|---|")
+    for s in sorted(stores, key=lambda s: -s["survival"]["store_stats"]
+                    ["tokens_per_store_mean"]):
+        st = s["survival"]["store_stats"]
+        p = s["survival"]["primary"]["record"]
+        lo, hi = p["chance_corrected_ci95"]
+        print(f"| {s['store_id']} | {st['tokens_per_store_mean']:,.0f} | "
+              f"{st['records_per_store_mean']:.0f} | {p['survival']:.3f} | "
+              f"{p['null']:.3f} | **{p['chance_corrected']:.3f}** | "
+              f"[{lo:.3f}, {hi:.3f}] |")
+
+    summary_path = results_dir / "survival" / "summary.json"
+    if summary_path.exists():
+        summary = json.loads(summary_path.read_text())
+        comps = summary.get("paired_vs_baseline") or {}
+        if comps:
+            print(f"\nPaired against `{summary['baseline']}`, on the "
+                  f"questions both scored. McNemar plus a paired bootstrap, "
+                  f"the same functions the memory-lift ablation uses.\n")
+            print("| comparison | difference | 95% CI | McNemar p |")
+            print("|---|---|---|---|")
+            for name, c in comps.items():
+                pt, lo, hi = c["paired_diff_ci95"]
+                print(f"| {name.replace('_vs_', ' vs ')} | {pt:+.3f} | "
+                      f"[{lo:+.3f}, {hi:+.3f}] | {c['mcnemar_p']:.2e} |")
+
+
 def main() -> None:
     results_dir = Path("results")
     runs = load_all(results_dir)
@@ -333,6 +384,7 @@ def main() -> None:
               f"{read_calls/n:.1f} |")
 
     granularity_section(runs)
+    survival_section(results_dir)
     e2e_section(load_e2e(results_dir))
 
     print("\n## Retrieval quality by question type\n")

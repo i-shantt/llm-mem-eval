@@ -1,0 +1,80 @@
+{
+  "_README": [
+    "Hand classification of temporal-reasoning questions whose gold answer does",
+    "NOT appear verbatim in the turns LongMemEval labels `has_answer`.",
+    "",
+    "Purpose: results/benchmark_audit.json measures that only 0.232 of",
+    "temporal-reasoning questions (golds >= 2 tokens) have their answer present",
+    "in the labelled evidence. That number alone does not say why. These labels",
+    "do, and they decide whether the low rate is a property of the task or an",
+    "artefact of the string matcher.",
+    "",
+    "Sampling is deterministic and reproducible:",
+    "  scripts/audit_benchmark.py                      # writes the audit",
+    "  scripts/sample_tr_misses.py --n 20 --seed 0     # reprints these 20",
+    "",
+    "LIMITATION, stated because it matters: these are one annotator's labels",
+    "(the repo author's), with no second rater and therefore no inter-annotator",
+    "agreement. They are offered as an explanation of a measured number, not as",
+    "a validated annotation. Every label can be checked against the quoted",
+    "evidence in seconds, which is why the evidence is quoted inline."
+  ],
+  "_categories": {
+    "date-arithmetic": "The answer is a computed quantity -- a count of days, weeks, or a duration -- that appears nowhere in the text because it must be derived from two timestamps or from a relative expression plus the question date.",
+    "comparison-selection": "The answer names which of two events came first. Ordering the two requires resolving both timestamps; the winning event's name is often present but in different words than the gold.",
+    "paraphrase": "The answer content is present in an evidence turn, but the gold is a first-person restatement whose token sequence is broken by inserted words ('just', 'today', 'my friend').",
+    "surface-normalization": "The same value in a different surface form -- 'June 3rd' against 'the 3rd of June'.",
+    "annotation-coarse": "The answer is verbatim in a turn that is NOT labelled has_answer. Measured separately and at scale by the audit's `outside_evidence_only` column."
+  },
+  "_summary": {
+    "n_sampled": 20,
+    "n_candidates": 76,
+    "counts": {
+      "date-arithmetic": 10,
+      "comparison-selection": 6,
+      "paraphrase": 3,
+      "surface-normalization": 1,
+      "annotation-coarse": 0
+    },
+    "reading": [
+      "16 of 20 (date-arithmetic + comparison-selection) are questions whose",
+      "answer is a computed value or a choice between alternatives. No string",
+      "matcher, and no retriever, can find these as spans -- they are not in the",
+      "text. This is a property of the task.",
+      "",
+      "4 of 20 (paraphrase + surface-normalization) are cases where a more",
+      "permissive matcher would help. That bounds how much of the 0.232 is",
+      "our instrument rather than the benchmark: roughly a fifth of the misses,",
+      "so a perfect matcher would lift temporal-reasoning to about 0.39, not to",
+      "anything near the 0.88 seen on single-session-user.",
+      "",
+      "Consequence for reading anyone's retrieval metrics on this benchmark:",
+      "on temporal-reasoning, retrieving the gold evidence turn does NOT hand",
+      "the reader the answer. High scores on this category therefore cannot be",
+      "explained by span retrieval, and an aggregate retrieval metric over all",
+      "500 questions mixes two tasks that behave differently."
+    ]
+  },
+  "labels": [
+    {"question_id": "gpt4_213fd887", "category": "comparison-selection", "gold": "volleyball league", "note": "Requires ordering '5K about a month ago' against 'volleyball for about 2 months'. The source also says 'volleyball in a recreational league', so the gold bigram is split even though the topic matches."},
+    {"question_id": "gpt4_93159ced", "category": "date-arithmetic", "gold": "4 years and 9 months", "note": "Evidence states 4 years 3 months at an earlier session date; the answer adds the elapsed interval. The stated and the correct figure differ."},
+    {"question_id": "gpt4_85da3956", "category": "date-arithmetic", "gold": "3 weeks ago", "note": "Derived from evidence date 2023/07/15 against question date 2023/08/05."},
+    {"question_id": "gpt4_7a0daae1", "category": "date-arithmetic", "gold": "1 week", "note": "Interval between two evidence sessions, 03/10 and 03/17."},
+    {"question_id": "bbf86515", "category": "date-arithmetic", "gold": "4 days.", "note": "June 14 against June 18, both stated in text; the difference is not."},
+    {"question_id": "gpt4_8c8961ae", "category": "comparison-selection", "gold": "The solo trip to Thailand", "note": "Ordering two trips; the gold is a noun phrase assembled by the annotator."},
+    {"question_id": "4dfccbf8", "category": "paraphrase", "gold": "I started taking ukulele lessons with Rachel.", "note": "Evidence: 'I just started taking ukulele lessons with my friend Rachel today'. Content present; 'just' and 'my friend' break the token sequence."},
+    {"question_id": "gpt4_fa19884c", "category": "date-arithmetic", "gold": "6 days. 7 days (including the last day) is also acceptable.", "note": "The gold key itself offers two acceptable computed values, which is a tell that the answer is derived."},
+    {"question_id": "gpt4_0a05b494", "category": "comparison-selection", "gold": "the woman selling jam at the farmer's market", "note": "Source says 'a jam maker at the farmer's market'. Ordering plus a rewritten referent."},
+    {"question_id": "gpt4_4cd9eba1", "category": "date-arithmetic", "gold": "one week", "note": "Accepted 03/20, orientation from 03/27."},
+    {"question_id": "gpt4_4edbafa2", "category": "surface-normalization", "gold": "June 3rd", "note": "Evidence says 'the 3rd of June'. Identical value, different surface form. The only case in the sample a normaliser alone would fix."},
+    {"question_id": "gpt4_68e94288", "category": "paraphrase", "gold": "You participated in a social media challenge called #PlankChallenge.", "note": "Gold is a full second-person sentence; the evidence turn states the hashtag in running prose. Also needs 'five days ago' resolved to a session."},
+    {"question_id": "gpt4_e414231e", "category": "date-arithmetic", "gold": "4 days. 5 days (including the last day) is also acceptable.", "note": "03/15 against 03/19."},
+    {"question_id": "gpt4_c27434e8", "category": "comparison-selection", "gold": "Japanese Zero fighter plane model", "note": "Ordering two model builds; source phrases it as '1/48 scale Japanese Zero fighter plane'."},
+    {"question_id": "gpt4_4fc4f797", "category": "date-arithmetic", "gold": "38 days. 39 days (including the last day) is also acceptable.", "note": "03/17 against 04/23."},
+    {"question_id": "gpt4_2487a7cb", "category": "comparison-selection", "gold": "'Data Analysis using Python' webinar", "note": "Ordering 'two months ago' against 'last Saturday'."},
+    {"question_id": "eac54add", "category": "paraphrase", "gold": "I signed a contract with my first client.", "note": "Evidence: 'I just signed a contract with my first client today'. A single inserted 'just' breaks contiguous containment."},
+    {"question_id": "gpt4_98f46fc6", "category": "comparison-selection", "gold": "I participated in the charity bake sale first.", "note": "Gold is a sentence containing the word 'first', which appears in no evidence turn."},
+    {"question_id": "gpt4_1d80365e", "category": "date-arithmetic", "gold": "2 days. 3 days (including the last day) is also acceptable.", "note": "Trip start 05/15, return 05/17."},
+    {"question_id": "gpt4_1916e0ea", "category": "date-arithmetic", "gold": "54 days. 55 days (including the last day) is also acceptable.", "note": "01/05 against 02/28."}
+  ]
+}

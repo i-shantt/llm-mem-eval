@@ -1,5 +1,6 @@
 # Core: everything except the dense retriever and the cost figure.
-# The tests, the grader audit, BM25, and scripts/make_report.py run on these.
+# The tests, the grader audit, BM25, scripts/make_report.py, the benchmark
+# audit, the write-cost model, and the survival sweep all run on these.
 huggingface_hub
 numpy
 rank_bm25
@@ -16,3 +17,8 @@ pytest
 # two lines if you just want BM25, the grader audit, and the report.
 sentence-transformers
 torch
+
+# NOT listed here on purpose: mem0ai, for memllm/write/mem0_adapter.py. That
+# arm has not been run (see RUNNING.md), the version must be pinned exactly to
+# be attributable, and installing it pulls openai and qdrant-client into every
+# clone. Install it deliberately with `pip install -e ".[mem0]"`.

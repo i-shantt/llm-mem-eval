@@ -25,6 +25,12 @@ dense = ["sentence-transformers", "torch"]
 # The amortisation figure.
 figures = ["matplotlib"]
 dev = ["pytest"]
+# Mem0's own SDK, for the write policy in memllm/write/mem0_adapter.py.
+# Pinned exactly: v2.0.18 is the v3 ADD-only pipeline, which is a different
+# algorithm from the 2025 paper, so an unpinned store cannot be attributed to
+# either. fastembed is not optional in practice -- without it mem0 silently
+# disables BM25 even on qdrant. Not installed by CI; see RUNNING.md.
+mem0 = ["mem0ai==2.0.18", "fastembed>=0.7", "spacy>=3.8"]
 
 [tool.setuptools.packages.find]
 include = ["memllm*"]

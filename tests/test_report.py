@@ -79,3 +79,47 @@ def test_a_missing_split_explains_the_download_instead_of_raising():
     assert "xiaowu0162/longmemeval" in msg, "must name the dataset"
     assert "definitely_not_downloaded" in msg, "must name the split requested"
     assert "results/" in msg, "must say what still works without it"
+
+
+def test_new_artifacts_do_not_leak_into_the_retrieval_table() -> None:
+    """results/ holds non-run artifacts; the report must ignore them.
+
+    `make_report.load_all` globs `results/*.json` and folds any value dict
+    carrying a "metrics" key into the retrieval table. That heuristic is one
+    accidentally-named key away from silently listing the benchmark audit or the
+    write-cost model as a retriever row. This pins the rule rather than the
+    current file list, so a future artifact fails here instead of in RESULTS.md.
+    """
+    sys.path.insert(0, str(REPO / "scripts"))
+    from make_report import load_all
+
+    keys = set(load_all(REPO / "results"))
+    assert keys, "no runs found; the glob or the artifacts moved"
+
+    known_retrievers = {"bm25", "dense", "hybrid", "oracle", "recency",
+                        "random", "none"}
+    for key in keys:
+        name = key.split("|")[0]
+        assert name in known_retrievers, (
+            f"{name!r} was folded into the retrieval table but is not a "
+            f"retriever. A non-run artifact in results/ grew a 'metrics' key, "
+            f"or a new artifact belongs in a subdirectory."
+        )
+
+    for artifact in ("benchmark_audit.json", "write_cost_model.json"):
+        path = REPO / "results" / artifact
+        if path.exists():
+            payload = json.loads(path.read_text())
+            assert not any(
+                isinstance(v, dict) and "metrics" in v
+                for v in payload.values()
+            ), f"{artifact} would be read as a run"
+
+
+def test_survival_artifacts_live_in_a_subdirectory() -> None:
+    """`load_all`'s glob is non-recursive, which is the whole defence."""
+    top_level = {p.name for p in (REPO / "results").glob("*.json")}
+    assert not any(n.startswith("survival") for n in top_level), (
+        "survival artifacts belong in results/survival/ -- at the top level "
+        "they are one 'metrics' key away from becoming retriever rows"
+    )
