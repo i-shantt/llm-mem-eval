@@ -1,5 +1,0 @@
-# Optional: only needed to drive Kaggle from Claude Code via MCP.
-# The evaluation harness itself has no dependency on these.
-mcp>=2.0.0
-kaggle>=2.2.0
-nbformat
