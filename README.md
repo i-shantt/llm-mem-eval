@@ -1,6 +1,6 @@
 # llm-mem-eval — measuring LLM memory systems without a judge
 
-[![tests](https://github.com/i-shantt/memllm/actions/workflows/tests.yml/badge.svg)](https://github.com/i-shantt/memllm/actions/workflows/tests.yml)
+[![tests](https://github.com/i-shantt/llm-mem-eval/actions/workflows/tests.yml/badge.svg)](https://github.com/i-shantt/llm-mem-eval/actions/workflows/tests.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 An evaluation harness for long-term memory systems. It measures retrieval and
