@@ -106,31 +106,31 @@ The same retrievers, over the same conversations, cut into turns, user turns, or
 
 Retrieve, answer with a local model, grade deterministically. Graded by normalised token-span containment, never by an LLM judge; abstractive gold answers with no checkable surface form are excluded rather than scored wrong, which is the `not gradable` column.
 
-| model | retriever | granularity | accuracy | token-F1 | graded | not gradable | read tok/query | max prompt | num_ctx | truncated | valid |
+| model | retriever | granularity | accuracy | token-F1 | graded | not gradable | read tok/query | max prompt | num_ctx | clamped | valid |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| qwen2.5:1.5b-instruct | hybrid | turn | 0.352 | 0.203 | 91 | 9 | 2627 | 4961 | 8192 | 0 | ok |
-| qwen2.5:1.5b-instruct | none | turn | 0.033 | 0.074 | 91 | 9 | 139 | 142 | 8192 | 0 | ok |
-| qwen2.5:1.5b-instruct | oracle | turn | 0.352 | 0.193 | 91 | 9 | 2225 | 4481 | 8192 | 0 | ok |
-| qwen2.5:1.5b-instruct | random | turn | 0.077 | 0.080 | 91 | 9 | 2484 | 5112 | 8192 | 1 | ok |
-| qwen2.5:1.5b-instruct | recency | turn | 0.066 | 0.081 | 91 | 9 | 2574 | 4354 | 8192 | 1 | ok |
-| qwen2.5:3b-instruct | hybrid | turn | 0.319 | 0.172 | 91 | 9 | 2629 | 4961 | 8192 | 0 | ok |
-| qwen2.5:3b-instruct | none | turn | 0.044 | 0.038 | 91 | 9 | 125 | 142 | 8192 | 0 | ok |
-| qwen2.5:3b-instruct | oracle | turn | 0.418 | 0.177 | 91 | 9 | 2235 | 4481 | 8192 | 0 | ok |
-| qwen2.5:3b-instruct | random | turn | 0.066 | 0.057 | 91 | 9 | 2475 | 5112 | 8192 | 0 | ok |
-| qwen2.5:3b-instruct | recency | turn | 0.077 | 0.068 | 91 | 9 | 2568 | 4354 | 8192 | 1 | ok |
-| qwen2.5:7b-instruct | bm25 | turn | 0.418 | 0.177 | 91 | 9 | 2903 | 4894 | 8192 | 1 | ok |
-| qwen2.5:7b-instruct | hybrid | session | 0.044 | 0.055 | 91 | 9 | 4128 | 4098 | 8192 | 0 | **INVALID** |
-| qwen2.5:7b-instruct | hybrid | turn | 0.473 | 0.186 | 91 | 9 | 2639 | 4961 | 8192 | 1 | ok |
-| qwen2.5:7b-instruct | none | turn | 0.055 | 0.048 | 91 | 9 | 135 | 142 | 8192 | 0 | ok |
-| qwen2.5:7b-instruct | oracle | turn | 0.593 | 0.208 | 91 | 9 | 2242 | 4481 | 8192 | 0 | ok |
-| qwen2.5:7b-instruct | random | turn | 0.066 | 0.073 | 91 | 9 | 2483 | 5112 | 8192 | 0 | ok |
-| qwen2.5:7b-instruct | recency | turn | 0.088 | 0.072 | 91 | 9 | 2568 | 4354 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | hybrid | session | 0.033 | 0.058 | 91 | 9 | 4147 | 4098 | 8192 | 1 | **INVALID** |
-| qwen2.5:14b-instruct | hybrid | turn | 0.593 | 0.193 | 91 | 9 | 2642 | 4961 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | none | turn | 0.044 | 0.060 | 91 | 9 | 146 | 142 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | oracle | turn | 0.560 | 0.192 | 91 | 9 | 2244 | 4481 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | random | turn | 0.055 | 0.072 | 91 | 9 | 2494 | 5112 | 8192 | 0 | ok |
-| qwen2.5:14b-instruct | recency | turn | 0.088 | 0.076 | 91 | 9 | 2580 | 4354 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | hybrid | turn | 0.352 | 0.190 | 91 | 9 | 2627 | 4961 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | none | turn | 0.033 | 0.052 | 91 | 9 | 139 | 142 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | oracle | turn | 0.352 | 0.181 | 91 | 9 | 2225 | 4481 | 8192 | 0 | ok |
+| qwen2.5:1.5b-instruct | random | turn | 0.077 | 0.060 | 91 | 9 | 2484 | 5112 | 8192 | 1 | ok |
+| qwen2.5:1.5b-instruct | recency | turn | 0.066 | 0.065 | 91 | 9 | 2574 | 4354 | 8192 | 1 | ok |
+| qwen2.5:3b-instruct | hybrid | turn | 0.319 | 0.158 | 91 | 9 | 2629 | 4961 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | none | turn | 0.044 | 0.025 | 91 | 9 | 125 | 142 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | oracle | turn | 0.418 | 0.161 | 91 | 9 | 2235 | 4481 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | random | turn | 0.066 | 0.046 | 91 | 9 | 2475 | 5112 | 8192 | 0 | ok |
+| qwen2.5:3b-instruct | recency | turn | 0.077 | 0.060 | 91 | 9 | 2568 | 4354 | 8192 | 1 | ok |
+| qwen2.5:7b-instruct | bm25 | turn | 0.418 | 0.165 | 91 | 9 | 2903 | 4894 | 8192 | 1 | ok |
+| qwen2.5:7b-instruct | hybrid | session | 0.044 | 0.036 | 91 | 9 | 4128 | 4098 | 8192 | 0 | **INVALID** |
+| qwen2.5:7b-instruct | hybrid | turn | 0.473 | 0.173 | 91 | 9 | 2639 | 4961 | 8192 | 1 | ok |
+| qwen2.5:7b-instruct | none | turn | 0.055 | 0.035 | 91 | 9 | 135 | 142 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | oracle | turn | 0.593 | 0.196 | 91 | 9 | 2242 | 4481 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | random | turn | 0.066 | 0.055 | 91 | 9 | 2483 | 5112 | 8192 | 0 | ok |
+| qwen2.5:7b-instruct | recency | turn | 0.088 | 0.061 | 91 | 9 | 2568 | 4354 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | hybrid | session | 0.033 | 0.042 | 91 | 9 | 4147 | 4098 | 8192 | 1 | **INVALID** |
+| qwen2.5:14b-instruct | hybrid | turn | 0.593 | 0.183 | 91 | 9 | 2642 | 4961 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | none | turn | 0.044 | 0.040 | 91 | 9 | 146 | 142 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | oracle | turn | 0.560 | 0.175 | 91 | 9 | 2244 | 4481 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | random | turn | 0.055 | 0.053 | 91 | 9 | 2494 | 5112 | 8192 | 0 | ok |
+| qwen2.5:14b-instruct | recency | turn | 0.088 | 0.064 | 91 | 9 | 2580 | 4354 | 8192 | 0 | ok |
 
 > **`e2e_7b_hybrid_session_k10_n100` is not a valid measurement.** Every one of its 100 prompts was exactly 4098 tokens. Prompts do not naturally agree to the token; the server truncated them to a fixed size before the model read them, so the retrieved memory never reached it. Its accuracy of 0.044 measures the clamp, not the system.
 
@@ -138,7 +138,7 @@ Retrieve, answer with a local model, grade deterministically. Graded by normalis
 
 ### Oracle is not a ceiling
 
-`oracle` retrieves exactly the turns LongMemEval labels `has_answer`, which is a *smaller* prompt than the retrievers produce, not a superset of one. Where the gap below is negative, a real retriever beat the gold labels: the answer needed a turn that was never labelled evidence. So `1 - oracle` is not model loss alone -- it also contains whatever the labelling missed, and the oracle arm cannot be read as an upper bound.
+`oracle` ranks the turns LongMemEval labels `has_answer` first, then pads to the same `k` as every other arm with non-evidence turns in conversation order. Questions carry ~1.9 evidence turns on average, so at k=10 that context is mostly filler: it is a *different* context from a retriever's, not a superset of one. Where the gap below is negative, a real retriever beat the gold labels, because the answer needed a turn that was never labelled evidence. So `1 - oracle` is not model loss alone -- it also contains whatever the labelling missed, and the oracle arm cannot be read as an upper bound.
 
 | model | oracle | hybrid | oracle - hybrid | 1 - oracle |
 |---|---|---|---|---|

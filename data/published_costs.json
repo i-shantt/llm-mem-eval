@@ -27,7 +27,8 @@
   "locomo_read_path": {
     "_source": "Mem0, arXiv 2504.19413, Table 2",
     "_benchmark": "LoCoMo",
-    "_unit": "mean prompt tokens supplied to the answering model per question",
+    "_unit": "mean retrieved-memory tokens placed in the answering model's context per question (Table 2's 'chunk size / memory tokens' column)",
+    "_comparability": "This counts retrieved context only, not the surrounding prompt template or the question. This repo's read-path figures are measured the same way, so the two are like-for-like; adding this repo's ~500-token template to both sides would move the full-context ratio from 49.6x to about 40x.",
     "_verified": true,
     "_note": "This paper reports NO write-path cost. It documents retrieval and inference latency but is silent on tokens or LLM calls consumed during memory extraction and consolidation. That omission is the gap this repo is about.",
     "systems": [
@@ -149,6 +150,19 @@
         "paradigm": "IV (agentic control flow)"
       }
     ]
+  },
+  "mem0_2026_algorithm": {
+    "_source": "Mem0, 'The Token-Efficient Memory Algorithm', mem0.ai blog, 2026",
+    "_url": "https://mem0.ai/blog/mem0-the-token-efficient-memory-algorithm",
+    "_source_type": "vendor blog post, not peer reviewed",
+    "_verified": false,
+    "_note": "Recorded because the 2025 paper no longer describes Mem0's default path. Extraction is single-pass and ADD-only -- UPDATE and DELETE are gone, superseded facts coexist -- and retrieval fuses semantic, keyword and entity matching. That makes the write path cheaper than the paper's two-phase design, though still at least one LLM call per message pair. Quoted in README.md as Mem0's own reported figures, not as a measurement by this repo.",
+    "reported": {
+      "longmemeval_score": 94.4,
+      "longmemeval_tokens_per_query": 6787,
+      "locomo_score": 92.5,
+      "locomo_tokens_per_query": 6956
+    }
   },
   "judge_reliability": {
     "_source": "Same Ranking, Different Winner: How Scoring Targets Shape LLM Memory Benchmarks, arXiv 2605.24060",

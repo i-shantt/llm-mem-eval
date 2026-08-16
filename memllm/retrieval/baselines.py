@@ -6,12 +6,15 @@ RandomRetriever   -- lower bound; distinguishes real retrieval from lucky priors
 NoMemoryRetriever -- retrieves nothing; the closed-book floor
 
 Note what the oracle is and is not. It is a ceiling for the *retrieval metrics*
-by construction, since it returns every evidence unit and nothing can score
-higher than 1.000. It is **not** an end-to-end ceiling: it hands the model only
-the turns LongMemEval labelled `has_answer`, which is a smaller prompt than a
-real retriever builds on most questions, so a retriever that also picks up an
-unlabelled turn carrying the answer can beat it -- and does. See "Oracle is not
-a ceiling" in RESULTS.md.
+by construction: it ranks every evidence unit first, so any_hit, recall and MRR
+are all 1.000 and nothing can beat it.
+
+It is **not** an end-to-end ceiling. Questions carry ~1.9 evidence turns on
+average and never more than six, so at k=10 the arm is gold evidence padded out
+with non-evidence turns in conversation order -- roughly 80% filler. That is a
+*different* context from a retriever's, not a superset of one, and a retriever
+that surfaces an unlabelled turn which happens to carry the answer can beat it.
+It does: hybrid beats oracle at 14B. See "Oracle is not a ceiling" in RESULTS.md.
 """
 
 from __future__ import annotations
@@ -24,12 +27,13 @@ from .base import Hit
 
 
 class OracleRetriever:
-    """Returns gold evidence first, then arbitrary filler.
+    """Ranks gold evidence first, then pads to k with non-evidence units in
+    conversation order.
 
     Isolates 'can the model answer *given* the labelled evidence' from 'can we
     find the right memory'. Scores 1.000 on every retrieval metric by
-    construction; see the module docstring for why that does not make it an
-    end-to-end upper bound.
+    construction; see the module docstring for why the padding means that does
+    not make it an end-to-end upper bound.
     """
 
     name = "oracle"

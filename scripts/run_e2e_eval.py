@@ -148,7 +148,11 @@ def main() -> None:
         else:
             n_det_graded += 1
             n_det_correct += int(det)
-        f1_sum += token_f1(gen.text, gold)
+            # Same denominator as `accuracy`. Averaging token-F1 over all n
+            # while accuracy divides by the gradable subset made the two
+            # non-comparable, and the README quotes their difference as the
+            # check on containment's length bias.
+            f1_sum += token_f1(gen.text, gold)
 
         verdict, raw = (None, "")
         if judger is not None:
@@ -206,7 +210,7 @@ def main() -> None:
         "n_not_gradable": n_not_gradable,
         "not_gradable_note": "abstractive gold answers with no checkable surface "
                              "form; excluded rather than scored as wrong",
-        "token_f1_mean": f1_sum / n,
+        "token_f1_mean": f1_sum / max(n_det_graded, 1),
         "accuracy_by_question_type": {
             t: {**v, "accuracy": v["correct"] / v["n"]}
             for t, v in sorted(by_type.items())

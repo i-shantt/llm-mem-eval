@@ -199,8 +199,12 @@ def e2e_section(arms: list[dict]) -> None:
           "Graded by normalised token-span containment, never by an LLM judge; "
           "abstractive gold answers with no checkable surface form are excluded "
           "rather than scored wrong, which is the `not gradable` column.\n")
+    # "clamped" rather than "truncated": the column falls back to
+    # n_hit_token_cap, which counts answers that hit the generation cap, not
+    # prompts the server clipped. Both are clamps worth seeing; conflating them
+    # under the prompt-truncation name misread six arms.
     print("| model | retriever | granularity | accuracy | token-F1 | graded | "
-          "not gradable | read tok/query | max prompt | num_ctx | truncated | "
+          "not gradable | read tok/query | max prompt | num_ctx | clamped | "
           "valid |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     suspect = []
@@ -246,13 +250,16 @@ def e2e_section(arms: list[dict]) -> None:
              if "oracle" in v and "hybrid" in v}
     if pairs:
         print("\n### Oracle is not a ceiling\n")
-        print("`oracle` retrieves exactly the turns LongMemEval labels "
-              "`has_answer`, which is a *smaller* prompt than the retrievers "
-              "produce, not a superset of one. Where the gap below is negative, "
-              "a real retriever beat the gold labels: the answer needed a turn "
-              "that was never labelled evidence. So `1 - oracle` is not model "
-              "loss alone -- it also contains whatever the labelling missed, "
-              "and the oracle arm cannot be read as an upper bound.\n")
+        print("`oracle` ranks the turns LongMemEval labels `has_answer` first, "
+              "then pads to the same `k` as every other arm with non-evidence "
+              "turns in conversation order. Questions carry ~1.9 evidence turns "
+              "on average, so at k=10 that context is mostly filler: it is a "
+              "*different* context from a retriever's, not a superset of one. "
+              "Where the gap below is negative, a real retriever beat the gold "
+              "labels, because the answer needed a turn that was never "
+              "labelled evidence. So `1 - oracle` is not model loss alone -- it "
+              "also contains whatever the labelling missed, and the oracle arm "
+              "cannot be read as an upper bound.\n")
         print("| model | oracle | hybrid | oracle - hybrid | 1 - oracle |")
         print("|---|---|---|---|---|")
         for m, v in sorted(pairs.items(), key=lambda kv: param_count(kv[0])):

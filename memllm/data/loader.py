@@ -1,9 +1,9 @@
 """LongMemEval loading and memory-unit construction.
 
-The dataset gives each question its own haystack of ~50 sessions (~490 turns,
-~123K tokens). Every turn carries a `has_answer` flag, which we treat as a gold
-retrieval label -- this is what lets us measure retrieval quality without an
-LLM judge.
+The dataset gives each question its own haystack of ~48 sessions (~490 turns,
+~104K tokens; measured in results/token_stats_turn.json). Every turn carries a
+`has_answer` flag, which we treat as a gold retrieval label -- this is what lets
+us measure retrieval quality without an LLM judge.
 """
 
 from __future__ import annotations

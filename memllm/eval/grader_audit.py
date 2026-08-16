@@ -15,8 +15,9 @@ Honest limit, stated in the report as well as here: constructed negatives are
 *easy* negatives. A grader that passes this audit can still misjudge a model's
 genuine near-miss. Passing is necessary for trusting a grader, not sufficient.
 The sufficient check is human labels on the cases where two independent graders
-disagree -- a far smaller set than labelling everything. See
-`scripts/audit_graders.py --export-disagreements`.
+disagree -- a far smaller set than labelling everything. `find_disagreements`
+below builds that set from two graders' verdicts; run the second grader with
+`scripts/audit_graders.py --judge-backend`.
 """
 
 from __future__ import annotations
@@ -165,6 +166,12 @@ def build_audit_cases(examples, seed: int = 0, per_type: int = 60) -> list[Audit
 
     No model outputs and no human labels are involved -- only the benchmark's
     own answer key, recombined so the correct verdict is known.
+
+    `per_type` sets the pool size as `per_type * 6`, six being the number of
+    question types. It is a budget knob, not a stratifier: the pool is taken in
+    dataset order, so the type mix is whatever the benchmark's own ordering
+    gives. Substituted golds *are* drawn within a question type, which is what
+    keeps a negative topically plausible rather than trivially rejectable.
     """
     from memllm.eval.grade import (
         _ORDER_QUESTION, gold_signals_abstention, grade, is_extractive,

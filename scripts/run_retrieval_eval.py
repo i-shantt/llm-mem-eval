@@ -105,8 +105,8 @@ def main() -> None:
             cache_key = f"{ex.question_id}|{args.granularity}"
             # Write path: indexing the haystack.
             retriever.index(units, ledger, cache_key)
-            # Read path: one query.
-            ledger.read.llm_calls += 0  # retrieval-only arm makes no LLM calls
+            # Read path: one query. No LLM call -- these arms are retrieval
+            # only, so read.llm_calls stays 0 and the ledger says so.
             hits = retriever.search(
                 ex.question, args.k, ledger, question_date=ex.question_date
             )

@@ -87,10 +87,11 @@ with a rolling conversation summary plus the last `m=10` messages and the new
 pair, and that call emits a set of candidate facts. Then, *for each candidate
 fact*, the top `s=10` semantically similar existing memories are retrieved and
 handed back to the LLM, which picks one of **ADD**, **UPDATE**, **DELETE** or
-**NOOP**. There is no separate conflict-resolution classifier — the paper is
-explicit that the LLM's own reasoning plays that role. `Mem0^g` adds entity and
-relationship extraction on top, into a Neo4j graph, and marks superseded
-relationships invalid rather than deleting them.
+**NOOP**. In base Mem0 there is no separate conflict-resolution classifier — the
+paper is explicit that the LLM's own reasoning plays that role. `Mem0^g` differs
+here: it adds entity and relationship extraction into a Neo4j graph, and does
+describe a conflict-detection step with an LLM-based update resolver, which
+marks superseded relationships invalid rather than deleting them.
 
 Two points of accuracy:
 
@@ -125,6 +126,12 @@ gpt-4o-mini prompt rates:
 | full context | $0 | $0.01561 (104,059 tok) |
 | Mem0 — *reported*, LoCoMo | $0.185 (1.23M tok) | $0.00026 (1,764 tok) |
 
+That `$0` is **API dollars, not free**. Indexing one conversation still costs
+3.1 s of local compute and ~104K embedding tokens through a 33M-parameter model.
+Priced at a hosted embedding rate it is on the order of $0.002 per conversation
+— about 1% of the LLM-extraction figure above, so the comparison survives, but
+it is a rounding-to-zero, not a zero.
+
 Two readings, and the second is the one that matters.
 
 **A search index with no LLM write path reads 49.6× cheaper per query than
@@ -147,6 +154,13 @@ shown rather than the most convenient one:
 The headline uses the smallest, because its extraction model matches the prices
 used everywhere else here, and because quoting the largest would be picking the
 number that flatters this repo.
+
+**What "read, per query" counts.** Retrieved context only — not the prompt
+template, the date line or the question. Mem0's 1,764 is the same quantity, its
+Table 2 "memory tokens" column, so the two are like-for-like. This repo's
+template adds ~500 tokens, and adding it to both sides would move the
+full-context ratio from 49.6× to about 40×. The break-even is unaffected in
+direction and lands near 1,500 queries on that basis instead of 3,700.
 
 **No memory product was re-run here.** Mem0's read path comes from its own
 Table 2; the construction tokens come from
@@ -175,14 +189,14 @@ Judge-free: LongMemEval labels every turn with `has_answer`, which is a gold
 *retrieval* label, so these are arithmetic. n=100, turn granularity. Full tables
 in [RESULTS.md](RESULTS.md).
 
-| system | any_hit@1 | any_hit@10 | MRR | write ms/conv | write LLM calls |
-|---|---|---|---|---|---|
-| random | 0.021 | 0.041 | 0.027 | 0 | 0 |
-| recency (last-N turns) | 0.000 | 0.062 | 0.012 | 0 | 0 |
-| **BM25** | **0.546** | 0.825 | **0.634** | **40** | **0** |
-| dense (bge-small, 33M) | 0.464 | 0.897 | 0.616 | 3,020 | 0 |
-| hybrid (BM25 + dense, RRF) | 0.536 | **0.907** | 0.649 | 3,075 | 0 |
-| oracle (gold evidence only) | 1.000 | 1.000 | 1.000 | — | — |
+| system | any_hit@1 | any_hit@10 | recall@10 | MRR | write ms/conv | write LLM calls |
+|---|---|---|---|---|---|---|
+| random | 0.021 | 0.041 | 0.021 | 0.027 | 0 | 0 |
+| recency (last-N turns) | 0.000 | 0.062 | 0.028 | 0.012 | 0 | 0 |
+| **BM25** | **0.546** | 0.825 | 0.693 | **0.634** | **40** | **0** |
+| dense (bge-small, 33M) | 0.464 | 0.897 | **0.821** | 0.616 | 3,020 | 0 |
+| hybrid (BM25 + dense, RRF) | 0.536 | **0.907** | 0.811 | 0.649 | 3,075 | 0 |
+| oracle (gold evidence ranked first) | 1.000 | 1.000 | 1.000 | 1.000 | — | — |
 
 Write cost is wall-clock, and wall-clock is machine-dependent. All six rows come
 from one run on one machine with the embedding cache disabled
@@ -191,7 +205,9 @@ meaningful even though the absolute figures are not portable.
 
 1. **BM25 beats a neural embedding model on top-1 precision and MRR** (0.546 vs
    0.464; 0.634 vs 0.616) for **75× less write cost**. The embedding model buys
-   deeper recall (`any_hit@10` 0.897 vs 0.825), not better ranking.
+   deeper recall and wins clearly there — `recall@10` 0.821 vs 0.693 — but it
+   does not rank better. Which of the two you want depends on whether the
+   answering model needs one evidence turn or all of them.
 2. **BM25 is perfect on knowledge-update questions** (`any_hit@10` = 1.000, vs
    dense 0.938) — the slice the memory-conflict literature treats as the hard one.
 3. **"Just keep the last N turns" does not work.** Recency scores 0.062, barely
@@ -239,8 +255,9 @@ needed. Over 3,166 constructed cases:
 | false reject — all meaning-preserving positives | 0.001 |
 | false reject — meaning-preserving *rewrites* only | **0.003** |
 
-CI re-measures this on every push and fails the build if the false-accept rate
-leaves zero, so it cannot quietly stop being true.
+CI re-measures this on every push to `main` and on every pull request, and fails
+the build if the false-accept rate leaves zero, so it cannot quietly stop being
+true.
 
 **Where the audit stops being enough.** Constructed negatives are *easy*
 negatives. The clearest demonstration is a false accept it could not catch: on
@@ -354,10 +371,12 @@ greedy decoding, no judge).
 
 ### Oracle is not a ceiling
 
-The oracle arm retrieves exactly the turns LongMemEval labels `has_answer`. That
-is a *smaller* prompt than a retriever builds — smaller on **59 of 100
-questions** — not a superset of one. So it is not an upper bound: hybrid beat it
-at 14B and tied it at 1.5B.
+The oracle arm ranks the turns LongMemEval labels `has_answer` first, then pads
+to the same `k=10` as every other arm with non-evidence turns in conversation
+order. Questions carry **1.9 evidence turns on average** and never more than six,
+so that context is mostly filler — a *different* context from a retriever's, not
+a superset of one, and a smaller one on **59 of 100 questions**. So it is not an
+upper bound: hybrid beat it at 14B and tied it at 1.5B.
 
 > **Q:** Where did I redeem a $5 coupon on coffee creamer? **Gold:** `Target`
 > — 14B arm
@@ -387,7 +406,7 @@ their first N words prices that:
 | **14B − 7B** | **+0.121** | +0.121 | +0.088 | +0.044 | **+0.000** |
 
 The 14B lead decays to exactly zero. Token-F1, which penalises length rather than
-rewarding it, puts the same gap at **+0.007**.
+rewarding it, puts the same gap at **+0.010** — against +0.121 by containment.
 
 So containment is fair across *retrievers at a fixed model* — same answerer, same
 verbosity — and **unfair across models that differ in verbosity**. An earlier
@@ -517,12 +536,12 @@ reported number carries its own `n`.
   the experiment I would most like to do and have not done.
 - **A refusal that names both candidates can be scored correct.** On
   two-alternative questions ("A or B?") the gold string appears inside answers
-  that decline entirely, and containment accepts them. Four such records exist
-  across the closed-book arms. Because they land in the *control*, they inflate
-  the control and therefore **understate** the reported lift — the 76–85% is
-  conservative in this respect, not optimistic. An earlier version of this README
-  asserted this class had been checked and cleared in the controls; that was
-  wrong.
+  that decline entirely, and containment accepts them. Three such records exist
+  across the closed-book arms (14B `Page Turners`, 14B and 7B `Tom`). Because
+  they land in the *control*, they inflate the control and therefore
+  **understate** the reported lift — the 76–85% is conservative in this respect,
+  not optimistic. An earlier version of this README asserted this class had been
+  checked and cleared in the controls; that was wrong.
 - **The regression tests for the two hardest grader defects are one case each.**
   `hard_list_reorder` and `reordered_ordered_list` are n=1 in the audit.
 - **The deterministic grader has a known false-reject class**: gold answers whose
