@@ -82,6 +82,45 @@ def test_batching_granularities_partition_the_conversation() -> None:
         assert sorted(flat) == list(range(12))
 
 
+def test_pair_batching_never_straddles_a_session() -> None:
+    """build() dates a batch from its first turn, so a pair that crosses a
+    session boundary is stored under the earlier session's date -- the
+    conversation-date contamination the preflight check exists to catch.
+    8.1% of LongMemEval-S sessions have an odd turn count, so this is the
+    common case, not a corner one.
+    """
+    # Session s0 has three turns, so a flat pairing would put its last turn
+    # in the same add() call as s1's first.
+    sizes = [3, 4, 3]
+    turns, idx = [], 0
+    for si, n in enumerate(sizes):
+        for _ in range(n):
+            turns.append(Turn("user", f"m{idx}", f"s{si}",
+                              f"2023/0{si + 1}/01 (Sun) 10:00", si, idx, False))
+            idx += 1
+    ex = Example("q1", "single-session-user", "?", "a",
+                 "2023/06/01 (Thu) 10:00", turns)
+
+    got = Mem0OssPolicy(llm_model="stub", batch="pair")._batches(ex)
+    for b in got:
+        assert len({t.session_id for t in b}) == 1, \
+            f"batch spans sessions: {[t.session_id for t in b]}"
+    assert sorted(t.turn_index for b in got for t in b) == list(range(idx))
+    # ceil(3/2) + ceil(4/2) + ceil(3/2) = 2 + 2 + 2, against 5 when flat.
+    assert len(got) == 6
+
+
+def test_estimated_write_tokens_reach_the_manifest() -> None:
+    """The flag used to be appended to a `ledger.notes` list that CostLedger
+    does not have, so an arm whose write tokens were counted locally rather
+    than reported by the server was written to disk with nothing saying so.
+    """
+    p = Mem0OssPolicy(llm_model="stub")
+    assert p.config()["write_tokens_estimated"] is False
+    p.usage_estimated = True
+    assert p.config()["write_tokens_estimated"] is True
+
+
 def test_store_is_named_for_the_configuration_not_just_mem0() -> None:
     p = Mem0OssPolicy(llm_model="Qwen/Qwen2.5-7B-Instruct")
     assert p.name == "mem0_oss_v3_qwen2.5-7b-instruct"

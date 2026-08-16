@@ -1,9 +1,10 @@
 {
   "store_id": "leadk_10pct",
   "policy_config": {
-    "policy": "extractive_lead_k",
+    "policy": "extractive_k",
     "fraction": 0.1,
     "granularity": "turn",
+    "rule": "lead",
     "selector": "round-robin lead sentences"
   },
   "n_placebo_per_question": 10,
@@ -11,7 +12,7 @@
   "config": {
     "tag": "leadk_10pct",
     "retriever": "store",
-    "answer_backend": "extractive_lead_k"
+    "answer_backend": "extractive_k"
   },
   "survival": {
     "n_all": 184,
@@ -228,9 +229,9 @@
       }
     },
     "store_stats": {
-      "records_per_store_mean": 410.82065217391306,
-      "tokens_per_store_mean": 10410.048913043478,
-      "tokens_per_record_mean": 25.787822434831796
+      "records_per_store_mean": 410.83152173913044,
+      "tokens_per_store_mean": 10410.369565217392,
+      "tokens_per_record_mean": 25.787885186183832
     }
   },
   "cost_total": {
@@ -240,7 +241,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 5.540982002275996
+      "wall_clock_s": 13.675308609730564
     },
     "read": {
       "llm_calls": 0,
@@ -460,7 +461,7 @@
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 365,
-      "store_tokens": 10279
+      "store_tokens": 10281
     },
     {
       "question_id": "726462e0",
@@ -640,7 +641,7 @@
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 477,
-      "store_tokens": 10509
+      "store_tokens": 10510
     },
     {
       "question_id": "0862e8bf",
@@ -715,7 +716,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 455,
-      "store_tokens": 10266
+      "store_tokens": 10267
     },
     {
       "question_id": "d52b4f67",
@@ -775,7 +776,7 @@
       "null_soft": 0.2,
       "null_union": 0.1,
       "n_records": 335,
-      "store_tokens": 10532
+      "store_tokens": 10535
     },
     {
       "question_id": "60d45044",
@@ -865,7 +866,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 412,
-      "store_tokens": 10539
+      "store_tokens": 10542
     },
     {
       "question_id": "e01b8e2f",
@@ -1435,7 +1436,7 @@
       "null_soft": 0.7,
       "null_union": 0.7,
       "n_records": 471,
-      "store_tokens": 10324
+      "store_tokens": 10328
     },
     {
       "question_id": "08e075c7",
@@ -1450,7 +1451,7 @@
       "null_soft": 0.1,
       "null_union": 0.0,
       "n_records": 406,
-      "store_tokens": 10420
+      "store_tokens": 10423
     },
     {
       "question_id": "f9e8c073",
@@ -1510,7 +1511,7 @@
       "null_soft": 0.4,
       "null_union": 0.4,
       "n_records": 434,
-      "store_tokens": 10499
+      "store_tokens": 10500
     },
     {
       "question_id": "45dc21b6",
@@ -1525,7 +1526,7 @@
       "null_soft": 0.7,
       "null_union": 0.7,
       "n_records": 401,
-      "store_tokens": 10347
+      "store_tokens": 10349
     },
     {
       "question_id": "5a4f22c0",
@@ -1585,7 +1586,7 @@
       "null_soft": 0.3,
       "null_union": 0.3,
       "n_records": 407,
-      "store_tokens": 10487
+      "store_tokens": 10490
     },
     {
       "question_id": "72e3ee87",
@@ -1720,7 +1721,7 @@
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 437,
-      "store_tokens": 10428
+      "store_tokens": 10429
     },
     {
       "question_id": "1cea1afa",
@@ -1780,7 +1781,7 @@
       "null_soft": 0.6,
       "null_union": 0.6,
       "n_records": 441,
-      "store_tokens": 10540
+      "store_tokens": 10543
     },
     {
       "question_id": "22d2cb42",
@@ -1840,7 +1841,7 @@
       "null_soft": 0.7,
       "null_union": 0.7,
       "n_records": 418,
-      "store_tokens": 10241
+      "store_tokens": 10244
     },
     {
       "question_id": "603deb26",
@@ -1900,7 +1901,7 @@
       "null_soft": 0.6,
       "null_union": 0.6,
       "n_records": 439,
-      "store_tokens": 10607
+      "store_tokens": 10608
     },
     {
       "question_id": "affe2881",
@@ -1930,7 +1931,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 479,
-      "store_tokens": 10523
+      "store_tokens": 10526
     },
     {
       "question_id": "e66b632c",
@@ -2020,7 +2021,7 @@
       "null_soft": 0.8,
       "null_union": 0.8,
       "n_records": 340,
-      "store_tokens": 10281
+      "store_tokens": 10282
     },
     {
       "question_id": "cf22b7bf",
@@ -2065,7 +2066,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 369,
-      "store_tokens": 10514
+      "store_tokens": 10515
     },
     {
       "question_id": "06db6396",
@@ -2125,7 +2126,7 @@
       "null_soft": 0.6,
       "null_union": 0.6,
       "n_records": 438,
-      "store_tokens": 10298
+      "store_tokens": 10301
     },
     {
       "question_id": "dad224aa",
@@ -2200,7 +2201,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 403,
-      "store_tokens": 10455
+      "store_tokens": 10456
     },
     {
       "question_id": "26bdc477",
@@ -2425,7 +2426,7 @@
       "null_soft": 0.0,
       "null_union": 0.1,
       "n_records": 302,
-      "store_tokens": 10466
+      "store_tokens": 10469
     },
     {
       "question_id": "fea54f57",
@@ -2485,7 +2486,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 323,
-      "store_tokens": 10479
+      "store_tokens": 10482
     },
     {
       "question_id": "488d3006",
@@ -2605,7 +2606,7 @@
       "null_soft": 0.3,
       "null_union": 0.3,
       "n_records": 397,
-      "store_tokens": 10530
+      "store_tokens": 10533
     },
     {
       "question_id": "1b9b7252",
@@ -2665,7 +2666,7 @@
       "null_soft": 0.0,
       "null_union": 0.1,
       "n_records": 425,
-      "store_tokens": 10573
+      "store_tokens": 10576
     },
     {
       "question_id": "d596882b",
@@ -2829,8 +2830,8 @@
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
-      "n_records": 366,
-      "store_tokens": 10382
+      "n_records": 367,
+      "store_tokens": 10383
     },
     {
       "question_id": "4baee567",
@@ -2860,7 +2861,7 @@
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 447,
-      "store_tokens": 10432
+      "store_tokens": 10435
     },
     {
       "question_id": "b759caee",
@@ -2890,7 +2891,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 433,
-      "store_tokens": 10269
+      "store_tokens": 10270
     },
     {
       "question_id": "28bcfaac",
@@ -2949,8 +2950,8 @@
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
-      "n_records": 422,
-      "store_tokens": 10319
+      "n_records": 423,
+      "store_tokens": 10320
     },
     {
       "question_id": "c7cf7dfd",
@@ -2995,7 +2996,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 425,
-      "store_tokens": 10534
+      "store_tokens": 10535
     },
     {
       "question_id": "778164c6",

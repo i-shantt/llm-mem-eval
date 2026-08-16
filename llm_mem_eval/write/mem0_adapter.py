@@ -143,6 +143,9 @@ class Mem0OssPolicy:
         self.embed_dims = embed_dims
         self.batch = batch
         self.workdir = workdir
+        # Set by build() when a server returns no usage block and the write
+        # tokens have to be counted locally instead. Surfaced in config().
+        self.usage_estimated = False
         short = llm_model.rstrip("/").split("/")[-1].replace(":", "-").lower()
         self.name = f"mem0_oss_v3_{short}"
 
@@ -165,6 +168,8 @@ class Mem0OssPolicy:
         cfg = {
             "policy": "mem0_oss_v3",
             "mem0_version_pinned": MEM0_PINNED_VERSION,
+            # Read after every build() has run, so this reflects the whole arm.
+            "write_tokens_estimated": self.usage_estimated,
             "llm_model": self.llm_model,
             "embed_model": self.embed_model,
             "batch": self.batch,
@@ -292,7 +297,16 @@ class Mem0OssPolicy:
                 out.setdefault(t.session_id, []).append(t)
             return list(out.values())
         if self.batch == "pair":
-            return [ex.turns[i:i + 2] for i in range(0, len(ex.turns), 2)]
+            # Paired *within* a session, not across the flat turn list. A pair
+            # straddling a session boundary would be stamped with the earlier
+            # session's date by build(), which is the conversation-date
+            # contamination the preflight check exists to catch.
+            out: dict[str, list[Turn]] = {}
+            for t in ex.turns:
+                out.setdefault(t.session_id, []).append(t)
+            return [ts[i:i + 2]
+                    for ts in out.values()
+                    for i in range(0, len(ts), 2)]
         if self.batch == "turn":
             return [[t] for t in ex.turns]
         raise ValueError(f"unknown batch granularity: {self.batch}")
@@ -343,11 +357,13 @@ class Mem0OssPolicy:
                 )
                 for i, r in enumerate(rows) if r.get("memory")
             ]
-            if counter.usage_estimated:
-                ledger_note = getattr(ledger, "notes", None)
-                if ledger_note is not None:
-                    ledger_note.append("mem0 write tokens are estimated: the "
-                                       "server reported no usage")
+            # Sticky across examples: one server that reported no usage makes
+            # the arm's write column part-estimated, and the manifest has to
+            # say so. This used to append to a `ledger.notes` list that
+            # CostLedger does not have, so the flag was raised and dropped --
+            # the exact silent mixing the comment on _CountingChatClient says
+            # is being prevented.
+            self.usage_estimated |= counter.usage_estimated
             return renumber(units)
 
 

@@ -232,7 +232,7 @@ Modelled over all 500 LongMemEval conversations
 | `add()` batching | calls | tokens | of which system prompt | break-even vs this repo |
 |---|---|---|---|---|
 | per turn | 494 | 5.32M | 71% | ~16,000 queries |
-| per message pair | 247 | 2.71M | 70% | ~8,100 queries |
+| per message pair | 249 | 2.73M | 70% | ~8,200 queries |
 | **per session** | 48 | 0.61M | 60% | ~1,800 queries |
 
 **An earlier version of this section said "one extraction call per message pair
@@ -428,11 +428,11 @@ work — it keeps the same number of sentences from every turn, counted from the
 | write policy | store tokens | records | survival | null | **corrected** |
 |---|---|---|---|---|---|
 | verbatim (whole conversation) | 104,110 | 497 | 0.791 | 0.162 | **0.751** |
-| lead-k @ 50% | 52,193 | 497 | 0.736 | 0.120 | **0.700** |
+| lead-k @ 50% | 52,194 | 497 | 0.736 | 0.120 | **0.700** |
 | tail-k @ 50% | 52,197 | 497 | 0.736 | 0.125 | **0.699** |
 | truncate-recent @ 50% | 52,053 | 253 | 0.545 | 0.108 | **0.490** |
 | tail-k @ 25% | 26,027 | 497 | 0.582 | 0.079 | **0.546** |
-| lead-k @ 25% | 26,020 | 497 | 0.564 | 0.081 | **0.525** |
+| lead-k @ 25% | 26,021 | 497 | 0.564 | 0.081 | **0.525** |
 | truncate-random @ 25% (3 seeds) | 26,026 | ~130 | 0.309–0.400 | 0.080 | **0.244–0.348** |
 | truncate-recent @ 25% | 26,026 | 128 | 0.309 | 0.065 | **0.261** |
 | lead-k @ 10% | 10,410 | 411 | 0.282 | 0.049 | **0.245** |
@@ -777,6 +777,7 @@ scripts/
   audit_benchmark.py         what fraction of answers are spans at all
   sample_tr_misses.py        regenerate the hand-labelled temporal sample
   model_write_cost.py        Mem0 v3 write cost vs caller batching
+  verify_write_cost_inputs.py  re-derives that model's pinned mem0 constants
   run_survival_eval.py       survival for a set of write policies
   run_retrieval_eval.py      run any set of retrievers, emit results/*.json
   run_e2e_eval.py            retrieve -> answer -> grade, with cost accounting

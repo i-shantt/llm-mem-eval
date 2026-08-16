@@ -49,19 +49,19 @@
       "break_even_queries_tokens": 15965.911675675678
     },
     "per_pair": {
-      "n_calls": 247.182,
-      "prompt_tokens": 2638351.748,
-      "completion_tokens": 74154.6,
-      "system_prompt_tokens": 1896133.122,
-      "resent_context_tokens": 514496.44,
+      "n_calls": 248.868,
+      "prompt_tokens": 2654739.512,
+      "completion_tokens": 74660.4,
+      "system_prompt_tokens": 1909066.428,
+      "resent_context_tokens": 517107.898,
       "new_content_tokens": 104131.186,
-      "total_tokens": 2712506.348,
-      "usd_uncached": 0.8078971370000001,
-      "usd_cached": 0.38299315955,
-      "share_system_prompt": 0.6990336164182868,
-      "share_resent_context": 0.18967566301894603,
-      "share_new_content": 0.038389287485641674,
-      "break_even_queries_tokens": 8145.664708708709
+      "total_tokens": 2729399.912,
+      "usd_uncached": 0.8130056780000001,
+      "usd_cached": 0.38519170669999997,
+      "share_system_prompt": 0.6994454786953918,
+      "share_resent_context": 0.189458457782789,
+      "share_new_content": 0.0381516777890187,
+      "break_even_queries_tokens": 8196.396132132133
     },
     "per_session": {
       "n_calls": 47.738,

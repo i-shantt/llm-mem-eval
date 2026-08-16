@@ -69,6 +69,11 @@ the store, and it should be closed rather than caveated.
 pip install "mem0ai==2.0.18" "fastembed>=0.7" "spacy>=3.8"
 python -m spacy download en_core_web_sm            # needs network
 
+# Cheapest useful thing the extra buys, and it does not need a server: the
+# write-cost model pins mem0's 7,671-token extraction prompt and asserts the
+# wheel is the v3 rewrite. This re-derives both from the installed package.
+python scripts/verify_write_cost_inputs.py
+
 # mem0's vllm/openai providers are HTTP clients, not in-process: serve first.
 python -m vllm.entrypoints.openai.api_server \
     --model Qwen/Qwen2.5-7B-Instruct \

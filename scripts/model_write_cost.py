@@ -53,12 +53,14 @@ from llm_mem_eval.cost import count_tokens  # noqa: E402
 from llm_mem_eval.data.loader import Example, load_examples  # noqa: E402
 
 # Measured from mem0/configs/prompts.py at tag v2.0.18 with tiktoken cl100k_base.
-# Pinned as a constant rather than fetched so this script runs offline and the
-# number is reviewable; scripts/verify_write_cost_inputs.py re-derives it.
+# Pinned as a constant rather than fetched so this script runs offline and in a
+# clone that has never installed mem0. `scripts/verify_write_cost_inputs.py`
+# re-derives it from the installed package and fails if it has moved.
 SYSTEM_PROMPT_TOKENS = 7671
 MEM0_VERSION = "2.0.18"
 
-# main.py:919 and :925 -- both are hardcoded in v3, not configurable.
+# main.py:920 (`get_last_messages(..., limit=10)`) and :929 (`top_k=10`) in the
+# V3 PHASED BATCH PIPELINE block. Both are literals, not configurable.
 LAST_K_MESSAGES = 10
 EXISTING_MEMORIES_TOP_K = 10
 
@@ -94,7 +96,15 @@ def batches(ex: Example, granularity: str) -> list[list[int]]:
     if granularity == "per_turn":
         return [[i] for i in range(n)]
     if granularity == "per_pair":
-        return [list(range(i, min(i + 2, n))) for i in range(0, n, 2)]
+        # Paired within a session. 8.1% of LongMemEval-S sessions have an odd
+        # turn count, so pairing over the flat list merges the tail of one
+        # session with the head of the next -- which is not what "one add() per
+        # exchange" means, and it undercounts calls.
+        out: dict[str, list[int]] = {}
+        for i, t in enumerate(ex.turns):
+            out.setdefault(t.session_id, []).append(i)
+        return [ids[i:i + 2] for ids in out.values()
+                for i in range(0, len(ids), 2)]
     if granularity == "per_session":
         out: dict[str, list[int]] = {}
         for i, t in enumerate(ex.turns):

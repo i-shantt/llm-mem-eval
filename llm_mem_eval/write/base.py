@@ -50,8 +50,8 @@ def renumber(units: list[MemoryUnit]) -> list[MemoryUnit]:
 def check_store(units: list[MemoryUnit]) -> None:
     """Raise if a store breaks a contract that would otherwise fail silently.
 
-    Called by build_store.py on every policy's output. Cheap, and it converts
-    two silent-corruption bugs into a stack trace.
+    Called by scripts/run_survival_eval.py on every policy's output. Cheap,
+    and it converts two silent-corruption bugs into a stack trace.
     """
     ids = [u.unit_id for u in units]
     if ids != list(range(len(units))):

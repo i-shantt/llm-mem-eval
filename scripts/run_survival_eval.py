@@ -160,21 +160,32 @@ def main() -> None:
                    for r in payload["records"]},
         )
 
-    baseline = args.baseline or args.policies[0]
+    # Resolved through build_policy, because `graded` is keyed by policy *name*
+    # and the command line takes a policy *spec*. Those differ for every
+    # fractional policy -- the spec `leadk_25` names the arm `leadk_25pct` --
+    # so comparing the raw strings silently produced an empty comparison block
+    # for any baseline other than verbatim_turn.
+    baseline = build_policy(args.baseline or args.policies[0]).name
     comparisons = {}
-    if baseline in graded:
-        for name, g in sorted(graded.items()):
-            if name == baseline:
-                continue
-            # McNemar and the paired bootstrap are reused directly from
-            # eval.ablation; compute_lift is deliberately NOT, because it picks
-            # the strongest control by accuracy and would compare against the
-            # verbatim ceiling instead of the intended budget control.
-            comparisons[f"{name}_vs_{baseline}"] = {
-                "contingency": contingency(g, graded[baseline]),
-                "mcnemar_p": mcnemar_p(g, graded[baseline]),
-                "paired_diff_ci95": paired_bootstrap_ci(g, graded[baseline]),
-            }
+    if baseline not in graded:
+        # Loud, because the failure this replaced was a summary.json that named
+        # a baseline and carried no comparisons against it.
+        raise SystemExit(
+            f"baseline {baseline!r} has no arm in {outdir}. Run it first, or "
+            f"pass --baseline with one of: {', '.join(sorted(graded))}"
+        )
+    for name, g in sorted(graded.items()):
+        if name == baseline:
+            continue
+        # McNemar and the paired bootstrap are reused directly from
+        # eval.ablation; compute_lift is deliberately NOT, because it picks
+        # the strongest control by accuracy and would compare against the
+        # verbatim ceiling instead of the intended budget control.
+        comparisons[f"{name}_vs_{baseline}"] = {
+            "contingency": contingency(g, graded[baseline]),
+            "mcnemar_p": mcnemar_p(g, graded[baseline]),
+            "paired_diff_ci95": paired_bootstrap_ci(g, graded[baseline]),
+        }
 
     summary_path = outdir / "summary.json"
     summary_path.write_text(json.dumps({

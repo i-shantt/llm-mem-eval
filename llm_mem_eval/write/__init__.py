@@ -21,12 +21,39 @@ __all__ = [
 ]
 
 
+GRANULARITIES = ("turn", "user_turn", "session")
+
+
+def _percent(spec: str, parts: list[str], i: int) -> float:
+    """The `25` in `leadk_25`, as a fraction.
+
+    Split out so a malformed spec raises a ValueError naming the spec, rather
+    than the bare IndexError or ValueError that indexing and `int()` would
+    raise on their own. A policy spec usually arrives from a `--policies`
+    command line, where the failure mode being guarded against is a typo.
+    """
+    if len(parts) <= i:
+        raise ValueError(f"write policy {spec!r} is missing its percentage")
+    try:
+        pct = int(parts[i])
+    except ValueError:
+        raise ValueError(
+            f"write policy {spec!r}: expected an integer percentage, "
+            f"got {parts[i]!r}"
+        ) from None
+    if not 0 < pct <= 100:
+        raise ValueError(
+            f"write policy {spec!r}: percentage must be in (0, 100], got {pct}"
+        )
+    return pct / 100
+
+
 def build_policy(spec: str) -> WritePolicy:
     """Parse a policy spec string.
 
-        verbatim_turn
+        verbatim_turn                   verbatim_user_turn
         truncated_recency_25            truncated_random_25_s1
-        leadk_25
+        leadk_25                        tailk_25
         mem0_oss_v3_<model>             (requires the optional mem0 extra)
 
     Percentages are integers, so `truncated_recency_5` is a 5% token budget.
@@ -34,17 +61,28 @@ def build_policy(spec: str) -> WritePolicy:
     parts = spec.split("_")
 
     if parts[0] == "verbatim":
-        return VerbatimPolicy(granularity=parts[1] if len(parts) > 1 else "turn")
+        # Joined, not `parts[1]`: `user_turn` is a granularity, and taking only
+        # the first token silently built a `verbatim_user` policy that failed
+        # later, inside build(), with an unrelated-looking error.
+        granularity = "_".join(parts[1:]) or "turn"
+        if granularity not in GRANULARITIES:
+            raise ValueError(
+                f"write policy {spec!r}: unknown granularity "
+                f"{granularity!r}, expected one of {GRANULARITIES}"
+            )
+        return VerbatimPolicy(granularity=granularity)
 
     if parts[0] == "truncated":
+        if len(parts) < 2:
+            raise ValueError(f"write policy {spec!r} is missing its rule")
         rule = parts[1]
-        fraction = int(parts[2]) / 100
+        fraction = _percent(spec, parts, 2)
         seed = int(parts[3][1:]) if len(parts) > 3 and parts[3].startswith("s") else 0
         return TruncatedVerbatimPolicy(fraction=fraction, rule=rule, seed=seed)
 
     if parts[0] in ("leadk", "tailk"):
         return ExtractiveSelectionPolicy(
-            fraction=int(parts[1]) / 100,
+            fraction=_percent(spec, parts, 1),
             rule="lead" if parts[0] == "leadk" else "tail",
         )
 

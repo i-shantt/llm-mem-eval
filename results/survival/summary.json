@@ -2,10 +2,9 @@
   "n_eligible": 184,
   "baseline": "verbatim_turn",
   "policies": [
-    "verbatim_turn",
-    "leadk_10pct",
-    "leadk_25pct",
     "leadk_50pct",
+    "leadk_25pct",
+    "leadk_10pct",
     "leadk_5pct",
     "tailk_25pct",
     "tailk_50pct",
@@ -15,35 +14,22 @@
     "truncated_recency_10pct",
     "truncated_recency_25pct",
     "truncated_recency_50pct",
-    "truncated_recency_5pct"
+    "truncated_recency_5pct",
+    "verbatim_turn"
   ],
   "survival_primary_record": {
-    "verbatim_turn": {
+    "leadk_50pct": {
       "n": 110,
-      "survival": 0.7909090909090909,
+      "survival": 0.7363636363636363,
       "survival_ci95": [
-        0.7057473462909243,
-        0.8564373032572199
+        0.6470570975969133,
+        0.8097179301609537
       ],
-      "null": 0.16181818181818183,
-      "chance_corrected": 0.7505422993492408,
+      "null": 0.12000000000000001,
+      "chance_corrected": 0.7004132231404958,
       "chance_corrected_ci95": [
-        0.6617336152219874,
-        0.8353658536585366
-      ]
-    },
-    "leadk_10pct": {
-      "n": 110,
-      "survival": 0.2818181818181818,
-      "survival_ci95": [
-        0.206210213519945,
-        0.3721512993189469
-      ],
-      "null": 0.049090909090909095,
-      "chance_corrected": 0.24474187380497128,
-      "chance_corrected_ci95": [
-        0.15690866510538642,
-        0.3356157055739809
+        0.6065904505716208,
+        0.7905027932960894
       ]
     },
     "leadk_25pct": {
@@ -60,18 +46,18 @@
         0.6240932072983073
       ]
     },
-    "leadk_50pct": {
+    "leadk_10pct": {
       "n": 110,
-      "survival": 0.7363636363636363,
+      "survival": 0.2818181818181818,
       "survival_ci95": [
-        0.6470570975969133,
-        0.8097179301609537
+        0.206210213519945,
+        0.3721512993189469
       ],
-      "null": 0.12000000000000001,
-      "chance_corrected": 0.7004132231404958,
+      "null": 0.049090909090909095,
+      "chance_corrected": 0.24474187380497128,
       "chance_corrected_ci95": [
-        0.6065904505716208,
-        0.7905027932960894
+        0.15690866510538642,
+        0.3356157055739809
       ]
     },
     "leadk_5pct": {
@@ -213,33 +199,42 @@
         0.04245429191199255,
         0.161664251707721
       ]
+    },
+    "verbatim_turn": {
+      "n": 110,
+      "survival": 0.7909090909090909,
+      "survival_ci95": [
+        0.7057473462909243,
+        0.8564373032572199
+      ],
+      "null": 0.16181818181818183,
+      "chance_corrected": 0.7505422993492408,
+      "chance_corrected_ci95": [
+        0.6617336152219874,
+        0.8353658536585366
+      ]
     }
   },
   "store_stats": {
-    "verbatim_turn": {
+    "leadk_50pct": {
       "records_per_store_mean": 497.26630434782606,
-      "tokens_per_store_mean": 104109.57608695653,
-      "tokens_per_record_mean": 210.15747663571065
-    },
-    "leadk_10pct": {
-      "records_per_store_mean": 410.82065217391306,
-      "tokens_per_store_mean": 10410.048913043478,
-      "tokens_per_record_mean": 25.787822434831796
+      "tokens_per_store_mean": 52193.510869565216,
+      "tokens_per_record_mean": 105.3609203053517
     },
     "leadk_25pct": {
       "records_per_store_mean": 497.26630434782606,
-      "tokens_per_store_mean": 26020.456521739132,
-      "tokens_per_record_mean": 52.52555748777673
+      "tokens_per_store_mean": 26020.570652173912,
+      "tokens_per_record_mean": 52.52579059313648
     },
-    "leadk_50pct": {
-      "records_per_store_mean": 497.26630434782606,
-      "tokens_per_store_mean": 52193.413043478264,
-      "tokens_per_record_mean": 105.36072404163497
+    "leadk_10pct": {
+      "records_per_store_mean": 410.83152173913044,
+      "tokens_per_store_mean": 10410.369565217392,
+      "tokens_per_record_mean": 25.787885186183832
     },
     "leadk_5pct": {
-      "records_per_store_mean": 206.65217391304347,
-      "tokens_per_store_mean": 5204.516304347826,
-      "tokens_per_record_mean": 26.245595737716627
+      "records_per_store_mean": 206.69565217391303,
+      "tokens_per_store_mean": 5204.836956521739,
+      "tokens_per_record_mean": 26.239980173694562
     },
     "tailk_25pct": {
       "records_per_store_mean": 497.26630434782606,
@@ -285,6 +280,11 @@
       "records_per_store_mean": 29.46195652173913,
       "tokens_per_store_mean": 5203.83152173913,
       "tokens_per_record_mean": 185.52800637973
+    },
+    "verbatim_turn": {
+      "records_per_store_mean": 497.26630434782606,
+      "tokens_per_store_mean": 104109.57608695653,
+      "tokens_per_record_mean": 210.15747663571065
     }
   },
   "paired_vs_baseline": {

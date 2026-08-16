@@ -93,7 +93,6 @@ class ExtractiveSelectionPolicy:
             max_depth = max((len(s) for s in sents), default=0)
 
             while depth < max_depth and used < budget:
-                progressed = False
                 for i, s in enumerate(sents):
                     if depth >= len(s):
                         continue
@@ -107,11 +106,13 @@ class ExtractiveSelectionPolicy:
                         continue
                     kept[i].append(j)
                     used += t
-                    progressed = True
-                if not progressed:
-                    # Every remaining sentence is individually over budget.
-                    break
                 depth += 1
+                # No early break on "this depth added nothing". A depth level
+                # where every candidate happened to be too long says nothing
+                # about the next one, and stopping there would make the
+                # realised store size depend on sentence-length ordering --
+                # exactly what the skip-don't-stop rule above exists to remove.
+                # The loop is bounded by max_depth, so it terminates regardless.
 
             out = [
                 MemoryUnit(

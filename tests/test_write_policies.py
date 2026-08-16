@@ -194,3 +194,77 @@ def test_build_policy_parses_the_tail_rule() -> None:
     assert build_policy("tailk_25").rule == "tail"
     assert build_policy("leadk_25").rule == "lead"
     assert build_policy("tailk_25").name == "tailk_25pct"
+
+
+def test_a_spec_is_not_a_name() -> None:
+    """Artifacts and paired comparisons are keyed by `.name`, not by the spec.
+
+    They differ for every fractional policy, so anything that takes a spec
+    from a command line and looks it up among names has to resolve it through
+    build_policy first. run_survival_eval.py did not, and its `--baseline`
+    silently produced an empty comparison block for every arm but one.
+    """
+    for spec in ("truncated_recency_25", "truncated_random_25_s1",
+                 "leadk_50", "tailk_5"):
+        assert build_policy(spec).name != spec, f"{spec} round-tripped"
+    # verbatim_turn is the exception, which is why the bug stayed hidden: it
+    # was the default baseline and the only spec that is also a name.
+    assert build_policy("verbatim_turn").name == "verbatim_turn"
+
+
+def test_build_policy_keeps_two_word_granularities_whole() -> None:
+    """`user_turn` is a granularity; splitting on the first `_` truncated it.
+
+    The old parse produced a policy named `verbatim_user` that constructed
+    fine and only failed later, inside build(), with `unknown granularity:
+    user` -- an error that points nowhere near the spec that caused it.
+    """
+    p = build_policy("verbatim_user_turn")
+    assert p.granularity == "user_turn"
+    assert p.name == "verbatim_user_turn"
+    assert p.build(_example(), CostLedger())
+
+    with pytest.raises(ValueError, match="unknown granularity"):
+        build_policy("verbatim_paragraph")
+
+
+def test_malformed_specs_name_the_spec_they_reject() -> None:
+    """A typo in --policies used to surface as a bare IndexError.
+
+    Every one of these raises ValueError mentioning the spec, because the
+    caller is a command line and the message is the whole diagnostic.
+    """
+    for spec in ("leadk", "tailk", "truncated_recency", "truncated",
+                 "leadk_half", "leadk_0", "leadk_250"):
+        with pytest.raises(ValueError) as e:
+            build_policy(spec)
+        assert spec in str(e.value), f"{spec!r} not named in {e.value!r}"
+
+
+def test_extractive_does_not_abandon_budget_on_one_bad_depth() -> None:
+    """A depth level where nothing fits says nothing about the next one.
+
+    Constructed so the second sentence of every turn is far too long for the
+    remaining budget while the third is small. The old `break` stopped at
+    depth 1 and left most of the budget unspent, which made realised store
+    size depend on sentence-length ordering -- the exact thing the
+    skip-don't-stop rule inside the loop exists to remove.
+    """
+    long_mid = "x" * 4000
+    turns = [
+        Turn(session_id=f"s{i}", session_date="2023/04/10 (Mon) 17:50",
+             session_index=i, turn_index=i, role="user",
+             content=f"Alpha fact {i}. {long_mid}. Gamma fact {i}.",
+             has_answer=False)
+        for i in range(6)
+    ]
+    ex = replace(_example(), turns=turns)
+
+    units = ExtractiveSelectionPolicy(0.05, rule="lead").build(ex, CostLedger())
+    budget = 0.05 * sum(count_tokens(u.text) for u in ex.units("turn"))
+    used = sum(count_tokens(u.text) for u in units)
+
+    assert used <= budget, "over budget"
+    # Depth 0 alone is ~6 short sentences; reaching depth 2 is the whole point.
+    assert any("Gamma" in u.text for u in units), \
+        "stopped at the long sentence instead of skipping past it"
