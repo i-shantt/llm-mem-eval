@@ -76,7 +76,7 @@ def main() -> None:
         print("(weak -- do NOT report judged accuracy; fix the judge first)")
     if fa is not None:
         print(f"False-accept rate: {fa:.3f} "
-              f"(LoCoMo's judge was audited at up to 0.63)")
+              f"(fraction of hand-labelled-wrong answers the judge accepted)")
 
 
 if __name__ == "__main__":

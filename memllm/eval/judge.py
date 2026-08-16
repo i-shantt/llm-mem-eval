@@ -1,13 +1,16 @@
 """LLM judge for answer correctness, plus the machinery to validate it.
 
-An unvalidated judge is worthless here. The audit of LoCoMo found its judge
-accepts up to 63% of intentionally wrong answers, and that benchmark's numbers
-are still cited. So this module ships three things together: the judge, an
-exporter that produces a hand-labelling worksheet, and an agreement calculation
-against those hand labels.
+An unvalidated judge is worthless here. Judged scores on these benchmarks move
+with conventions the grader is free to pick: arXiv 2605.24060 rescored LoCoMo
+and LongMemEval-S under different credited targets and the ranking changed on
+83.4-94.0% of shared queries. So this module ships three things together: the
+judge, an exporter that produces a hand-labelling worksheet, and an agreement
+calculation against those hand labels.
 
 Rule for this repo: no judged number is reported without its judge/human
-agreement alongside it.
+agreement alongside it. In practice that rule has kept every judged number out
+-- nothing in results/ carries a judge verdict, and the reported accuracies all
+come from the deterministic grader in grade.py.
 """
 
 from __future__ import annotations
@@ -147,7 +150,9 @@ def judge_agreement(
     pe = (h_true / n) * (j_true / n) + (1 - h_true / n) * (1 - j_true / n)
     kappa = (po - pe) / (1 - pe) if pe < 1 else 1.0
 
-    # The failure mode the LoCoMo audit found: judge accepting wrong answers.
+    # The failure mode that matters: a judge accepting wrong answers inflates
+    # every score it produces, and raw agreement hides it when most answers are
+    # correct.
     human_wrong = [(h, j) for h, j in pairs if not h]
     false_accept = (
         sum(1 for _, j in human_wrong if j) / len(human_wrong)
@@ -161,7 +166,7 @@ def judge_agreement(
         "cohens_kappa": kappa,
         "false_accept_rate": false_accept,
         "false_accept_note": "fraction of human-judged-WRONG answers the judge "
-                             "accepted; the LoCoMo audit found up to 0.63",
+                             "accepted",
         "human_correct_rate": h_true / n,
         "judge_correct_rate": j_true / n,
     }

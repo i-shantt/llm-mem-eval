@@ -1,10 +1,9 @@
 """Audit any grader using cases whose correct verdict is known by construction.
 
-The LoCoMo audit's finding -- that its LLM judge accepted up to 63% of
-intentionally wrong answers -- came from feeding it answers known to be wrong.
-Nothing about that method requires human annotation: if you take a question's
-gold answer and substitute a *different* question's gold answer, the result is
-wrong by construction. Labels come from how the case was built.
+The method is to feed a grader answers that are known to be wrong, and count how
+many it accepts. Nothing about that requires human annotation: if you take a
+question's gold answer and substitute a *different* question's gold answer, the
+result is wrong by construction. Labels come from how the case was built.
 
 That turns judge validation from 100 hand labels into a script. It measures the
 two failure modes that matter:
@@ -300,8 +299,7 @@ def audit_grader(cases: list[AuditCase], grade_fn) -> dict:
         # gold verbatim, which containment accepts trivially. This is the rate
         # on rewrites only, and it is the one worth quoting.
         "false_reject_rate_hard": hard_num / hard_den if hard_den else None,
-        "false_accept_note": "known-wrong answers marked CORRECT; the LoCoMo "
-                             "audit measured up to 0.63 for its judge",
+        "false_accept_note": "fraction of known-wrong answers marked CORRECT",
         "by_kind": {
             k: {**v, "accuracy": v["correct"] / (v["n"] - v["none"])
                 if v["n"] - v["none"] else None}

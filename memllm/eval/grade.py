@@ -14,9 +14,13 @@ Two things make this trustworthy rather than merely convenient:
 
 2. It is audited. `grader_audit.py` builds cases whose correct verdict is known
    by construction, so this grader's false-accept and false-reject rates are
-   measured, not assumed. That is the same audit that found LoCoMo's judge
-   accepting up to 63% of intentionally wrong answers -- run against our own
-   grader first.
+   measured, not assumed, and CI re-measures them on every push.
+
+The reason not to reach for a judge instead: judged scores on these benchmarks
+are sensitive to a free choice the grader makes. arXiv 2605.24060 rescored
+LoCoMo and LongMemEval-S under different credited targets and found the ranking
+changed on 83.4-94.0% of shared queries. A metric that moves that much with an
+unstated convention is not one to build a cost argument on.
 """
 
 from __future__ import annotations
