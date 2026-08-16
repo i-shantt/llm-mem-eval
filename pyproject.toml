@@ -3,9 +3,9 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "memllm"
+name = "llm-mem-eval"
 version = "0.1.0"
-description = "Write-path and read-path cost accounting for LLM memory systems, evaluated without an LLM judge"
+description = "Judge-free evaluation for LLM memory systems on LongMemEval: what a write path keeps, what retrieval finds, and how much accuracy is memory rather than the model already knowing"
 readme = "README.md"
 license = { file = "LICENSE" }
 # 3.10 is the floor: the code uses PEP 604 unions (`bool | None`) at runtime in
@@ -25,7 +25,7 @@ dense = ["sentence-transformers", "torch"]
 # The amortisation figure.
 figures = ["matplotlib"]
 dev = ["pytest"]
-# Mem0's own SDK, for the write policy in memllm/write/mem0_adapter.py.
+# Mem0's own SDK, for the write policy in llm_mem_eval/write/mem0_adapter.py.
 # Pinned exactly: v2.0.18 is the v3 ADD-only pipeline, which is a different
 # algorithm from the 2025 paper, so an unpinned store cannot be attributed to
 # either. fastembed is not optional in practice -- without it mem0 silently
@@ -33,4 +33,4 @@ dev = ["pytest"]
 mem0 = ["mem0ai==2.0.18", "fastembed>=0.7", "spacy>=3.8"]
 
 [tool.setuptools.packages.find]
-include = ["memllm*"]
+include = ["llm_mem_eval*"]

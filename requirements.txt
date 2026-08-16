@@ -18,7 +18,8 @@ pytest
 sentence-transformers
 torch
 
-# NOT listed here on purpose: mem0ai, for memllm/write/mem0_adapter.py. That
-# arm has not been run (see RUNNING.md), the version must be pinned exactly to
-# be attributable, and installing it pulls openai and qdrant-client into every
-# clone. Install it deliberately with `pip install -e ".[mem0]"`.
+# NOT listed here on purpose: mem0ai, for the write policy in
+# llm_mem_eval/write/mem0_adapter.py. That arm has not been run (see
+# RUNNING.md), the version must be pinned exactly to be attributable, and
+# installing it pulls openai and qdrant-client into every clone. Install it
+# deliberately with `pip install -e ".[mem0]"`.

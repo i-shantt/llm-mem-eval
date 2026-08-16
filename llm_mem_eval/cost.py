@@ -12,8 +12,8 @@ every construction figure quoted here already assumes a small, cheap extraction
 model, which is what Mem0 OSS actually defaults to. And the dollar amount is not
 the interesting quantity: scripts/model_write_cost.py shows the same shipped
 code spanning 8.8x depending on how the *caller* batches, and
-memllm/eval/survival.py asks the question cost cannot -- what the write path
-gives up in answerable content.
+llm_mem_eval/eval/survival.py asks the question cost cannot -- what the write
+path gives up in answerable content.
 
 See data/published_costs.json for every quoted figure and its source.
 """

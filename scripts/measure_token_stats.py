@@ -20,8 +20,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import count_tokens  # noqa: E402
-from memllm.data.loader import load_examples, stratified_subset  # noqa: E402
+from llm_mem_eval.cost import count_tokens  # noqa: E402
+from llm_mem_eval.data.loader import load_examples, stratified_subset  # noqa: E402
 
 
 def main() -> None:

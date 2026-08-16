@@ -23,15 +23,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger  # noqa: E402
-from memllm.data.loader import load_examples, stratified_subset  # noqa: E402
-from memllm.eval.grade import grade, is_extractive, token_f1  # noqa: E402
-from memllm.eval.judge import (  # noqa: E402
+from llm_mem_eval.cost import CostLedger  # noqa: E402
+from llm_mem_eval.data.loader import load_examples, stratified_subset  # noqa: E402
+from llm_mem_eval.eval.grade import grade, is_extractive, token_f1  # noqa: E402
+from llm_mem_eval.eval.judge import (  # noqa: E402
     JudgedAnswer,
     export_labelling_worksheet,
     judge_answer,
 )
-from memllm.generate.backends import build_backend  # noqa: E402
+from llm_mem_eval.generate.backends import build_backend  # noqa: E402
 
 ANSWER_PROMPT = """Here are excerpts from earlier conversations with the user, \
 most relevant first.
@@ -92,7 +92,7 @@ def main() -> None:
 
     # Reuse the retrieval eval's builder so both paths stay identical.
     from run_retrieval_eval import build_retriever  # noqa: E402
-    from memllm.retrieval.embed_cache import EmbeddingCache  # noqa: E402
+    from llm_mem_eval.retrieval.embed_cache import EmbeddingCache  # noqa: E402
 
     examples = stratified_subset(
         load_examples(args.data), args.limit, seed=args.seed
@@ -203,7 +203,7 @@ def main() -> None:
         "config": vars(args) | {"answer_backend_name": answerer.name,
                                 "judge_backend_name": judger.name if judger else None},
         "n_examples": n,
-        "grader": "deterministic (memllm.eval.grade); audit in "
+        "grader": "deterministic (llm_mem_eval.eval.grade); audit in "
                   "results/grader_audit.json",
         "accuracy": n_det_correct / max(n_det_graded, 1),
         "n_graded": n_det_graded,
@@ -224,7 +224,7 @@ def main() -> None:
         "records": records,
     }
     if judger is not None:
-        from memllm.eval.grader_audit import find_disagreements
+        from llm_mem_eval.eval.grader_audit import find_disagreements
         disagreements = find_disagreements(records)
         payload["llm_judge"] = {
             "backend": judger.name,

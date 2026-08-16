@@ -32,9 +32,9 @@ import os
 import tempfile
 from dataclasses import dataclass
 
-from memllm.cost import CostLedger, count_tokens
-from memllm.data.loader import Example, MemoryUnit, Turn
-from memllm.write.base import renumber
+from llm_mem_eval.cost import CostLedger, count_tokens
+from llm_mem_eval.data.loader import Example, MemoryUnit, Turn
+from llm_mem_eval.write.base import renumber
 
 MEM0_PINNED_VERSION = "2.0.18"
 
@@ -353,7 +353,7 @@ class Mem0OssPolicy:
 
 def _iso_date(session_date: str) -> str:
     """'2023/04/10 (Mon) 17:50' -> '2023-04-10'."""
-    from memllm.data.loader import parse_date
+    from llm_mem_eval.data.loader import parse_date
 
     y, mo, d = parse_date(session_date)
     return f"{y:04d}-{mo:02d}-{d:02d}"

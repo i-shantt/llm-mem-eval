@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.eval.grade import grade, token_f1  # noqa: E402
+from llm_mem_eval.eval.grade import grade, token_f1  # noqa: E402
 
 
 def regrade(payload: dict) -> tuple[dict, list[dict]]:

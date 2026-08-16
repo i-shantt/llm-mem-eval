@@ -1,7 +1,8 @@
 """Write policies: how a conversation becomes a store.
 
-The read half of a memory system lives in `memllm.retrieval`; this is the write
-half. See `memllm.write.base` for the Protocol and the two store contracts.
+The read half of a memory system lives in `llm_mem_eval.retrieval`; this is the
+write half. See `llm_mem_eval.write.base` for the Protocol and the two store
+contracts.
 
 `build_policy` mirrors `scripts/run_retrieval_eval.build_retriever`: one place
 that turns a name into an object, so adding a policy is one branch.
@@ -9,10 +10,10 @@ that turns a name into an object, so adding a policy is one branch.
 
 from __future__ import annotations
 
-from memllm.write.base import WritePolicy, check_store, renumber
-from memllm.write.extractive import ExtractiveSelectionPolicy
-from memllm.write.truncated import TruncatedVerbatimPolicy
-from memllm.write.verbatim import VerbatimPolicy
+from llm_mem_eval.write.base import WritePolicy, check_store, renumber
+from llm_mem_eval.write.extractive import ExtractiveSelectionPolicy
+from llm_mem_eval.write.truncated import TruncatedVerbatimPolicy
+from llm_mem_eval.write.verbatim import VerbatimPolicy
 
 __all__ = [
     "WritePolicy", "VerbatimPolicy", "TruncatedVerbatimPolicy",
@@ -50,7 +51,7 @@ def build_policy(spec: str) -> WritePolicy:
     if spec.startswith("mem0"):
         # Imported here, not at module scope, so the package stays importable
         # without the mem0 extra installed -- CI installs only the core deps.
-        from memllm.write.mem0_adapter import Mem0OssPolicy
+        from llm_mem_eval.write.mem0_adapter import Mem0OssPolicy
 
         return Mem0OssPolicy.from_spec(spec)
 

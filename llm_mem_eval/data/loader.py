@@ -42,7 +42,7 @@ class Turn:
 class MemoryUnit:
     """One retrievable item. `is_evidence` is the gold label.
 
-    Also the store format for `memllm.write` policies, so a store produced by
+    Also the store format for `llm_mem_eval.write` policies, so a store made by
     any write path -- verbatim turns, truncated turns, LLM-extracted facts --
     flows into every existing retriever and metric unchanged. Two contracts a
     policy must honour, both of which fail silently rather than loudly:

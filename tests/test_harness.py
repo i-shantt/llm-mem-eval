@@ -11,10 +11,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger  # noqa: E402
-from memllm.data.loader import Example, Turn, load_examples  # noqa: E402
-from memllm.eval.retrieval_metrics import aggregate, score_example  # noqa: E402
-from memllm.retrieval.bm25 import BM25Retriever  # noqa: E402
+from llm_mem_eval.cost import CostLedger  # noqa: E402
+from llm_mem_eval.data.loader import Example, Turn, load_examples  # noqa: E402
+from llm_mem_eval.eval.retrieval_metrics import aggregate, score_example  # noqa: E402
+from llm_mem_eval.retrieval.bm25 import BM25Retriever  # noqa: E402
 
 DATA = Path("data/raw/longmemeval_oracle")
 
@@ -90,7 +90,7 @@ def test_embed_cache_replays_cost_not_disk_read() -> None:
 
     import numpy as np
 
-    from memllm.retrieval.embed_cache import EmbeddingCache
+    from llm_mem_eval.retrieval.embed_cache import EmbeddingCache
 
     tmp = Path(tempfile.mkdtemp())
     try:
@@ -130,7 +130,7 @@ def test_real_data_loads() -> None:
 def test_grader_rejects_near_misses() -> None:
     """The failure mode that inflates every judged benchmark: accepting wrong
     answers. Numeric substrings are the sneakiest case."""
-    from memllm.eval.grade import grade
+    from llm_mem_eval.eval.grade import grade
 
     assert grade("You said Target.", "Target") is True
     assert grade("It was about 800 dollars.", "$800") is True
@@ -173,7 +173,7 @@ def test_grader_rejects_near_misses() -> None:
 def test_grader_matches_regular_plurals() -> None:
     """Both cases are real predictions that were scored wrong. The question
     fixes the referent, so the plural carries no extra meaning."""
-    from memllm.eval.grade import grade
+    from llm_mem_eval.eval.grade import grade
 
     assert grade("You take a cocktail-making class on Fridays.", "Friday") is True
     assert grade("Your new Samsung TV is 55 inches.", "55-inch") is True
@@ -193,7 +193,7 @@ def test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question() -> 
     Applied to a question whose answer IS the order, it accepts the wrong
     answer -- which it did, on a real 14B prediction, until the question was
     passed in."""
-    from memllm.eval.grade import grade
+    from llm_mem_eval.eval.grade import grade
 
     gold = "JetBlue, Delta, United, American Airlines"
     reordered = "JetBlue, Delta, American Airlines, and then United Airlines"
@@ -227,7 +227,7 @@ def test_write_policy_preserves_unit_contract() -> None:
     with no error. Both belong here for the same reason the evidence-label test
     does: nothing else would catch them.
     """
-    from memllm.write import (
+    from llm_mem_eval.write import (
         ExtractiveSelectionPolicy,
         TruncatedVerbatimPolicy,
         VerbatimPolicy,
@@ -253,8 +253,8 @@ def test_grader_audit_has_zero_false_accepts() -> None:
     If the grader starts accepting known-wrong answers, every accuracy number in
     the repo becomes an overestimate, and nothing else here would catch it.
     """
-    from memllm.eval.grade import grade
-    from memllm.eval.grader_audit import audit_grader, build_audit_cases
+    from llm_mem_eval.eval.grade import grade
+    from llm_mem_eval.eval.grader_audit import audit_grader, build_audit_cases
 
     # Skip rather than fail when the split is absent, matching
     # test_real_data_loads. A fresh clone that downloaded only longmemeval_s

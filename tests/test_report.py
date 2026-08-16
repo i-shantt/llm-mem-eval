@@ -22,7 +22,7 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from memllm.eval.grade import grade  # noqa: E402
+from llm_mem_eval.eval.grade import grade  # noqa: E402
 
 ARMS = sorted((REPO / "results").glob("e2e_*.json"))
 
@@ -69,7 +69,7 @@ def test_dropping_the_question_really_does_change_a_stored_arm():
 def test_a_missing_split_explains_the_download_instead_of_raising():
     """The likeliest failure on a clean clone, and the least self-explanatory:
     `open()` on an absent 278 MB download says only that a path is missing."""
-    from memllm.data.loader import load_examples
+    from llm_mem_eval.data.loader import load_examples
 
     with pytest.raises(SystemExit) as e:
         load_examples("data/raw/definitely_not_downloaded")

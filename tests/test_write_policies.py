@@ -18,9 +18,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger, count_tokens  # noqa: E402
-from memllm.data.loader import Example, Turn, parse_date  # noqa: E402
-from memllm.write import (  # noqa: E402
+from llm_mem_eval.cost import CostLedger, count_tokens  # noqa: E402
+from llm_mem_eval.data.loader import Example, Turn, parse_date  # noqa: E402
+from llm_mem_eval.write import (  # noqa: E402
     ExtractiveSelectionPolicy,
     TruncatedVerbatimPolicy,
     VerbatimPolicy,

@@ -7,8 +7,8 @@
     python scripts/audit_graders.py --judge-backend ollama:llama3.1:8b-instruct
 
 Verdicts here are known by construction, so no hand-labelling is involved. See
-memllm/eval/grader_audit.py for why that is legitimate and where it stops being
-sufficient.
+llm_mem_eval/eval/grader_audit.py for why that is legitimate and where it stops
+being sufficient.
 """
 
 from __future__ import annotations
@@ -20,9 +20,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.data.loader import load_examples  # noqa: E402
-from memllm.eval.grade import grade  # noqa: E402
-from memllm.eval.grader_audit import audit_grader, build_audit_cases  # noqa: E402
+from llm_mem_eval.data.loader import load_examples  # noqa: E402
+from llm_mem_eval.eval.grade import grade  # noqa: E402
+from llm_mem_eval.eval.grader_audit import audit_grader, build_audit_cases  # noqa: E402
 
 
 def main() -> None:
@@ -53,8 +53,8 @@ def main() -> None:
     report["graders"]["deterministic"] = audit_grader(cases, det)
 
     if args.judge_backend:
-        from memllm.eval.judge import judge_answer
-        from memllm.generate.backends import build_backend
+        from llm_mem_eval.eval.judge import judge_answer
+        from llm_mem_eval.generate.backends import build_backend
 
         backend = build_backend(args.judge_backend)
         subset = cases[:args.judge_limit]

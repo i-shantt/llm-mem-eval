@@ -49,8 +49,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import count_tokens  # noqa: E402
-from memllm.data.loader import Example, load_examples  # noqa: E402
+from llm_mem_eval.cost import count_tokens  # noqa: E402
+from llm_mem_eval.data.loader import Example, load_examples  # noqa: E402
 
 # Measured from mem0/configs/prompts.py at tag v2.0.18 with tiktoken cl100k_base.
 # Pinned as a constant rather than fetched so this script runs offline and the

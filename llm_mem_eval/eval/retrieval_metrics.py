@@ -2,8 +2,8 @@
 
 These need no LLM and no API budget, which makes them the load-bearing metrics
 for this project. End-to-end answer quality is graded without a judge too --
-see `memllm/eval/grade.py`, whose error rates are measured by
-`memllm/eval/grader_audit.py` rather than assumed.
+see `llm_mem_eval/eval/grade.py`, whose error rates are measured by
+`llm_mem_eval/eval/grader_audit.py` rather than assumed.
 """
 
 from __future__ import annotations

@@ -26,9 +26,9 @@ from __future__ import annotations
 
 import random
 
-from memllm.cost import CostLedger, count_tokens
-from memllm.data.loader import Example, MemoryUnit, parse_date
-from memllm.write.base import renumber
+from llm_mem_eval.cost import CostLedger, count_tokens
+from llm_mem_eval.data.loader import Example, MemoryUnit, parse_date
+from llm_mem_eval.write.base import renumber
 
 
 class TruncatedVerbatimPolicy:

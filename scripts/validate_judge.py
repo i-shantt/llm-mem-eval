@@ -1,8 +1,8 @@
 """Compute judge/human agreement from a hand-labelled worksheet.
 
 OPTIONAL. The main eval path grades deterministically and needs no labels at
-all -- see memllm/eval/grade.py and scripts/audit_graders.py. This script exists
-for the case where you want human ground truth on the LLM judge specifically.
+all -- see llm_mem_eval/eval/grade.py and scripts/audit_graders.py. This script
+exists for the case where you want human ground truth on the LLM judge itself.
 
 If you do, label the *disagreements* file that run_e2e_eval.py writes when
 --judge-backend is set, not the full worksheet. Where the deterministic grader
@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.eval.judge import JudgedAnswer, judge_agreement  # noqa: E402
+from llm_mem_eval.eval.judge import JudgedAnswer, judge_agreement  # noqa: E402
 
 
 def main() -> None:

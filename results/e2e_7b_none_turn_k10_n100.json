@@ -20,7 +20,7 @@
     "judge_backend_name": null
   },
   "n_examples": 100,
-  "grader": "deterministic (memllm.eval.grade); audit in results/grader_audit.json",
+  "grader": "deterministic (llm_mem_eval.eval.grade); audit in results/grader_audit.json",
   "accuracy": 0.054945054945054944,
   "n_graded": 91,
   "n_not_gradable": 9,

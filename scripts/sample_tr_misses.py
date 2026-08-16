@@ -24,7 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.data.loader import load_examples  # noqa: E402
+from llm_mem_eval.data.loader import load_examples  # noqa: E402
 
 
 def main() -> None:

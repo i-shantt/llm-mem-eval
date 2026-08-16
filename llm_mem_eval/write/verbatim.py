@@ -10,8 +10,8 @@ computed value or a paraphrase that appears verbatim nowhere in the conversation
 
 from __future__ import annotations
 
-from memllm.cost import CostLedger
-from memllm.data.loader import Example, Granularity, MemoryUnit
+from llm_mem_eval.cost import CostLedger
+from llm_mem_eval.data.loader import Example, Granularity, MemoryUnit
 
 
 class VerbatimPolicy:

@@ -11,7 +11,7 @@ was not done.
 
 ---
 
-## 1. The Mem0 arm — `memllm/write/mem0_adapter.py`
+## 1. The Mem0 arm — `llm_mem_eval/write/mem0_adapter.py`
 
 **Status: written, unit-tested against a stub, never executed against mem0.**
 
@@ -79,7 +79,7 @@ export MEM0_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
 export MEM0_BATCH=session
 
 python - <<'PY'
-from memllm.write.mem0_adapter import Mem0OssPolicy
+from llm_mem_eval.write.mem0_adapter import Mem0OssPolicy
 r = Mem0OssPolicy.from_spec("mem0_oss_v3_qwen7b").preflight()
 print(r.explain()); assert r.ok
 PY

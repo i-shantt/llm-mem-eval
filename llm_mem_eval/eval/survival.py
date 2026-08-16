@@ -51,13 +51,13 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from math import sqrt
 
-from memllm.cost import count_tokens
-from memllm.data.loader import Example, MemoryUnit
+from llm_mem_eval.cost import count_tokens
+from llm_mem_eval.data.loader import Example, MemoryUnit
 
 # `contains_answer` is imported rather than reimplemented so survival and
 # end-to-end accuracy are read off the same ruler. eval/grade.py is not modified
 # by this module: its measured false-accept rate is a CI gate.
-from memllm.eval.grade import contains_answer, normalize_tokens
+from llm_mem_eval.eval.grade import contains_answer, normalize_tokens
 
 BUCKETS = ("1", "2-3", "4+")
 
@@ -100,7 +100,7 @@ def eligible_examples(examples: list[Example]) -> list[Example]:
     arm at 1.000 by construction and make every comparison against it
     meaningless.
     """
-    from memllm.eval.grade import gold_signals_abstention, is_extractive
+    from llm_mem_eval.eval.grade import gold_signals_abstention, is_extractive
 
     return [
         ex for ex in examples

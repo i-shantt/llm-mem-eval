@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.eval.ablation import (  # noqa: E402
+from llm_mem_eval.eval.ablation import (  # noqa: E402
     CONTROL_ARMS,
     arm_from_payload,
     compute_lift,

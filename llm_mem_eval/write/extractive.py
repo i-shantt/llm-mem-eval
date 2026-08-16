@@ -36,9 +36,9 @@ from __future__ import annotations
 
 import re
 
-from memllm.cost import CostLedger, count_tokens
-from memllm.data.loader import Example, MemoryUnit
-from memllm.write.base import renumber
+from llm_mem_eval.cost import CostLedger, count_tokens
+from llm_mem_eval.data.loader import Example, MemoryUnit
+from llm_mem_eval.write.base import renumber
 
 # Split after ., ! or ? when followed by whitespace and a capital or digit.
 # Keeps the terminator with the sentence it ends.

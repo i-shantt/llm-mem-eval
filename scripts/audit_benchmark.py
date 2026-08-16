@@ -37,8 +37,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.data.loader import Example, load_examples  # noqa: E402
-from memllm.eval.grade import (  # noqa: E402
+from llm_mem_eval.data.loader import Example, load_examples  # noqa: E402
+from llm_mem_eval.eval.grade import (  # noqa: E402
     contains_answer,
     gold_signals_abstention,
     is_extractive,

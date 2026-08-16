@@ -8,9 +8,9 @@ results/survival/summary.json with the paired comparisons.
 
 Survival asks only "is the answer still in the store at all?", which makes it a
 ceiling on retrieval and on accuracy, and the one property of a write path that
-can be measured without a judge. See memllm/eval/survival.py for the three
-definitions, the declared bias, and why the chance floor is reported beside
-every rate.
+can be measured without a judge. See llm_mem_eval/eval/survival.py for the
+three definitions, the declared bias, and why the chance floor is reported
+beside every rate.
 
 Output goes in results/survival/, a subdirectory, deliberately:
 scripts/make_report.py globs results/*.json non-recursively and folds any value
@@ -28,22 +28,22 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger  # noqa: E402
-from memllm.data.loader import load_examples  # noqa: E402
-from memllm.eval.ablation import (  # noqa: E402
+from llm_mem_eval.cost import CostLedger  # noqa: E402
+from llm_mem_eval.data.loader import load_examples  # noqa: E402
+from llm_mem_eval.eval.ablation import (  # noqa: E402
     ArmResult,
     contingency,
     mcnemar_p,
     paired_bootstrap_ci,
 )
-from memllm.eval.survival import (  # noqa: E402
+from llm_mem_eval.eval.survival import (  # noqa: E402
     build_placebo_pool,
     eligible_examples,
     report,
     sample_placebos,
     score_store,
 )
-from memllm.write import build_policy, check_store  # noqa: E402
+from llm_mem_eval.write import build_policy, check_store  # noqa: E402
 
 
 def main() -> None:

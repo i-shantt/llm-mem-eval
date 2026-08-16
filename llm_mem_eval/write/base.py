@@ -5,11 +5,12 @@ the question before it: "given a conversation, what goes into the store?".
 Published memory systems differ far more in the second than the first, and it is
 the half that costs money, so the repo needs a name for it.
 
-The Protocol deliberately mirrors `memllm.retrieval.base.Retriever`: a `name`, a
-`config()` that goes verbatim into the artifact manifest, and one method that
-does the work and bills a `CostLedger`. A policy returns `list[MemoryUnit]`, the
-same type `Example.units()` returns, so every existing retriever and every
-existing metric works over a policy's output with no changes at all.
+The Protocol deliberately mirrors `llm_mem_eval.retrieval.base.Retriever`: a
+`name`, a `config()` that goes verbatim into the artifact manifest, and one
+method that does the work and bills a `CostLedger`. A policy returns
+`list[MemoryUnit]`, the same type `Example.units()` returns, so every existing
+retriever and every existing metric works over a policy's output with no changes
+at all.
 
 Policies bill the **write** phase. Nothing here should touch `ledger.read`.
 """
@@ -19,8 +20,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Protocol, runtime_checkable
 
-from memllm.cost import CostLedger
-from memllm.data.loader import Example, MemoryUnit, parse_date
+from llm_mem_eval.cost import CostLedger
+from llm_mem_eval.data.loader import Example, MemoryUnit, parse_date
 
 
 @runtime_checkable

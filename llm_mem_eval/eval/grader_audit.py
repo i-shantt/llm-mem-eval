@@ -139,7 +139,7 @@ def _hard_positives(gold: str, question: str = "") -> list[tuple[str, str]]:
     # ...unless the question asks for the ordering, in which case a reordering
     # is not a rewrite at all -- it is a different, wrong answer. That case is
     # built as a NEGATIVE in `build_audit_cases` instead.
-    from memllm.eval.grade import _ORDER_QUESTION
+    from llm_mem_eval.eval.grade import _ORDER_QUESTION
 
     items = _list_items(gold)
     if len(items) >= 3 and not _ORDER_QUESTION.search(question):
@@ -173,7 +173,7 @@ def build_audit_cases(examples, seed: int = 0, per_type: int = 60) -> list[Audit
     gives. Substituted golds *are* drawn within a question type, which is what
     keeps a negative topically plausible rather than trivially rejectable.
     """
-    from memllm.eval.grade import (
+    from llm_mem_eval.eval.grade import (
         _ORDER_QUESTION, gold_signals_abstention, grade, is_extractive,
         normalize_tokens,
     )

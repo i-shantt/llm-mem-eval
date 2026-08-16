@@ -111,7 +111,7 @@ def main() -> None:
 
     ns = list(range(1, args.max_queries + 1))
     series = {
-        f"memllm hybrid (top-{args.k}) — measured": [
+        f"llm-mem-eval hybrid (top-{args.k}) — measured": [
             ours_write + n * ours_read_per_query for n in ns
         ],
         "full context — measured": [n * full_read_per_query for n in ns],
@@ -122,7 +122,7 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(8, 5))
     styles = {
-        f"memllm hybrid (top-{args.k}) — measured": dict(lw=2.4, color="#1b7f5f"),
+        f"llm-mem-eval hybrid (top-{args.k}) — measured": dict(lw=2.4, color="#1b7f5f"),
         "full context — measured": dict(lw=2.0, color="#7a4fb8"),
         "Mem0 — reported, LoCoMo (not comparable)": dict(
             lw=2.0, color="#b8853f", ls="--"
@@ -173,7 +173,7 @@ def main() -> None:
 
     # Crossover: how many queries before an LLM-heavy write path pays off?
     print("\nBreak-even analysis (USD):")
-    print(f"  memllm:       write ${ours_write:.4f} + "
+    print(f"  llm-mem-eval: write ${ours_write:.4f} + "
           f"${ours_read_per_query:.5f}/query  ({retrieved_tokens:.0f} tok/query)")
     print(f"  full context: write $0 + "
           f"${full_read_per_query:.5f}/query  "
@@ -182,7 +182,7 @@ def main() -> None:
           f"${mem0_read_per_query:.5f}/query")
 
     ratio = full_read_per_query / ours_read_per_query
-    print(f"\n  memllm read path is {ratio:.1f}x cheaper per query "
+    print(f"\n  This repo's read path is {ratio:.1f}x cheaper per query "
           f"than full context.")
     if mem0_read_per_query < ours_read_per_query:
         n_even = mem0_write / (ours_read_per_query - mem0_read_per_query)

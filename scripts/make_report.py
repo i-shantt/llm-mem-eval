@@ -153,7 +153,7 @@ def length_bias_section(arms: list[dict]) -> None:
     accuracy, one that vanishes was length."""
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     try:
-        from memllm.eval.grade import grade
+        from llm_mem_eval.eval.grade import grade
     except Exception:
         return
     valid = [a for a in arms

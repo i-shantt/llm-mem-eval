@@ -16,27 +16,27 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger  # noqa: E402
-from memllm.data.loader import (  # noqa: E402
+from llm_mem_eval.cost import CostLedger  # noqa: E402
+from llm_mem_eval.data.loader import (  # noqa: E402
     load_examples,
     stratified_subset,
 )
-from memllm.eval.retrieval_metrics import aggregate, score_example  # noqa: E402
+from llm_mem_eval.eval.retrieval_metrics import aggregate, score_example  # noqa: E402
 
 
 def build_retriever(name: str, args, cache=None):
     if name == "bm25":
-        from memllm.retrieval.bm25 import BM25Retriever
+        from llm_mem_eval.retrieval.bm25 import BM25Retriever
 
         return BM25Retriever()
     if name == "dense":
-        from memllm.retrieval.dense import DenseRetriever
+        from llm_mem_eval.retrieval.dense import DenseRetriever
 
         return DenseRetriever(
             model_name=args.embed_model, device=args.device, cache=cache
         )
     if name == "hybrid":
-        from memllm.retrieval.hybrid import HybridRetriever
+        from llm_mem_eval.retrieval.hybrid import HybridRetriever
 
         return HybridRetriever(
             model_name=args.embed_model,
@@ -45,7 +45,7 @@ def build_retriever(name: str, args, cache=None):
             cache=cache,
         )
     if name in ("oracle", "recency", "random", "none"):
-        from memllm.retrieval import baselines
+        from llm_mem_eval.retrieval import baselines
 
         cls = {
             "oracle": baselines.OracleRetriever,
@@ -86,7 +86,7 @@ def main() -> None:
         examples = stratified_subset(examples, args.limit, seed=args.seed)
     print(f"{len(examples)} examples, granularity={args.granularity}, k={args.k}")
 
-    from memllm.retrieval.embed_cache import EmbeddingCache
+    from llm_mem_eval.retrieval.embed_cache import EmbeddingCache
 
     cache = EmbeddingCache(enabled=not args.no_cache)
 

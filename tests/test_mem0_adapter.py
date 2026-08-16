@@ -16,9 +16,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger  # noqa: E402
-from memllm.data.loader import Example, Turn  # noqa: E402
-from memllm.write.mem0_adapter import (  # noqa: E402
+from llm_mem_eval.cost import CostLedger  # noqa: E402
+from llm_mem_eval.data.loader import Example, Turn  # noqa: E402
+from llm_mem_eval.write.mem0_adapter import (  # noqa: E402
     CountingChatClient,
     Mem0OssPolicy,
     PreflightResult,
@@ -109,8 +109,8 @@ def test_preflight_result_reports_every_failure() -> None:
 
 
 def test_package_imports_without_the_mem0_extra() -> None:
-    """CI installs core deps only; `from memllm.write import ...` must work."""
-    import memllm.write as w
+    """CI installs core deps only; `llm_mem_eval.write` must import anyway."""
+    import llm_mem_eval.write as w
 
     assert w.build_policy("verbatim_turn").name == "verbatim_turn"
     if "mem0" not in sys.modules:

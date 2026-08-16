@@ -14,8 +14,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.data.loader import Example, MemoryUnit, Turn  # noqa: E402
-from memllm.eval.survival import (  # noqa: E402
+from llm_mem_eval.data.loader import Example, MemoryUnit, Turn  # noqa: E402
+from llm_mem_eval.eval.survival import (  # noqa: E402
     CLEAN_TYPES,
     bootstrap_corrected,
     build_placebo_pool,

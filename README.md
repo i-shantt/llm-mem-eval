@@ -1,4 +1,4 @@
-# memllm — measuring LLM memory systems without a judge
+# llm-mem-eval — measuring LLM memory systems without a judge
 
 [![tests](https://github.com/i-shantt/memllm/actions/workflows/tests.yml/badge.svg)](https://github.com/i-shantt/memllm/actions/workflows/tests.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -23,7 +23,7 @@ Six instruments, each answering a question the aggregate score cannot:
 | [control ladder](#how-much-of-the-accuracy-is-actually-memory) | how much of the accuracy is memory, and how much is the model already knowing? |
 
 **If you have five minutes:** [`scripts/audit_benchmark.py`](scripts/audit_benchmark.py)
-is the most reusable finding. [`memllm/eval/ablation.py`](memllm/eval/ablation.py)
+is the most reusable finding. [`llm_mem_eval/eval/ablation.py`](llm_mem_eval/eval/ablation.py)
 is the part most likely to be useful in someone else's harness.
 [`RESULTS.md`](RESULTS.md) is every table, regenerated from run artifacts rather
 than typed by hand. [`RUNNING.md`](RUNNING.md) is what is committed here but
@@ -506,7 +506,7 @@ the rewriting itself to be lossy.
 
 **No LLM extraction arm was run**, so this stays a prediction. An adapter that
 runs Mem0's own open-source v3 ingestion is committed at
-[`memllm/write/mem0_adapter.py`](memllm/write/mem0_adapter.py), with a preflight
+[`llm_mem_eval/write/mem0_adapter.py`](llm_mem_eval/write/mem0_adapter.py), with a preflight
 for the four ways mem0 silently degrades and a workaround for the conversation-date
 contamination in [issue #3944](https://github.com/mem0ai/mem0/issues/3944).
 [`RUNNING.md`](RUNNING.md) explains why it has not been run: an open 7B extractor
@@ -531,7 +531,7 @@ with an unstated choice is a poor foundation for a cost argument.
 LongMemEval mostly does not need a judge anyway. The median gold answer is **11
 characters** (`Target`, `$800`, `February 14th`) — short-answer QA, which had a
 reproducible metric for a decade before LLM judges existed.
-[`memllm/eval/grade.py`](memllm/eval/grade.py) scores by normalised token-span
+[`llm_mem_eval/eval/grade.py`](llm_mem_eval/eval/grade.py) scores by normalised token-span
 containment: no API key, no GPU for grading, byte-identical numbers on every
 re-run.
 
@@ -748,7 +748,7 @@ session.
 ## Layout
 
 ```
-memllm/
+llm_mem_eval/
   cost.py                    write/read cost ledger + amortisation
   data/loader.py             LongMemEval loading, turn/user_turn/session units
   retrieval/                 the READ half
@@ -864,7 +864,7 @@ reported number carries its own `n`.
   quoted from a publication, and the cost comparison mixes benchmarks — Mem0's
   read path is measured on LoCoMo, this repo's on LongMemEval. An adapter that
   runs Mem0's own OSS ingestion is committed at
-  [`memllm/write/mem0_adapter.py`](memllm/write/mem0_adapter.py) and has
+  [`llm_mem_eval/write/mem0_adapter.py`](llm_mem_eval/write/mem0_adapter.py) and has
   deliberately **not** been run; [`RUNNING.md`](RUNNING.md) says why and what it
   would take.
 - **The control arms bound what memory contributed *here*, not what any
