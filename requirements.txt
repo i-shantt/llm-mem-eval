@@ -1,6 +1,18 @@
+# Core: everything except the dense retriever and the cost figure.
+# The tests, the grader audit, BM25, and scripts/make_report.py run on these.
 huggingface_hub
+numpy
 rank_bm25
 tiktoken
-numpy
+
+# The headline cost figure (scripts/make_cost_curve.py).
+matplotlib
+
+# Test runner.
+pytest
+
+# Dense retrieval only. ~2 GB with CUDA wheels, and nothing else here imports
+# it -- CI deliberately installs only the four core packages above. Drop these
+# two lines if you just want BM25, the grader audit, and the report.
 sentence-transformers
 torch

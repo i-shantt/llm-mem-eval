@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memllm"
+version = "0.1.0"
+description = "Write-path and read-path cost accounting for LLM memory systems, evaluated without an LLM judge"
+readme = "README.md"
+license = { file = "LICENSE" }
+# 3.10 is the floor: the code uses PEP 604 unions (`bool | None`) at runtime in
+# dataclass field types, which 3.9 cannot evaluate.
+requires-python = ">=3.10"
+
+dependencies = [
+    "huggingface_hub",
+    "numpy",
+    "rank_bm25",
+    "tiktoken",
+]
+
+[project.optional-dependencies]
+# Dense retrieval. Heavy, and only needed for the `dense` and `hybrid` arms.
+dense = ["sentence-transformers", "torch"]
+# The amortisation figure.
+figures = ["matplotlib"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["memllm*"]

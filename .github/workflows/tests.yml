@@ -17,10 +17,12 @@ jobs:
           python-version: '3.12'
           cache: pip
 
-      # Not requirements.txt: that pulls torch and sentence-transformers for the
-      # dense retriever, which is ~2 GB and which nothing checked here touches.
-      # Every test and both report scripts run on these four.
-      - run: pip install pytest rank_bm25 tiktoken numpy
+      # The core dependencies plus pytest, via the package metadata -- which
+      # also checks that `pip install` of this repo works at all. Deliberately
+      # not requirements.txt: that pulls torch and sentence-transformers for
+      # the dense retriever, ~2 GB that nothing checked here touches. Every
+      # test and both report scripts run without them.
+      - run: pip install -e ".[dev]"
 
       - name: Tests
         run: python -m pytest tests/ -q
