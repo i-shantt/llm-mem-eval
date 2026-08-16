@@ -1,11 +1,19 @@
 """Cost instrumentation, split by write path vs read path.
 
-This is the point of the project. Published memory systems report read-path
-tokens per query and omit the write path, where the cost actually lives: Mem0's
-memory construction runs ~1.23M tokens for one LoCoMo conversation, a figure
-only a competitor reports (RecMem, arXiv 2605.16045, Table 1), since Mem0's own
-paper is silent on it. We account for both, separately, so total cost can be
-plotted against query volume.
+Published memory systems report read-path tokens per query and are mostly silent
+on the write path. Mem0's memory construction runs ~1.23M tokens for one LoCoMo
+conversation, a figure only a competitor reports (RecMem, arXiv 2605.16045,
+Table 1), because Mem0's own paper does not. This module accounts for both
+phases separately, so total cost can be plotted against query volume rather than
+quoted at the n -> infinity limit.
+
+Two things this deliberately does not claim. Per-call cost is not the issue --
+every construction figure quoted here already assumes a small, cheap extraction
+model, which is what Mem0 OSS actually defaults to. And the dollar amount is not
+the interesting quantity: scripts/model_write_cost.py shows the same shipped
+code spanning 8.8x depending on how the *caller* batches, and
+memllm/eval/survival.py asks the question cost cannot -- what the write path
+gives up in answerable content.
 
 See data/published_costs.json for every quoted figure and its source.
 """

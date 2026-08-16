@@ -139,10 +139,31 @@ def main() -> None:
               f"({st['tokens_per_record_mean']:.0f}/record)")
         print(f"  wrote {out}")
 
+    # The summary describes the directory, not this invocation. Every arm ever
+    # written to outdir is reloaded and paired, so running one extra policy
+    # later does not silently drop the other arms' comparisons from the file.
+    for path in sorted(outdir.glob("survival_*.json")):
+        payload = json.loads(path.read_text())
+        sid = payload["store_id"]
+        if sid in graded:
+            continue
+        summaries.setdefault(sid, payload["survival"])
+        graded[sid] = ArmResult(
+            name=sid,
+            model=payload.get("policy_config", {}).get("policy", "?"),
+            retriever="store",
+            accuracy=payload["survival"]["primary"]["record"]["survival"],
+            read_tokens_per_query=0.0,
+            graded={r["question_id"]: r["survival_record"]
+                    for r in payload["records"] if r["in_primary"]},
+            qtype={r["question_id"]: r["question_type"]
+                   for r in payload["records"]},
+        )
+
     baseline = args.baseline or args.policies[0]
     comparisons = {}
     if baseline in graded:
-        for name, g in graded.items():
+        for name, g in sorted(graded.items()):
             if name == baseline:
                 continue
             # McNemar and the paired bootstrap are reused directly from

@@ -1,15 +1,18 @@
 {
-  "store_id": "verbatim_turn",
+  "store_id": "tailk_25pct",
   "policy_config": {
-    "policy": "verbatim",
-    "granularity": "turn"
+    "policy": "extractive_k",
+    "fraction": 0.25,
+    "granularity": "turn",
+    "rule": "tail",
+    "selector": "round-robin tail sentences"
   },
   "n_placebo_per_question": 10,
   "seed": 0,
   "config": {
-    "tag": "verbatim_turn",
+    "tag": "tailk_25pct",
     "retriever": "store",
-    "answer_backend": "verbatim"
+    "answer_backend": "extractive_k"
   },
   "survival": {
     "n_all": 184,
@@ -18,74 +21,74 @@
     "primary": {
       "record": {
         "n": 110,
-        "survival": 0.7909090909090909,
+        "survival": 0.5818181818181818,
         "survival_ci95": [
-          0.7057473462909243,
-          0.8564373032572199
+          0.4884039805903501,
+          0.6697104520950654
         ],
-        "null": 0.16181818181818183,
-        "chance_corrected": 0.7505422993492408,
+        "null": 0.0788888888888889,
+        "chance_corrected": 0.5460028511898234,
         "chance_corrected_ci95": [
-          0.6617336152219874,
-          0.8353658536585366
+          0.4473684210526316,
+          0.6420285051375537
         ]
       },
       "soft": {
         "n": 110,
-        "survival": 0.8545454545454545,
+        "survival": 0.6,
         "survival_ci95": [
-          0.7767209782912426,
-          0.9084415633455579
+          0.5065687300827921,
+          0.6866822431993824
         ],
-        "null": 0.2645454545454546,
-        "chance_corrected": 0.8022249690976513,
+        "null": 0.12545454545454546,
+        "chance_corrected": 0.5426195426195426,
         "chance_corrected_ci95": [
-          0.7129186602870814,
-          0.8859315589353612
+          0.4427244582043343,
+          0.6406570841889117
         ]
       },
       "union": {
         "n": 110,
-        "survival": 0.7909090909090909,
+        "survival": 0.5818181818181818,
         "survival_ci95": [
-          0.7057473462909243,
-          0.8564373032572199
+          0.4884039805903501,
+          0.6697104520950654
         ],
-        "null": 0.16181818181818183,
-        "chance_corrected": 0.7505422993492408,
+        "null": 0.0788888888888889,
+        "chance_corrected": 0.5460028511898234,
         "chance_corrected_ci95": [
-          0.6617336152219874,
-          0.8353658536585366
+          0.4473684210526316,
+          0.6420285051375537
         ]
       }
     },
     "all_questions": {
       "record": {
         "n": 184,
-        "survival": 0.875,
+        "survival": 0.6902173913043478,
         "survival_ci95": [
-          0.819417568185297,
-          0.915243976435277
+          0.6200854444847699,
+          0.7525689622068255
         ],
-        "null": 0.3625,
-        "chance_corrected": 0.803921568627451,
+        "null": 0.2629227053140097,
+        "chance_corrected": 0.5797148943142716,
         "chance_corrected_ci95": [
-          0.7321179425169752,
-          0.8722195929957406
+          0.4940267041461701,
+          0.6654010441385857
         ]
       },
       "soft": {
         "n": 184,
-        "survival": 0.9130434782608695,
+        "survival": 0.7010869565217391,
         "survival_ci95": [
-          0.863424779716659,
-          0.945767646242234
+          0.6313790148461924,
+          0.7625699293706372
         ],
-        "null": 0.42391304347826086,
-        "chance_corrected": 0.8490566037735848,
+        "null": 0.2907608695652174,
+        "chance_corrected": 0.578544061302682,
         "chance_corrected_ci95": [
-          0.7793468667255075,
-          0.9141221374045799
+          0.4901065449010655,
+          0.6653696498054473
         ]
       }
     },
@@ -93,90 +96,90 @@
       "1": {
         "record": {
           "n": 74,
-          "survival": 1.0,
+          "survival": 0.8513513513513513,
           "survival_ci95": [
-            0.9506484964337834,
-            0.9999999999999998
+            0.7531029907801314,
+            0.9149202769841487
           ],
-          "null": 0.6608108108108108,
-          "chance_corrected": 1.0,
+          "null": 0.5364864864864866,
+          "chance_corrected": 0.6793002915451893,
           "chance_corrected_ci95": [
-            1.0,
-            1.0
+            0.5031055900621118,
+            0.8412698412698413
           ]
         },
         "soft": {
           "n": 74,
-          "survival": 1.0,
+          "survival": 0.8513513513513513,
           "survival_ci95": [
-            0.9506484964337834,
-            0.9999999999999998
+            0.7531029907801314,
+            0.9149202769841487
           ],
-          "null": 0.6608108108108108,
-          "chance_corrected": 1.0,
+          "null": 0.5364864864864866,
+          "chance_corrected": 0.6793002915451893,
           "chance_corrected_ci95": [
-            1.0,
-            1.0
+            0.5031055900621118,
+            0.8412698412698413
           ]
         }
       },
       "2-3": {
         "record": {
           "n": 71,
-          "survival": 0.9577464788732394,
+          "survival": 0.7323943661971831,
           "survival_ci95": [
-            0.8829739389031531,
-            0.9855270017501733
+            0.6194579122102354,
+            0.821473334582992
           ],
-          "null": 0.22535211267605634,
-          "chance_corrected": 0.9454545454545454,
+          "null": 0.10704225352112677,
+          "chance_corrected": 0.7003154574132493,
           "chance_corrected_ci95": [
-            0.8754448398576511,
-            1.0
+            0.5800933125972005,
+            0.8107255520504731
           ]
         },
         "soft": {
           "n": 71,
-          "survival": 0.971830985915493,
+          "survival": 0.7323943661971831,
           "survival_ci95": [
-            0.9029831473899659,
-            0.992240899129617
+            0.6194579122102354,
+            0.821473334582992
           ],
-          "null": 0.38591549295774646,
-          "chance_corrected": 0.9541284403669725,
+          "null": 0.18873239436619718,
+          "chance_corrected": 0.670138888888889,
           "chance_corrected_ci95": [
-            0.8850574712643676,
-            1.0
+            0.5415959252971136,
+            0.7905759162303665
           ]
         }
       },
       "4+": {
         "record": {
           "n": 39,
-          "survival": 0.48717948717948717,
+          "survival": 0.3076923076923077,
           "survival_ci95": [
-            0.3386492878313309,
-            0.6380089135430342
+            0.1856575344598306,
+            0.464215486155646
           ],
-          "null": 0.046153846153846156,
-          "chance_corrected": 0.4623655913978495,
+          "null": 0.027635327635327635,
+          "chance_corrected": 0.28801640785232935,
           "chance_corrected_ci95": [
-            0.30086644756498354,
-            0.6241050119331742
+            0.14843287995269072,
+            0.4431349440188569
           ]
         },
         "soft": {
           "n": 39,
-          "survival": 0.6410256410256411,
+          "survival": 0.358974358974359,
           "survival_ci95": [
-            0.484178631846895,
-            0.772581153035089
+            0.22741884696491105,
+            0.515821368153105
           ],
-          "null": 0.043589743589743594,
-          "chance_corrected": 0.6246648793565684,
+          "null": 0.010256410256410256,
+          "chance_corrected": 0.35233160621761656,
           "chance_corrected_ci95": [
-            0.4666666666666666,
-            0.7843665768194069
+            0.20103092783505153,
+            0.5064935064935064
           ]
         }
       }
@@ -184,51 +187,51 @@
     "by_question_type_primary": {
       "knowledge-update": {
         "n": 31,
-        "survival": 0.8709677419354839,
+        "survival": 0.7741935483870968,
         "survival_ci95": [
-          0.7114724304561464,
-          0.9486579883535524
+          0.6018723994130262,
+          0.8860500840550121
         ],
-        "null": 0.15483870967741936,
-        "chance_corrected": 0.847328244274809,
+        "null": 0.09928315412186381,
+        "chance_corrected": 0.7493036211699164,
         "chance_corrected_ci95": [
-          0.6955602536997886,
-          0.9623430962343097
+          0.5758051846032993,
+          0.8934070272404263
         ]
       },
       "single-session-assistant": {
         "n": 37,
-        "survival": 0.6216216216216216,
+        "survival": 0.2702702702702703,
         "survival_ci95": [
-          0.4610014255281996,
-          0.7593621253610898
+          0.15397298246990684,
+          0.4297847547392133
         ],
-        "null": 0.10270270270270271,
-        "chance_corrected": 0.5783132530120483,
+        "null": 0.03513513513513514,
+        "chance_corrected": 0.24369747899159663,
         "chance_corrected_ci95": [
-          0.4134897360703812,
-          0.7507788161993769
+          0.10112359550561799,
+          0.3888888888888889
         ]
       },
       "single-session-user": {
         "n": 42,
-        "survival": 0.8809523809523809,
+        "survival": 0.7142857142857143,
         "survival_ci95": [
-          0.7499931819289246,
-          0.9480627323498091
+          0.5643250392275445,
+          0.8283314125542434
         ],
-        "null": 0.21904761904761907,
-        "chance_corrected": 0.8475609756097561,
+        "null": 0.10238095238095238,
+        "chance_corrected": 0.6816976127320955,
         "chance_corrected_ci95": [
-          0.7213622291021672,
-          0.9685534591194969
+          0.5238095238095238,
+          0.8186528497409327
         ]
       }
     },
     "store_stats": {
       "records_per_store_mean": 497.26630434782606,
-      "tokens_per_store_mean": 104109.57608695653,
-      "tokens_per_record_mean": 210.15747663571065
+      "tokens_per_store_mean": 26026.619565217392,
+      "tokens_per_record_mean": 52.5379417055183
     }
   },
   "cost_total": {
@@ -238,7 +241,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 0.054084133356809616
+      "wall_clock_s": 6.0808813670882955
     },
     "read": {
       "llm_calls": 0,
@@ -259,11 +262,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.4,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 550,
-      "store_tokens": 103642
+      "store_tokens": 25915
     },
     {
       "question_id": "118b2229",
@@ -275,10 +278,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.0,
-      "null_soft": 0.2,
+      "null_soft": 0.1,
       "null_union": 0.0,
       "n_records": 497,
-      "store_tokens": 105513
+      "store_tokens": 26380
     },
     {
       "question_id": "51a45a95",
@@ -289,11 +292,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.6,
-      "null_soft": 0.6,
-      "null_union": 0.6,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 529,
-      "store_tokens": 104713
+      "store_tokens": 26183
     },
     {
       "question_id": "58bf7951",
@@ -308,7 +311,7 @@
       "null_soft": 0.3,
       "null_union": 0.2,
       "n_records": 616,
-      "store_tokens": 104493
+      "store_tokens": 26116
     },
     {
       "question_id": "1e043500",
@@ -319,11 +322,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 510,
-      "store_tokens": 104693
+      "store_tokens": 26162
     },
     {
       "question_id": "c5e8278d",
@@ -334,11 +337,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 469,
-      "store_tokens": 105060
+      "store_tokens": 26262
     },
     {
       "question_id": "6ade9755",
@@ -349,11 +352,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.4,
-      "null_union": 0.4,
+      "null_record": 0.3,
+      "null_soft": 0.3,
+      "null_union": 0.3,
       "n_records": 513,
-      "store_tokens": 103375
+      "store_tokens": 25844
     },
     {
       "question_id": "6f9b354f",
@@ -364,11 +367,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 500,
-      "store_tokens": 105854
+      "store_tokens": 26459
     },
     {
       "question_id": "58ef2f1c",
@@ -379,41 +382,41 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 518,
-      "store_tokens": 102667
+      "store_tokens": 25664
     },
     {
       "question_id": "f8c5f88b",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.3,
-      "null_union": 0.2,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.2,
+      "null_union": 0.1,
       "n_records": 487,
-      "store_tokens": 103716
+      "store_tokens": 25937
     },
     {
       "question_id": "5d3d2817",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 510,
-      "store_tokens": 104467
+      "store_tokens": 26117
     },
     {
       "question_id": "7527f7e2",
@@ -428,7 +431,7 @@
       "null_soft": 0.5,
       "null_union": 0.5,
       "n_records": 490,
-      "store_tokens": 104342
+      "store_tokens": 26081
     },
     {
       "question_id": "c960da58",
@@ -443,7 +446,7 @@
       "null_soft": 0.5,
       "null_union": 0.5,
       "n_records": 504,
-      "store_tokens": 105307
+      "store_tokens": 26323
     },
     {
       "question_id": "3b6f954b",
@@ -452,13 +455,13 @@
       "gold_len_bucket": "4+",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.1,
-      "null_soft": 0.2,
+      "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 470,
-      "store_tokens": 102815
+      "store_tokens": 25701
     },
     {
       "question_id": "726462e0",
@@ -469,11 +472,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.4,
+      "null_soft": 0.4,
+      "null_union": 0.4,
       "n_records": 501,
-      "store_tokens": 104602
+      "store_tokens": 26155
     },
     {
       "question_id": "94f70d80",
@@ -484,11 +487,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.5,
-      "null_union": 0.4,
+      "null_record": 0.1,
+      "null_soft": 0.2,
+      "null_union": 0.1,
       "n_records": 510,
-      "store_tokens": 103686
+      "store_tokens": 25922
     },
     {
       "question_id": "66f24dbb",
@@ -500,10 +503,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.0,
-      "null_soft": 0.3,
+      "null_soft": 0.2,
       "null_union": 0.0,
       "n_records": 507,
-      "store_tokens": 102577
+      "store_tokens": 25644
     },
     {
       "question_id": "ad7109d1",
@@ -514,11 +517,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.4,
-      "null_union": 0.3,
+      "null_record": 0.1,
+      "null_soft": 0.3,
+      "null_union": 0.1,
       "n_records": 478,
-      "store_tokens": 104368
+      "store_tokens": 26096
     },
     {
       "question_id": "af8d2e46",
@@ -529,11 +532,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.4,
+      "null_soft": 0.4,
+      "null_union": 0.4,
       "n_records": 495,
-      "store_tokens": 101936
+      "store_tokens": 25482
     },
     {
       "question_id": "dccbc061",
@@ -545,10 +548,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.0,
-      "null_soft": 0.2,
+      "null_soft": 0.1,
       "null_union": 0.0,
       "n_records": 505,
-      "store_tokens": 103061
+      "store_tokens": 25760
     },
     {
       "question_id": "c8c3f81d",
@@ -559,11 +562,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.6,
-      "null_soft": 0.6,
-      "null_union": 0.6,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 487,
-      "store_tokens": 105564
+      "store_tokens": 26390
     },
     {
       "question_id": "8ebdbe50",
@@ -574,11 +577,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 487,
-      "store_tokens": 105701
+      "store_tokens": 26425
     },
     {
       "question_id": "6b168ec8",
@@ -589,11 +592,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 482,
-      "store_tokens": 105799
+      "store_tokens": 26451
     },
     {
       "question_id": "75499fd8",
@@ -604,11 +607,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.4,
-      "null_union": 0.3,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 491,
-      "store_tokens": 103659
+      "store_tokens": 25905
     },
     {
       "question_id": "21436231",
@@ -619,11 +622,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 512,
-      "store_tokens": 103295
+      "store_tokens": 25820
     },
     {
       "question_id": "95bcc1c8",
@@ -634,11 +637,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 487,
-      "store_tokens": 105107
+      "store_tokens": 26280
     },
     {
       "question_id": "0862e8bf",
@@ -649,11 +652,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 502,
-      "store_tokens": 104185
+      "store_tokens": 26039
     },
     {
       "question_id": "853b0a1d",
@@ -664,11 +667,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.4,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 512,
-      "store_tokens": 103179
+      "store_tokens": 25790
     },
     {
       "question_id": "a06e4cfe",
@@ -679,26 +682,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.3,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 534,
-      "store_tokens": 105408
+      "store_tokens": 26360
     },
     {
       "question_id": "37d43f65",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.5,
       "null_soft": 0.5,
       "null_union": 0.5,
       "n_records": 533,
-      "store_tokens": 104133
+      "store_tokens": 26026
     },
     {
       "question_id": "b86304ba",
@@ -713,7 +716,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 456,
-      "store_tokens": 102660
+      "store_tokens": 25666
     },
     {
       "question_id": "d52b4f67",
@@ -724,11 +727,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.0,
       "null_soft": 0.3,
-      "null_union": 0.2,
+      "null_union": 0.0,
       "n_records": 479,
-      "store_tokens": 104167
+      "store_tokens": 26038
     },
     {
       "question_id": "25e5aa4f",
@@ -743,7 +746,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 506,
-      "store_tokens": 104783
+      "store_tokens": 26204
     },
     {
       "question_id": "caf9ead2",
@@ -754,11 +757,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.5,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 466,
-      "store_tokens": 104481
+      "store_tokens": 26120
     },
     {
       "question_id": "8550ddae",
@@ -769,26 +772,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.5,
-      "null_union": 0.4,
+      "null_record": 0.1,
+      "null_soft": 0.2,
+      "null_union": 0.1,
       "n_records": 453,
-      "store_tokens": 105357
+      "store_tokens": 26330
     },
     {
       "question_id": "60d45044",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
+      "survival_record": false,
       "survival_soft": true,
-      "survival_union": true,
+      "survival_union": false,
       "null_record": 0.1,
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 541,
-      "store_tokens": 104817
+      "store_tokens": 26202
     },
     {
       "question_id": "3f1e9474",
@@ -799,11 +802,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.6,
-      "null_soft": 0.6,
-      "null_union": 0.6,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 515,
-      "store_tokens": 103687
+      "store_tokens": 25927
     },
     {
       "question_id": "86b68151",
@@ -814,26 +817,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 485,
-      "store_tokens": 103109
+      "store_tokens": 25780
     },
     {
       "question_id": "577d4d32",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.6,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.2,
+      "null_union": 0.1,
       "n_records": 487,
-      "store_tokens": 104179
+      "store_tokens": 26040
     },
     {
       "question_id": "ec81a493",
@@ -844,11 +847,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.6,
-      "null_soft": 0.6,
-      "null_union": 0.6,
+      "null_record": 0.4,
+      "null_soft": 0.4,
+      "null_union": 0.4,
       "n_records": 495,
-      "store_tokens": 105637
+      "store_tokens": 26411
     },
     {
       "question_id": "15745da0",
@@ -863,7 +866,7 @@
       "null_soft": 0.2,
       "null_union": 0.1,
       "n_records": 474,
-      "store_tokens": 105417
+      "store_tokens": 26363
     },
     {
       "question_id": "e01b8e2f",
@@ -874,26 +877,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 523,
-      "store_tokens": 104918
+      "store_tokens": 26224
     },
     {
       "question_id": "bc8a6e93",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.5,
-      "null_soft": 0.5,
-      "null_union": 0.5,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.3,
+      "null_soft": 0.4,
+      "null_union": 0.3,
       "n_records": 537,
-      "store_tokens": 103446
+      "store_tokens": 25849
     },
     {
       "question_id": "ccb36322",
@@ -904,11 +907,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 471,
-      "store_tokens": 104410
+      "store_tokens": 26104
     },
     {
       "question_id": "001be529",
@@ -919,11 +922,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.5,
-      "null_soft": 0.7,
-      "null_union": 0.5,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 514,
-      "store_tokens": 104793
+      "store_tokens": 26194
     },
     {
       "question_id": "b320f3f8",
@@ -934,11 +937,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.6,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.4,
+      "null_union": 0.2,
       "n_records": 463,
-      "store_tokens": 104125
+      "store_tokens": 26030
     },
     {
       "question_id": "19b5f2b3",
@@ -949,11 +952,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.5,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.3,
+      "null_union": 0.2,
       "n_records": 482,
-      "store_tokens": 102829
+      "store_tokens": 25702
     },
     {
       "question_id": "4fd1909e",
@@ -968,7 +971,7 @@
       "null_soft": 0.3,
       "null_union": 0.2,
       "n_records": 554,
-      "store_tokens": 105013
+      "store_tokens": 26252
     },
     {
       "question_id": "545bd2b5",
@@ -979,11 +982,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.6,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.5,
+      "null_union": 0.2,
       "n_records": 461,
-      "store_tokens": 102704
+      "store_tokens": 25674
     },
     {
       "question_id": "8a137a7f",
@@ -994,26 +997,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.5,
-      "null_union": 0.3,
+      "null_record": 0.0,
+      "null_soft": 0.2,
+      "null_union": 0.0,
       "n_records": 512,
-      "store_tokens": 103355
+      "store_tokens": 25836
     },
     {
       "question_id": "76d63226",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.2,
-      "null_soft": 0.3,
+      "null_soft": 0.2,
       "null_union": 0.2,
       "n_records": 489,
-      "store_tokens": 103437
+      "store_tokens": 25859
     },
     {
       "question_id": "86f00804",
@@ -1024,11 +1027,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 503,
-      "store_tokens": 101475
+      "store_tokens": 25371
     },
     {
       "question_id": "8e9d538c",
@@ -1043,7 +1046,7 @@
       "null_soft": 0.6,
       "null_union": 0.6,
       "n_records": 486,
-      "store_tokens": 104275
+      "store_tokens": 26067
     },
     {
       "question_id": "311778f1",
@@ -1054,11 +1057,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 500,
-      "store_tokens": 105196
+      "store_tokens": 26295
     },
     {
       "question_id": "c19f7a0b",
@@ -1069,11 +1072,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.4,
-      "null_union": 0.3,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 478,
-      "store_tokens": 104148
+      "store_tokens": 26041
     },
     {
       "question_id": "4100d0a0",
@@ -1085,10 +1088,10 @@
       "survival_soft": false,
       "survival_union": false,
       "null_record": 0.0,
-      "null_soft": 0.1,
+      "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 523,
-      "store_tokens": 103457
+      "store_tokens": 25865
     },
     {
       "question_id": "29f2956b",
@@ -1099,11 +1102,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.3,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.2,
+      "null_union": 0.1,
       "n_records": 496,
-      "store_tokens": 101369
+      "store_tokens": 25338
     },
     {
       "question_id": "1faac195",
@@ -1114,11 +1117,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.6,
-      "null_soft": 0.6,
-      "null_union": 0.6,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 494,
-      "store_tokens": 105411
+      "store_tokens": 26344
     },
     {
       "question_id": "faba32e5",
@@ -1129,26 +1132,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.4,
-      "null_union": 0.3,
+      "null_record": 0.1,
+      "null_soft": 0.3,
+      "null_union": 0.1,
       "n_records": 473,
-      "store_tokens": 105011
+      "store_tokens": 26252
     },
     {
       "question_id": "f4f1d8a4",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 585,
-      "store_tokens": 104041
+      "store_tokens": 26006
     },
     {
       "question_id": "c14c00dd",
@@ -1160,25 +1163,25 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.1,
-      "null_soft": 0.4,
+      "null_soft": 0.3,
       "null_union": 0.1,
       "n_records": 492,
-      "store_tokens": 104355
+      "store_tokens": 26081
     },
     {
       "question_id": "36580ce8",
       "question_type": "single-session-user",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.6,
       "null_soft": 0.6,
       "null_union": 0.6,
       "n_records": 545,
-      "store_tokens": 102615
+      "store_tokens": 25652
     },
     {
       "question_id": "3d86fd0a",
@@ -1189,11 +1192,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 526,
-      "store_tokens": 104959
+      "store_tokens": 26241
     },
     {
       "question_id": "a82c026e",
@@ -1205,10 +1208,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.0,
-      "null_soft": 0.2,
+      "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 476,
-      "store_tokens": 105583
+      "store_tokens": 26398
     },
     {
       "question_id": "6a1eabeb",
@@ -1217,13 +1220,13 @@
       "gold_len_bucket": "4+",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.1111111111111111,
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 413,
-      "store_tokens": 103446
+      "store_tokens": 25866
     },
     {
       "question_id": "6aeb4375",
@@ -1234,11 +1237,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 468,
-      "store_tokens": 102188
+      "store_tokens": 25547
     },
     {
       "question_id": "830ce83f",
@@ -1253,7 +1256,7 @@
       "null_soft": 1.0,
       "null_union": 1.0,
       "n_records": 511,
-      "store_tokens": 103139
+      "store_tokens": 25789
     },
     {
       "question_id": "852ce960",
@@ -1265,10 +1268,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.1,
-      "null_soft": 0.5,
+      "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 396,
-      "store_tokens": 103548
+      "store_tokens": 25886
     },
     {
       "question_id": "945e3d21",
@@ -1280,25 +1283,25 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.2,
-      "null_soft": 0.4,
+      "null_soft": 0.2,
       "null_union": 0.2,
       "n_records": 489,
-      "store_tokens": 105486
+      "store_tokens": 26373
     },
     {
       "question_id": "d7c942c3",
       "question_type": "knowledge-update",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 520,
-      "store_tokens": 105464
+      "store_tokens": 26367
     },
     {
       "question_id": "71315a70",
@@ -1309,11 +1312,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.5,
-      "null_union": 0.3,
+      "null_record": 0.1,
+      "null_soft": 0.3,
+      "null_union": 0.1,
       "n_records": 514,
-      "store_tokens": 104830
+      "store_tokens": 26212
     },
     {
       "question_id": "89941a93",
@@ -1324,11 +1327,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 528,
-      "store_tokens": 105138
+      "store_tokens": 26281
     },
     {
       "question_id": "ce6d2d27",
@@ -1343,7 +1346,7 @@
       "null_soft": 0.8,
       "null_union": 0.8,
       "n_records": 521,
-      "store_tokens": 104542
+      "store_tokens": 26135
     },
     {
       "question_id": "9ea5eabc",
@@ -1354,11 +1357,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 537,
-      "store_tokens": 103280
+      "store_tokens": 25819
     },
     {
       "question_id": "07741c44",
@@ -1369,11 +1372,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.5,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.3,
+      "null_union": 0.1,
       "n_records": 513,
-      "store_tokens": 104502
+      "store_tokens": 26120
     },
     {
       "question_id": "a1eacc2a",
@@ -1388,7 +1391,7 @@
       "null_soft": 0.9,
       "null_union": 0.9,
       "n_records": 474,
-      "store_tokens": 104591
+      "store_tokens": 26151
     },
     {
       "question_id": "184da446",
@@ -1399,11 +1402,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 473,
-      "store_tokens": 103110
+      "store_tokens": 25776
     },
     {
       "question_id": "4d6b87c8",
@@ -1414,26 +1417,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 516,
-      "store_tokens": 101896
+      "store_tokens": 25476
     },
     {
       "question_id": "0f05491a",
       "question_type": "knowledge-update",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 489,
-      "store_tokens": 103278
+      "store_tokens": 25822
     },
     {
       "question_id": "08e075c7",
@@ -1444,11 +1447,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.5,
-      "null_union": 0.3,
+      "null_record": 0.2,
+      "null_soft": 0.2,
+      "null_union": 0.2,
       "n_records": 484,
-      "store_tokens": 104223
+      "store_tokens": 26058
     },
     {
       "question_id": "f9e8c073",
@@ -1463,7 +1466,7 @@
       "null_soft": 0.6,
       "null_union": 0.6,
       "n_records": 504,
-      "store_tokens": 104928
+      "store_tokens": 26231
     },
     {
       "question_id": "41698283",
@@ -1478,7 +1481,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 476,
-      "store_tokens": 103488
+      "store_tokens": 25867
     },
     {
       "question_id": "2698e78f",
@@ -1489,11 +1492,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.5,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.1,
+      "null_union": 0.0,
       "n_records": 478,
-      "store_tokens": 106045
+      "store_tokens": 26505
     },
     {
       "question_id": "b6019101",
@@ -1504,11 +1507,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 510,
-      "store_tokens": 105003
+      "store_tokens": 26251
     },
     {
       "question_id": "45dc21b6",
@@ -1519,11 +1522,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 485,
-      "store_tokens": 103482
+      "store_tokens": 25880
     },
     {
       "question_id": "5a4f22c0",
@@ -1534,11 +1537,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 487,
-      "store_tokens": 105394
+      "store_tokens": 26346
     },
     {
       "question_id": "6071bd76",
@@ -1553,7 +1556,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 482,
-      "store_tokens": 104064
+      "store_tokens": 26016
     },
     {
       "question_id": "e493bb7c",
@@ -1565,10 +1568,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.2,
-      "null_soft": 0.6,
+      "null_soft": 0.3,
       "null_union": 0.2,
       "n_records": 506,
-      "store_tokens": 105894
+      "store_tokens": 26478
     },
     {
       "question_id": "618f13b2",
@@ -1579,11 +1582,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 506,
-      "store_tokens": 104897
+      "store_tokens": 26222
     },
     {
       "question_id": "72e3ee87",
@@ -1594,11 +1597,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 496,
-      "store_tokens": 103395
+      "store_tokens": 25848
     },
     {
       "question_id": "c4ea545c",
@@ -1609,11 +1612,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 490,
-      "store_tokens": 104085
+      "store_tokens": 26016
     },
     {
       "question_id": "01493427",
@@ -1624,11 +1627,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 487,
-      "store_tokens": 103715
+      "store_tokens": 25925
     },
     {
       "question_id": "6a27ffc2",
@@ -1639,11 +1642,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 493,
-      "store_tokens": 103007
+      "store_tokens": 25753
     },
     {
       "question_id": "2133c1b5",
@@ -1655,10 +1658,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.1,
-      "null_soft": 0.4,
+      "null_soft": 0.2,
       "null_union": 0.1,
       "n_records": 523,
-      "store_tokens": 104350
+      "store_tokens": 26087
     },
     {
       "question_id": "18bc8abd",
@@ -1669,11 +1672,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.4,
-      "null_soft": 0.7,
-      "null_union": 0.4,
+      "null_record": 0.2,
+      "null_soft": 0.3,
+      "null_union": 0.2,
       "n_records": 436,
-      "store_tokens": 102003
+      "store_tokens": 25508
     },
     {
       "question_id": "db467c8c",
@@ -1685,10 +1688,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.2,
-      "null_soft": 0.7,
+      "null_soft": 0.5,
       "null_union": 0.2,
       "n_records": 475,
-      "store_tokens": 103799
+      "store_tokens": 25946
     },
     {
       "question_id": "7a87bd0c",
@@ -1700,25 +1703,25 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.0,
-      "null_soft": 0.6,
+      "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 506,
-      "store_tokens": 104630
+      "store_tokens": 26157
     },
     {
       "question_id": "e61a7584",
       "question_type": "knowledge-update",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.6,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.4,
+      "null_union": 0.1,
       "n_records": 496,
-      "store_tokens": 104299
+      "store_tokens": 26077
     },
     {
       "question_id": "1cea1afa",
@@ -1729,11 +1732,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 1.0,
-      "null_soft": 1.0,
-      "null_union": 1.0,
+      "null_record": 0.9,
+      "null_soft": 0.9,
+      "null_union": 0.9,
       "n_records": 485,
-      "store_tokens": 105269
+      "store_tokens": 26316
     },
     {
       "question_id": "ed4ddc30",
@@ -1744,11 +1747,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 543,
-      "store_tokens": 104112
+      "store_tokens": 26036
     },
     {
       "question_id": "8fb83627",
@@ -1763,7 +1766,7 @@
       "null_soft": 0.7,
       "null_union": 0.7,
       "n_records": 485,
-      "store_tokens": 103203
+      "store_tokens": 25801
     },
     {
       "question_id": "b01defab",
@@ -1774,11 +1777,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 503,
-      "store_tokens": 105436
+      "store_tokens": 26365
     },
     {
       "question_id": "22d2cb42",
@@ -1789,26 +1792,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1111111111111111,
+      "null_record": 0.0,
       "null_soft": 0.0,
-      "null_union": 0.1111111111111111,
+      "null_union": 0.0,
       "n_records": 473,
-      "store_tokens": 103188
+      "store_tokens": 25814
     },
     {
       "question_id": "0e4e4c46",
       "question_type": "knowledge-update",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.5,
-      "null_union": 0.1,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.0,
+      "null_soft": 0.2,
+      "null_union": 0.0,
       "n_records": 481,
-      "store_tokens": 104227
+      "store_tokens": 26059
     },
     {
       "question_id": "4b24c848",
@@ -1823,7 +1826,7 @@
       "null_soft": 0.8,
       "null_union": 0.8,
       "n_records": 514,
-      "store_tokens": 104202
+      "store_tokens": 26050
     },
     {
       "question_id": "7e974930",
@@ -1838,7 +1841,7 @@
       "null_soft": 0.9,
       "null_union": 0.9,
       "n_records": 502,
-      "store_tokens": 102437
+      "store_tokens": 25603
     },
     {
       "question_id": "603deb26",
@@ -1849,11 +1852,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 472,
-      "store_tokens": 105650
+      "store_tokens": 26409
     },
     {
       "question_id": "59524333",
@@ -1864,11 +1867,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.3,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 528,
-      "store_tokens": 102724
+      "store_tokens": 25679
     },
     {
       "question_id": "5831f84d",
@@ -1879,11 +1882,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.5,
+      "null_soft": 0.5,
+      "null_union": 0.5,
       "n_records": 422,
-      "store_tokens": 103070
+      "store_tokens": 25762
     },
     {
       "question_id": "eace081b",
@@ -1894,11 +1897,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.7,
-      "null_soft": 0.7,
-      "null_union": 0.7,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 489,
-      "store_tokens": 106088
+      "store_tokens": 26521
     },
     {
       "question_id": "affe2881",
@@ -1909,11 +1912,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 484,
-      "store_tokens": 104315
+      "store_tokens": 26076
     },
     {
       "question_id": "50635ada",
@@ -1925,10 +1928,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.2,
-      "null_soft": 0.7,
+      "null_soft": 0.4,
       "null_union": 0.2,
       "n_records": 531,
-      "store_tokens": 105258
+      "store_tokens": 26308
     },
     {
       "question_id": "e66b632c",
@@ -1943,7 +1946,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 506,
-      "store_tokens": 104715
+      "store_tokens": 26181
     },
     {
       "question_id": "0ddfec37",
@@ -1954,11 +1957,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 483,
-      "store_tokens": 102414
+      "store_tokens": 25610
     },
     {
       "question_id": "cc5ded98",
@@ -1970,10 +1973,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.0,
-      "null_soft": 0.5,
+      "null_soft": 0.1,
       "null_union": 0.0,
       "n_records": 493,
-      "store_tokens": 103559
+      "store_tokens": 25890
     },
     {
       "question_id": "dfde3500",
@@ -1984,26 +1987,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 480,
-      "store_tokens": 103874
+      "store_tokens": 25975
     },
     {
       "question_id": "69fee5aa",
       "question_type": "knowledge-update",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 483,
-      "store_tokens": 103835
+      "store_tokens": 25962
     },
     {
       "question_id": "7401057b",
@@ -2014,11 +2017,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 1.0,
-      "null_soft": 1.0,
-      "null_union": 1.0,
+      "null_record": 0.6,
+      "null_soft": 0.6,
+      "null_union": 0.6,
       "n_records": 446,
-      "store_tokens": 102825
+      "store_tokens": 25707
     },
     {
       "question_id": "cf22b7bf",
@@ -2030,10 +2033,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.2,
-      "null_soft": 0.8,
+      "null_soft": 0.2,
       "null_union": 0.2,
       "n_records": 550,
-      "store_tokens": 103591
+      "store_tokens": 25898
     },
     {
       "question_id": "a2f3aa27",
@@ -2044,11 +2047,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 460,
-      "store_tokens": 106153
+      "store_tokens": 26534
     },
     {
       "question_id": "c7dc5443",
@@ -2059,11 +2062,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.7,
-      "null_union": 0.2,
+      "null_record": 0.0,
+      "null_soft": 0.2,
+      "null_union": 0.0,
       "n_records": 478,
-      "store_tokens": 105154
+      "store_tokens": 26293
     },
     {
       "question_id": "06db6396",
@@ -2074,11 +2077,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 479,
-      "store_tokens": 105101
+      "store_tokens": 26292
     },
     {
       "question_id": "3ba21379",
@@ -2089,11 +2092,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1111111111111111,
+      "null_record": 0.0,
       "null_soft": 0.0,
-      "null_union": 0.1111111111111111,
+      "null_union": 0.0,
       "n_records": 431,
-      "store_tokens": 103117
+      "store_tokens": 25779
     },
     {
       "question_id": "9bbe84a2",
@@ -2105,10 +2108,10 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.3,
-      "null_soft": 0.6,
+      "null_soft": 0.3,
       "null_union": 0.3,
       "n_records": 459,
-      "store_tokens": 103657
+      "store_tokens": 25915
     },
     {
       "question_id": "10e09553",
@@ -2119,11 +2122,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.8,
-      "null_soft": 0.8,
-      "null_union": 0.8,
+      "null_record": 0.7,
+      "null_soft": 0.7,
+      "null_union": 0.7,
       "n_records": 472,
-      "store_tokens": 103003
+      "store_tokens": 25748
     },
     {
       "question_id": "dad224aa",
@@ -2134,11 +2137,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.7,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.4,
+      "null_union": 0.1,
       "n_records": 521,
-      "store_tokens": 104855
+      "store_tokens": 26211
     },
     {
       "question_id": "ba61f0b9",
@@ -2149,11 +2152,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 454,
-      "store_tokens": 105188
+      "store_tokens": 26293
     },
     {
       "question_id": "42ec0761",
@@ -2164,11 +2167,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.9,
-      "null_soft": 0.9,
-      "null_union": 0.9,
+      "null_record": 0.8,
+      "null_soft": 0.8,
+      "null_union": 0.8,
       "n_records": 521,
-      "store_tokens": 103167
+      "store_tokens": 25791
     },
     {
       "question_id": "5c40ec5b",
@@ -2183,7 +2186,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 479,
-      "store_tokens": 103758
+      "store_tokens": 25942
     },
     {
       "question_id": "c6853660",
@@ -2198,7 +2201,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 477,
-      "store_tokens": 104567
+      "store_tokens": 26135
     },
     {
       "question_id": "26bdc477",
@@ -2209,11 +2212,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.6,
-      "null_soft": 0.6,
-      "null_union": 0.6,
+      "null_record": 0.4,
+      "null_soft": 0.4,
+      "null_union": 0.4,
       "n_records": 498,
-      "store_tokens": 104760
+      "store_tokens": 26191
     },
     {
       "question_id": "0977f2af",
@@ -2224,26 +2227,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.8,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.3,
+      "null_union": 0.0,
       "n_records": 484,
-      "store_tokens": 104028
+      "store_tokens": 26011
     },
     {
       "question_id": "89941a94",
       "question_type": "knowledge-update",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
+      "survival_record": false,
       "survival_soft": false,
-      "survival_union": true,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 523,
-      "store_tokens": 104556
+      "store_tokens": 26105
     },
     {
       "question_id": "07741c45",
@@ -2258,7 +2261,7 @@
       "null_soft": 0.0,
       "null_union": 0.1111111111111111,
       "n_records": 527,
-      "store_tokens": 101805
+      "store_tokens": 25444
     },
     {
       "question_id": "7161e7e2",
@@ -2273,7 +2276,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 550,
-      "store_tokens": 103554
+      "store_tokens": 25883
     },
     {
       "question_id": "c4f10528",
@@ -2284,11 +2287,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 485,
-      "store_tokens": 104817
+      "store_tokens": 26208
     },
     {
       "question_id": "89527b6b",
@@ -2297,13 +2300,13 @@
       "gold_len_bucket": "4+",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.0,
-      "null_soft": 0.1,
+      "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 467,
-      "store_tokens": 105097
+      "store_tokens": 26274
     },
     {
       "question_id": "e9327a54",
@@ -2312,13 +2315,13 @@
       "gold_len_bucket": "4+",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 533,
-      "store_tokens": 103159
+      "store_tokens": 25787
     },
     {
       "question_id": "4c36ccef",
@@ -2329,56 +2332,56 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 521,
-      "store_tokens": 104946
+      "store_tokens": 26243
     },
     {
       "question_id": "6ae235be",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 454,
-      "store_tokens": 103634
+      "store_tokens": 25906
     },
     {
       "question_id": "7e00a6cb",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.1,
-      "null_union": 0.1,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 564,
-      "store_tokens": 103232
+      "store_tokens": 25803
     },
     {
       "question_id": "1903aded",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.2,
       "null_soft": 0.2,
       "null_union": 0.2,
       "n_records": 486,
-      "store_tokens": 103660
+      "store_tokens": 25916
     },
     {
       "question_id": "ceb54acb",
@@ -2393,37 +2396,37 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 493,
-      "store_tokens": 104092
+      "store_tokens": 26026
     },
     {
       "question_id": "f523d9fe",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.2,
-      "null_soft": 0.2,
+      "null_soft": 0.1,
       "null_union": 0.2,
       "n_records": 484,
-      "store_tokens": 105789
+      "store_tokens": 26448
     },
     {
       "question_id": "0e5e2d1a",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.1,
-      "null_union": 0.2,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.0,
+      "null_union": 0.1,
       "n_records": 450,
-      "store_tokens": 104684
+      "store_tokens": 26173
     },
     {
       "question_id": "fea54f57",
@@ -2434,11 +2437,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 527,
-      "store_tokens": 103850
+      "store_tokens": 25955
     },
     {
       "question_id": "cc539528",
@@ -2450,10 +2453,10 @@
       "survival_soft": false,
       "survival_union": false,
       "null_record": 0.0,
-      "null_soft": 0.1,
+      "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 496,
-      "store_tokens": 104015
+      "store_tokens": 26007
     },
     {
       "question_id": "dc439ea3",
@@ -2464,11 +2467,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_record": 0.2,
+      "null_soft": 0.1,
+      "null_union": 0.2,
       "n_records": 476,
-      "store_tokens": 104676
+      "store_tokens": 26175
     },
     {
       "question_id": "18dcd5a5",
@@ -2479,11 +2482,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 503,
-      "store_tokens": 104828
+      "store_tokens": 26205
     },
     {
       "question_id": "488d3006",
@@ -2492,43 +2495,43 @@
       "gold_len_bucket": "2-3",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.1,
       "null_soft": 0.2,
       "null_union": 0.1,
       "n_records": 509,
-      "store_tokens": 105466
+      "store_tokens": 26371
     },
     {
       "question_id": "8464fc84",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 484,
-      "store_tokens": 103939
+      "store_tokens": 25982
     },
     {
       "question_id": "8aef76bc",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 492,
-      "store_tokens": 104856
+      "store_tokens": 26210
     },
     {
       "question_id": "71a3fd6b",
@@ -2543,22 +2546,22 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 439,
-      "store_tokens": 104676
+      "store_tokens": 26174
     },
     {
       "question_id": "2bf43736",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 478,
-      "store_tokens": 103052
+      "store_tokens": 25759
     },
     {
       "question_id": "70b3e69b",
@@ -2569,11 +2572,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
-      "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 495,
-      "store_tokens": 104950
+      "store_tokens": 26227
     },
     {
       "question_id": "8752c811",
@@ -2588,37 +2591,37 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 493,
-      "store_tokens": 102893
+      "store_tokens": 25712
     },
     {
       "question_id": "3249768e",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.5,
-      "null_soft": 0.5,
-      "null_union": 0.5,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.3,
+      "null_soft": 0.3,
+      "null_union": 0.3,
       "n_records": 475,
-      "store_tokens": 105327
+      "store_tokens": 26321
     },
     {
       "question_id": "1b9b7252",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.1,
-      "null_union": 0.2,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.0,
+      "null_union": 0.1,
       "n_records": 466,
-      "store_tokens": 103293
+      "store_tokens": 25823
     },
     {
       "question_id": "1568498a",
@@ -2629,11 +2632,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.0,
+      "null_soft": 0.1,
+      "null_union": 0.0,
       "n_records": 478,
-      "store_tokens": 102653
+      "store_tokens": 25658
     },
     {
       "question_id": "6222b6eb",
@@ -2642,58 +2645,58 @@
       "gold_len_bucket": "4+",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 497,
-      "store_tokens": 105544
+      "store_tokens": 26382
     },
     {
       "question_id": "e8a79c70",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.1,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 483,
-      "store_tokens": 105762
+      "store_tokens": 26451
     },
     {
       "question_id": "d596882b",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.3,
+      "null_union": 0.1,
       "n_records": 474,
-      "store_tokens": 104620
+      "store_tokens": 26162
     },
     {
       "question_id": "e3fc4d6e",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 519,
-      "store_tokens": 103412
+      "store_tokens": 25856
     },
     {
       "question_id": "51b23612",
@@ -2708,7 +2711,7 @@
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 481,
-      "store_tokens": 101980
+      "store_tokens": 25498
     },
     {
       "question_id": "3e321797",
@@ -2719,11 +2722,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.0,
+      "null_union": 0.1,
       "n_records": 490,
-      "store_tokens": 105963
+      "store_tokens": 26494
     },
     {
       "question_id": "e982271f",
@@ -2735,25 +2738,25 @@
       "survival_soft": true,
       "survival_union": true,
       "null_record": 0.1,
-      "null_soft": 0.1,
+      "null_soft": 0.0,
       "null_union": 0.1,
       "n_records": 589,
-      "store_tokens": 104772
+      "store_tokens": 26191
     },
     {
       "question_id": "fca762bc",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 459,
-      "store_tokens": 104862
+      "store_tokens": 26226
     },
     {
       "question_id": "7a8d0b71",
@@ -2764,11 +2767,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.0,
+      "null_soft": 0.1,
+      "null_union": 0.0,
       "n_records": 489,
-      "store_tokens": 104592
+      "store_tokens": 26151
     },
     {
       "question_id": "a40e080f",
@@ -2777,28 +2780,28 @@
       "gold_len_bucket": "4+",
       "in_primary": true,
       "survival_record": false,
-      "survival_soft": true,
+      "survival_soft": false,
       "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 529,
-      "store_tokens": 104935
+      "store_tokens": 26236
     },
     {
       "question_id": "8b9d4367",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 537,
-      "store_tokens": 103743
+      "store_tokens": 25925
     },
     {
       "question_id": "5809eb10",
@@ -2809,11 +2812,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 606,
-      "store_tokens": 103779
+      "store_tokens": 25938
     },
     {
       "question_id": "4388e9dd",
@@ -2828,7 +2831,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 477,
-      "store_tokens": 103832
+      "store_tokens": 25963
     },
     {
       "question_id": "4baee567",
@@ -2839,11 +2842,11 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.1,
-      "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 514,
-      "store_tokens": 101848
+      "store_tokens": 25467
     },
     {
       "question_id": "561fabcd",
@@ -2854,26 +2857,26 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 495,
-      "store_tokens": 104347
+      "store_tokens": 26086
     },
     {
       "question_id": "b759caee",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.2,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.0,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.0,
       "n_records": 516,
-      "store_tokens": 104348
+      "store_tokens": 26086
     },
     {
       "question_id": "ac031881",
@@ -2884,11 +2887,11 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.1,
-      "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_record": 0.0,
+      "null_soft": 0.0,
+      "null_union": 0.0,
       "n_records": 529,
-      "store_tokens": 102702
+      "store_tokens": 25676
     },
     {
       "question_id": "28bcfaac",
@@ -2903,7 +2906,7 @@
       "null_soft": 0.1,
       "null_union": 0.1,
       "n_records": 500,
-      "store_tokens": 105373
+      "store_tokens": 26339
     },
     {
       "question_id": "16c90bf4",
@@ -2918,7 +2921,7 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 509,
-      "store_tokens": 102874
+      "store_tokens": 25719
     },
     {
       "question_id": "c8f1aeed",
@@ -2929,11 +2932,11 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
-      "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 504,
-      "store_tokens": 102749
+      "store_tokens": 25679
     },
     {
       "question_id": "eaca4986",
@@ -2948,22 +2951,22 @@
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 513,
-      "store_tokens": 103201
+      "store_tokens": 25786
     },
     {
       "question_id": "c7cf7dfd",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.2,
       "null_soft": 0.2,
       "null_union": 0.2,
       "n_records": 520,
-      "store_tokens": 102402
+      "store_tokens": 25595
     },
     {
       "question_id": "e48988bc",
@@ -2978,37 +2981,37 @@
       "null_soft": 0.3,
       "null_union": 0.3,
       "n_records": 530,
-      "store_tokens": 104818
+      "store_tokens": 26201
     },
     {
       "question_id": "1de5cff2",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "1",
       "in_primary": false,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
-      "null_record": 0.3,
-      "null_soft": 0.3,
-      "null_union": 0.3,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
+      "null_record": 0.1,
+      "null_soft": 0.1,
+      "null_union": 0.1,
       "n_records": 473,
-      "store_tokens": 105356
+      "store_tokens": 26334
     },
     {
       "question_id": "778164c6",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "4+",
       "in_primary": true,
-      "survival_record": true,
-      "survival_soft": true,
-      "survival_union": true,
+      "survival_record": false,
+      "survival_soft": false,
+      "survival_union": false,
       "null_record": 0.0,
       "null_soft": 0.0,
       "null_union": 0.0,
       "n_records": 542,
-      "store_tokens": 101074
+      "store_tokens": 25269
     }
   ]
 }

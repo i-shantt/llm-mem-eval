@@ -111,8 +111,10 @@ Restricted to golds of two or more normalised tokens: one-token answers match a 
 | write policy | store tokens | records | survival | null | corrected | 95% CI |
 |---|---|---|---|---|---|---|
 | verbatim_turn | 104,110 | 497 | 0.791 | 0.162 | **0.751** | [0.662, 0.835] |
+| tailk_50pct | 52,197 | 497 | 0.736 | 0.125 | **0.699** | [0.603, 0.790] |
 | leadk_50pct | 52,193 | 497 | 0.736 | 0.120 | **0.700** | [0.607, 0.791] |
 | truncated_recency_50pct | 52,053 | 253 | 0.545 | 0.108 | **0.490** | [0.391, 0.594] |
+| tailk_25pct | 26,027 | 497 | 0.582 | 0.079 | **0.546** | [0.447, 0.642] |
 | truncated_random_25pct_s1 | 26,026 | 129 | 0.400 | 0.080 | **0.348** | [0.250, 0.449] |
 | truncated_random_25pct_s2 | 26,026 | 130 | 0.309 | 0.086 | **0.244** | [0.151, 0.338] |
 | truncated_random_25pct_s0 | 26,026 | 130 | 0.345 | 0.075 | **0.292** | [0.199, 0.389] |
@@ -127,17 +129,19 @@ Paired against `verbatim_turn`, on the questions both scored. McNemar plus a pai
 
 | comparison | difference | 95% CI | McNemar p |
 |---|---|---|---|
-| truncated_recency_50pct vs verbatim_turn | -0.245 | [-0.327, -0.164] | 1.49e-08 |
-| truncated_recency_25pct vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
-| truncated_recency_10pct vs verbatim_turn | -0.609 | [-0.700, -0.518] | 1.36e-20 |
-| truncated_recency_5pct vs verbatim_turn | -0.673 | [-0.755, -0.582] | 1.06e-22 |
+| leadk_10pct vs verbatim_turn | -0.509 | [-0.600, -0.418] | 2.78e-17 |
+| leadk_25pct vs verbatim_turn | -0.227 | [-0.309, -0.155] | 5.96e-08 |
+| leadk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
+| leadk_5pct vs verbatim_turn | -0.655 | [-0.736, -0.564] | 4.24e-22 |
+| tailk_25pct vs verbatim_turn | -0.209 | [-0.291, -0.136] | 2.38e-07 |
+| tailk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
 | truncated_random_25pct_s0 vs verbatim_turn | -0.445 | [-0.536, -0.355] | 3.55e-15 |
 | truncated_random_25pct_s1 vs verbatim_turn | -0.391 | [-0.482, -0.300] | 2.27e-13 |
 | truncated_random_25pct_s2 vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
-| leadk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
-| leadk_25pct vs verbatim_turn | -0.227 | [-0.309, -0.155] | 5.96e-08 |
-| leadk_10pct vs verbatim_turn | -0.509 | [-0.600, -0.418] | 2.78e-17 |
-| leadk_5pct vs verbatim_turn | -0.655 | [-0.736, -0.564] | 4.24e-22 |
+| truncated_recency_10pct vs verbatim_turn | -0.609 | [-0.700, -0.518] | 1.36e-20 |
+| truncated_recency_25pct vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
+| truncated_recency_50pct vs verbatim_turn | -0.245 | [-0.327, -0.164] | 1.49e-08 |
+| truncated_recency_5pct vs verbatim_turn | -0.673 | [-0.755, -0.582] | 1.06e-22 |
 
 ## End-to-end answer accuracy
 

@@ -41,8 +41,11 @@ def build_policy(spec: str) -> WritePolicy:
         seed = int(parts[3][1:]) if len(parts) > 3 and parts[3].startswith("s") else 0
         return TruncatedVerbatimPolicy(fraction=fraction, rule=rule, seed=seed)
 
-    if parts[0] == "leadk":
-        return ExtractiveSelectionPolicy(fraction=int(parts[1]) / 100)
+    if parts[0] in ("leadk", "tailk"):
+        return ExtractiveSelectionPolicy(
+            fraction=int(parts[1]) / 100,
+            rule="lead" if parts[0] == "leadk" else "tail",
+        )
 
     if spec.startswith("mem0"):
         # Imported here, not at module scope, so the package stays importable

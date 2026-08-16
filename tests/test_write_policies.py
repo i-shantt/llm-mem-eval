@@ -54,6 +54,7 @@ ALL_POLICIES = [
     TruncatedVerbatimPolicy(0.25, "random", seed=0),
     ExtractiveSelectionPolicy(0.5),
     ExtractiveSelectionPolicy(0.1),
+    ExtractiveSelectionPolicy(0.5, rule="tail"),
 ]
 
 
@@ -162,3 +163,34 @@ def test_build_policy_parses_specs() -> None:
     assert build_policy("leadk_10").fraction == 0.1
     with pytest.raises(ValueError):
         build_policy("nonsense_policy")
+
+
+def test_tail_k_selects_from_the_other_end_at_the_same_budget() -> None:
+    """The control that decides what the lead-k result means.
+
+    If lead-k wins on survival because breadth helps, tail-k should do about as
+    well. If it wins because people state facts at the start of a message, tail-k
+    collapses. The two arms must therefore differ only in which sentences
+    survive -- same budget, same number of records, same reading order.
+    """
+    ex = _example()
+    lead = ExtractiveSelectionPolicy(0.5, rule="lead").build(ex, CostLedger())
+    tail = ExtractiveSelectionPolicy(0.5, rule="tail").build(ex, CostLedger())
+
+    lead_tok = sum(count_tokens(u.text) for u in lead)
+    tail_tok = sum(count_tokens(u.text) for u in tail)
+    assert abs(lead_tok - tail_tok) / max(lead_tok, 1) < 0.15, "budgets diverged"
+    assert len(lead) == len(tail), "different number of records"
+    assert [u.text for u in lead] != [u.text for u in tail], "rule had no effect"
+
+    source = {u.unit_id: u.text for u in ex.units("turn")}
+    for u in tail:
+        original = source[u.provenance[0]]
+        assert not original.startswith(u.text.split(".")[0]), \
+            "tail-k kept the turn's opening sentence"
+
+
+def test_build_policy_parses_the_tail_rule() -> None:
+    assert build_policy("tailk_25").rule == "tail"
+    assert build_policy("leadk_25").rule == "lead"
+    assert build_policy("tailk_25").name == "tailk_25pct"

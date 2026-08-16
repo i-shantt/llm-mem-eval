@@ -87,15 +87,18 @@ annotator's labels with no second rater, offered as an explanation of a measured
 number rather than as validated annotation; each is checkable against the quoted
 evidence in seconds.
 
-**What follows from this, stated non-adversarially.** Mem0 reports 97.0 on the
-temporal-reasoning category at top-k 200. This audit says 27.1% of
-temporal-reasoning answers are verbatim-present in their evidence. Those are
-perfectly compatible — and that is the point. A high score on that category
-*cannot* be explained by retrieving the right span, because for most of those
-questions there is no right span. Whatever is producing it is reading and
-computing, not retrieving. An aggregate retrieval metric over all 500 questions
-mixes two tasks that behave nothing alike, and this repo's own headline
-`any_hit@10` of 0.907 is subject to exactly the same caveat.
+**What follows from this, stated non-adversarially.** Mem0's managed platform
+reports **97.0 (129/133) on the temporal-reasoning category at top-k 200**
+([their benchmark repo](https://github.com/mem0ai/memory-benchmarks); the same
+README notes those scores are the managed platform, not the open-source SDK).
+This audit says 27.1% of temporal-reasoning answers are verbatim-present in their
+evidence. Those two facts are perfectly compatible — and that is the point. A
+high score on that category *cannot* be explained by retrieving the right span,
+because for most of those questions there is no right span. Whatever produces it
+is reading and computing over retrieved context, not locating an answer. So an
+aggregate retrieval metric over all 500 questions mixes two tasks that behave
+nothing alike, and this repo's own headline `any_hit@10` of 0.907 is subject to
+exactly the same caveat.
 
 One bookkeeping note: this audit covers all 500 questions, while the retrieval
 and end-to-end arms below are a stratified n=100. They are different question
@@ -291,6 +294,14 @@ The headline uses the smallest, because its extraction model matches the prices
 used everywhere else here, and because quoting the largest would be picking the
 number that flatters this repo.
 
+**All three rows already assume a cheap extractor.** Every one is a small hosted
+model — gpt-4o-mini or gpt-4.1-mini — not a frontier one, which matches what Mem0
+OSS actually defaults to (`gpt-5-mini`, `mem0/llms/openai.py`). So "the write path
+is cheap because the extraction model is cheap" is an assumption built into these
+figures rather than an objection to them. The write path is not expensive because
+each call is expensive; it is expensive because there are many calls, each
+carrying a large fixed prompt — which is the point of the batching table above.
+
 **What "read, per query" counts.** Retrieved context only — not the prompt
 template, the date line or the question. Mem0's 1,764 is the same quantity, its
 Table 2 "memory tokens" column, so the two are like-for-like. This repo's
@@ -399,17 +410,28 @@ questions remain) and reports chance-corrected survival**, `(s − null) / (1 �
 bootstrapped as the whole ratio rather than the numerator alone. These choices
 were fixed on the control arm before any other store existed.
 
+That containment rewards length is not a new suspicion here — [the length-decay
+table below](#containment-grading-rewards-length) already showed the 14B accuracy
+lead decaying to zero once answers are capped at eight words. Survival compares
+~210-token turns against much shorter records, so it is the same bias with a
+larger lever, which is why the budget-matched controls exist at all.
+
 ### What the controls show
 
 Every arm here is verbatim text and calls no LLM. They differ only in how a fixed
-token budget is spent: `truncated` keeps **some turns, complete**; `leadk` keeps
-**every turn, shortened** to its lead sentences. Same budget, opposite strategy.
+token budget is spent: `truncate` keeps **some turns, complete**; `lead-k` keeps
+**every turn, shortened** to its opening sentences. Same budget, opposite
+strategy. `tail-k` is the control that says which of those two facts is doing the
+work — it keeps the same number of sentences from every turn, counted from the
+*end* instead of the start.
 
 | write policy | store tokens | records | survival | null | **corrected** |
 |---|---|---|---|---|---|
 | verbatim (whole conversation) | 104,110 | 497 | 0.791 | 0.162 | **0.751** |
 | lead-k @ 50% | 52,193 | 497 | 0.736 | 0.120 | **0.700** |
+| tail-k @ 50% | 52,197 | 497 | 0.736 | 0.125 | **0.699** |
 | truncate-recent @ 50% | 52,053 | 253 | 0.545 | 0.108 | **0.490** |
+| tail-k @ 25% | 26,027 | 497 | 0.582 | 0.079 | **0.546** |
 | lead-k @ 25% | 26,020 | 497 | 0.564 | 0.081 | **0.525** |
 | truncate-random @ 25% (3 seeds) | 26,026 | ~130 | 0.309–0.400 | 0.080 | **0.244–0.348** |
 | truncate-recent @ 25% | 26,026 | 128 | 0.309 | 0.065 | **0.261** |
@@ -422,32 +444,59 @@ bootstrap — the same functions the memory-lift ablation uses):
 | policy | survival difference vs verbatim | 95% CI | p |
 |---|---|---|---|
 | **lead-k @ 50%** | **−0.055** | [−0.100, −0.018] | 0.031 |
+| **tail-k @ 50%** | **−0.055** | [−0.100, −0.018] | 0.031 |
 | truncate-recent @ 50% | −0.245 | [−0.327, −0.164] | 1.5e-08 |
+| tail-k @ 25% | −0.209 | [−0.291, −0.136] | 2.4e-07 |
 | lead-k @ 25% | −0.227 | [−0.309, −0.155] | 6.0e-08 |
 | truncate-recent @ 25% | −0.482 | [−0.573, −0.391] | 2.2e-16 |
 
-Three things follow.
+The two 50% rows are identical because both arms got exactly 81 of 110 with the
+same discordant pairs against verbatim (b=0, c=6) — not a copy-paste error. That
+`b=0` is itself a sanity check worth stating: no truncated store ever preserves an
+answer the full conversation does not, which is what "these stores are subsets"
+has to mean.
+
+Four things follow.
 
 1. **How the budget is spent matters more than how big it is.** At an identical
-   50% budget, keeping every turn's lead sentences loses 5.5 points of survival
-   against the full conversation; keeping half the turns intact loses 24.5. Lead-k
-   at **25%** (0.525 corrected) beats truncation at **50%** (0.490) — better
-   survival for half the tokens.
-2. **A recency prior does not help on these questions.** Truncate-recent at 25%
+   50% budget, keeping every turn's opening sentences loses 5.5 points of
+   survival against the full conversation; keeping half the turns intact loses
+   24.5. The gap survives the generous variant too (0.728 vs 0.560 corrected
+   under `soft`), which is the test it has to pass.
+
+   A tempting stronger claim does **not** survive it. Lead-k at 25% beats
+   truncation at 50% under strict containment (0.525 vs 0.490) — better survival
+   for half the tokens — but under `soft` the ordering reverses (0.541 vs 0.560).
+   One budget-halving is about where the two effects cancel, so that version is
+   not claimed.
+
+2. **It is breadth that helps, not answers appearing early in a message.** Those
+   two explanations predict the same lead-k number, so lead-k alone cannot
+   separate them — which is what tail-k is for. Taking the *closing* sentences of
+   every turn instead scores **0.699 against lead-k's 0.700** at 50%, and 0.546
+   against 0.525 at 25%: indistinguishable at both budgets, on stores matched to
+   within 4 tokens of each other. Meanwhile truncation at the same 50% budget
+   sits at 0.490. Which sentences you keep barely matters; *how many turns you
+   touch* matters a great deal.
+
+3. **A recency prior does not help on these questions.** Truncate-recent at 25%
    (0.261) sits inside the spread of three random seeds (0.244–0.348). That
    ±0.05 seed spread is the honest noise floor for this whole table, and the
-   lead-k-versus-truncation gap at the same budget is about five times it.
-3. **Compression alone is expensive, but not the way a naive reading suggests.**
+   breadth-versus-depth gap at the same budget is about five times it.
+
+4. **Compression alone is expensive, but not the way a naive reading suggests.**
    Survival does not fall proportionally with budget — it falls much faster for
    deep-and-narrow stores and much slower for broad-and-shallow ones.
 
 ### What this predicts for an LLM extraction store, and why it is not measured here
 
-An extracted memory store is broad and shallow: many short records covering the
-whole conversation, which is structurally what `leadk` is. So this table predicts
-that a well-behaved extraction store should sit **near the lead-k curve**, and
-that most of its survival loss would be explained by *being small*, not by the
-LLM having rewritten anything.
+An extracted memory store is broad and shallow — many short records covering the
+whole conversation — which is structurally what the lead-k and tail-k arms are.
+And since those two agree with each other while both beat truncation, the thing
+that predicts survival at a given budget is *coverage*, not which words survive.
+So this table predicts a well-behaved extraction store should sit **near the
+breadth curve**, with most of its survival loss explained by being small rather
+than by the LLM having rewritten anything.
 
 That prediction is recorded before the fact deliberately, because it is the
 outcome favourable to extraction-based systems. If a real extraction arm lands on
@@ -642,6 +691,14 @@ The answer lived in a turn the benchmark never labelled as evidence. So
 whatever the evidence labelling missed. Any paper reporting a gold-context arm as
 a ceiling is making this mistake.
 
+**This case is not a one-off, and the benchmark audit measures how common it is.**
+Over the same 184 questions the survival metric uses, the gold answer appears
+verbatim somewhere in the haystack for 161 of them but inside a labelled evidence
+turn for only 152 — so **9 questions (4.9%) have their answer in a turn nobody
+labelled**. `Target` is one of the nine. The audit's `outside_evidence_only`
+column found this by counting; the oracle arm found it by failing. Two
+independent routes to the same defect, which is the reason to trust either.
+
 ### Containment grading rewards length
 
 Answer length rises with model size (median 14 → 32 words from 1.5B to 14B), and
@@ -705,7 +762,7 @@ memllm/
     base.py                  WritePolicy protocol + store contracts
     verbatim.py              store the turns unchanged (the ceiling control)
     truncated.py             verbatim turns to a fraction of the token budget
-    extractive.py            lead-k sentences per turn: breadth, not depth
+    extractive.py            lead-k / tail-k sentences per turn: breadth, not depth
     mem0_adapter.py          Mem0 OSS v3 ingestion -- committed, NOT run
   eval/
     retrieval_metrics.py     judge-free metrics from has_answer labels
@@ -763,7 +820,7 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
     verbatim_turn truncated_recency_50 truncated_recency_25 \
     truncated_recency_10 truncated_recency_5 \
     truncated_random_25_s0 truncated_random_25_s1 truncated_random_25_s2 \
-    leadk_50 leadk_25 leadk_10 leadk_5
+    leadk_50 leadk_25 leadk_10 leadk_5 tailk_50 tailk_25
 
 # retrieval + the cost figure
 ./.venv/bin/python scripts/run_retrieval_eval.py --limit 100 \
