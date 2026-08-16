@@ -1,0 +1,17 @@
+{
+  "data": "data/raw/longmemeval_s",
+  "granularity": "session",
+  "n_examples": 100,
+  "n_units": 4811,
+  "tokens_per_unit": {
+    "mean": 2163.5406360424026,
+    "median": 2160,
+    "p90": 3594,
+    "max": 7374
+  },
+  "tokens_per_example_full_context": {
+    "mean": 104087.94,
+    "median": 104150.0
+  },
+  "encoding": "tiktoken cl100k_base"
+}

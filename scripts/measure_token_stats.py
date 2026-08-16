@@ -1,8 +1,13 @@
 """Measure token statistics of the benchmark so the cost figure uses measured
 inputs rather than assumed ones.
 
-    python scripts/measure_token_stats.py --limit 40 > /dev/null
-    # writes results/token_stats.json
+    python scripts/measure_token_stats.py --limit 100
+    # writes results/token_stats_turn.json
+
+The output filename carries the granularity. It used to default to a single
+`token_stats.json` for every granularity, so measuring sessions overwrote the
+turn statistics that `make_cost_curve.py` reads -- silently repricing the
+headline figure with units 10x larger than the ones it reports.
 """
 
 from __future__ import annotations
@@ -25,8 +30,11 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--granularity", default="turn")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out", default="results/token_stats.json")
+    ap.add_argument("--out", default=None,
+                   help="defaults to results/token_stats_<granularity>.json")
     args = ap.parse_args()
+    if args.out is None:
+        args.out = f"results/token_stats_{args.granularity}.json"
 
     examples = stratified_subset(
         load_examples(args.data), args.limit, seed=args.seed

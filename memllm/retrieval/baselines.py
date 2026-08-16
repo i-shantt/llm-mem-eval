@@ -1,8 +1,17 @@
 """Reference points that bound the frontier.
 
-OracleRetriever   -- upper bound on retrieval; any system that beats it has a bug
+OracleRetriever   -- retrieves exactly the gold evidence turns
 RecencyRetriever  -- "just keep the last N turns", the cheapest thing that works
 RandomRetriever   -- lower bound; distinguishes real retrieval from lucky priors
+NoMemoryRetriever -- retrieves nothing; the closed-book floor
+
+Note what the oracle is and is not. It is a ceiling for the *retrieval metrics*
+by construction, since it returns every evidence unit and nothing can score
+higher than 1.000. It is **not** an end-to-end ceiling: it hands the model only
+the turns LongMemEval labelled `has_answer`, which is a smaller prompt than a
+real retriever builds on most questions, so a retriever that also picks up an
+unlabelled turn carrying the answer can beat it -- and does. See "Oracle is not
+a ceiling" in RESULTS.md.
 """
 
 from __future__ import annotations
@@ -15,9 +24,13 @@ from .base import Hit
 
 
 class OracleRetriever:
-    """Returns gold evidence first, then arbitrary filler. Ceiling for the
-    retrieval metric, and the arm that isolates 'can the model answer *given*
-    perfect retrieval' from 'can we find the right memory'."""
+    """Returns gold evidence first, then arbitrary filler.
+
+    Isolates 'can the model answer *given* the labelled evidence' from 'can we
+    find the right memory'. Scores 1.000 on every retrieval metric by
+    construction; see the module docstring for why that does not make it an
+    end-to-end upper bound.
+    """
 
     name = "oracle"
 

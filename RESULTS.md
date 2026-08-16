@@ -31,26 +31,26 @@ Gold labels are LongMemEval's per-turn `has_answer` flags, so these numbers invo
 
 The write path is paid once per conversation; the read path is paid per query. Published memory systems report the read path only.
 
-| system | write ms/conv | write LLM calls | write LLM tokens | read ms/query | read LLM calls |
-|---|---|---|---|---|---|
-| random | 0 | 0.0 | 0 | 0 | 0.0 |
-| random | 0 | 0.0 | 0 | 0 | 0.0 |
-| random | 0 | 0.0 | 0 | 0 | 0.0 |
-| recency | 0 | 0.0 | 0 | 0 | 0.0 |
-| recency | 0 | 0.0 | 0 | 1 | 0.0 |
-| recency | 0 | 0.0 | 0 | 0 | 0.0 |
-| bm25 | 36 | 0.0 | 0 | 0 | 0.0 |
-| bm25 | 40 | 0.0 | 0 | 2 | 0.0 |
-| bm25 | 6 | 0.0 | 0 | 1 | 0.0 |
-| dense | 663 | 0.0 | 0 | 11 | 0.0 |
-| dense | 3020 | 0.0 | 0 | 11 | 0.0 |
-| dense | 1311 | 0.0 | 0 | 11 | 0.0 |
-| hybrid | 699 | 0.0 | 0 | 12 | 0.0 |
-| hybrid | 3075 | 0.0 | 0 | 14 | 0.0 |
-| hybrid | 1311 | 0.0 | 0 | 12 | 0.0 |
-| oracle | 0 | 0.0 | 0 | 0 | 0.0 |
-| oracle | 0 | 0.0 | 0 | 0 | 0.0 |
-| oracle | 0 | 0.0 | 0 | 0 | 0.0 |
+| system | granularity | write ms/conv | write LLM calls | write LLM tokens | read ms/query | read LLM calls |
+|---|---|---|---|---|---|---|
+| random | session | 0 | 0.0 | 0 | 0 | 0.0 |
+| random | turn | 0 | 0.0 | 0 | 0 | 0.0 |
+| random | user_turn | 0 | 0.0 | 0 | 0 | 0.0 |
+| recency | session | 0 | 0.0 | 0 | 0 | 0.0 |
+| recency | turn | 0 | 0.0 | 0 | 1 | 0.0 |
+| recency | user_turn | 0 | 0.0 | 0 | 0 | 0.0 |
+| bm25 | session | 36 | 0.0 | 0 | 0 | 0.0 |
+| bm25 | turn | 40 | 0.0 | 0 | 2 | 0.0 |
+| bm25 | user_turn | 6 | 0.0 | 0 | 1 | 0.0 |
+| dense | session | 663 | 0.0 | 0 | 11 | 0.0 |
+| dense | turn | 3020 | 0.0 | 0 | 11 | 0.0 |
+| dense | user_turn | 1311 | 0.0 | 0 | 11 | 0.0 |
+| hybrid | session | 699 | 0.0 | 0 | 12 | 0.0 |
+| hybrid | turn | 3075 | 0.0 | 0 | 14 | 0.0 |
+| hybrid | user_turn | 1311 | 0.0 | 0 | 12 | 0.0 |
+| oracle | session | 0 | 0.0 | 0 | 0 | 0.0 |
+| oracle | turn | 0 | 0.0 | 0 | 0 | 0.0 |
+| oracle | user_turn | 0 | 0.0 | 0 | 0 | 0.0 |
 
 ## What a memory unit should be
 

@@ -133,7 +133,8 @@ class DenseRetriever:
         ledger: CostLedger,
         question_date: str | None = None,
     ) -> list[Hit]:
-        assert self._emb is not None, "index() must be called first"
+        if self._emb is None:
+            raise RuntimeError("index() must be called before search()")
         q = BGE_QUERY_PREFIX + query if self._use_prefix else query
         with ledger.timer("read"):
             qv = self._encode([q])[0]
@@ -144,6 +145,7 @@ class DenseRetriever:
 
     def scores_for(self, query: str) -> np.ndarray:
         """Full score vector, for use by the hybrid retriever."""
-        assert self._emb is not None
+        if self._emb is None:
+            raise RuntimeError("index() must be called before scores_for()")
         q = BGE_QUERY_PREFIX + query if self._use_prefix else query
         return self._emb @ self._encode([q])[0]

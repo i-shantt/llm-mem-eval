@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from memllm.cost import CostLedger, count_tokens  # noqa: E402
+from memllm.cost import CostLedger  # noqa: E402
 from memllm.data.loader import (  # noqa: E402
     load_examples,
     stratified_subset,

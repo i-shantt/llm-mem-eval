@@ -6,8 +6,6 @@ compares against only in its weakest form. Still zero LLM calls.
 
 from __future__ import annotations
 
-import numpy as np
-
 from ..cost import CostLedger
 from ..data.loader import MemoryUnit, parse_date
 from .base import Hit, rrf_fuse

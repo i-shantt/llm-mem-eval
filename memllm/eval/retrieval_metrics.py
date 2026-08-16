@@ -1,8 +1,9 @@
 """Judge-free retrieval metrics, using LongMemEval's per-turn `has_answer` labels.
 
 These need no LLM and no API budget, which makes them the load-bearing metrics
-for this project. An LLM judge is only required for end-to-end answer quality,
-and it is validated against hand labels before we trust it.
+for this project. End-to-end answer quality is graded without a judge too --
+see `memllm/eval/grade.py`, whose error rates are measured by
+`memllm/eval/grader_audit.py` rather than assumed.
 """
 
 from __future__ import annotations

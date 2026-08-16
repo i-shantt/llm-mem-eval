@@ -27,7 +27,7 @@ def load_all(results_dir: Path) -> dict[str, dict]:
         if not isinstance(payload, dict):
             continue
         for name, run in payload.items():
-            # results/ also holds non-run artifacts (token_stats.json); a run
+            # results/ also holds non-run artifacts (token_stats_*.json); a run
             # payload is a dict keyed by retriever name carrying "metrics".
             if not isinstance(run, dict) or "metrics" not in run:
                 continue
@@ -306,17 +306,20 @@ def main() -> None:
     print("\n## Cost, split by write path and read path\n")
     print("The write path is paid once per conversation; the read path is paid "
           "per query. Published memory systems report the read path only.\n")
-    print("| system | write ms/conv | write LLM calls | write LLM tokens | "
-          "read ms/query | read LLM calls |")
-    print("|---|---|---|---|---|---|")
+    print("| system | granularity | write ms/conv | write LLM calls | "
+          "write LLM tokens | read ms/query | read LLM calls |")
+    print("|---|---|---|---|---|---|---|")
     for key in sorted(runs, key=sort_key):
         r = runs[key]
         c = r.get("cost_per_example", {})
         tot = r.get("cost_total", {})
+        # Without the granularity column this table printed three identical
+        # `random` rows, three `bm25` rows, and so on, with no way to tell which
+        # unit size produced which timing.
         name, gran = key.split("|")
         read_calls = tot.get("read", {}).get("llm_calls", 0)
         n = max(1, r["metrics"]["n_total"])
-        print(f"| {name} | {c.get('write_wall_clock_s',0)*1000:.0f} | "
+        print(f"| {name} | {gran} | {c.get('write_wall_clock_s',0)*1000:.0f} | "
               f"{c.get('write_llm_calls',0):.1f} | "
               f"{c.get('write_llm_tokens',0):.0f} | "
               f"{c.get('read_wall_clock_s',0)*1000:.0f} | "
