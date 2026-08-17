@@ -17,6 +17,16 @@ ORDER = ["random", "recency", "bm25", "dense", "hybrid", "oracle"]
 
 
 def load_all(results_dir: Path) -> dict[str, dict]:
+    """Every run, keyed `<retriever>|<granularity>|<n_total>`.
+
+    `n` belongs in the key rather than being used as a tiebreak. Keeping only
+    the largest run per (retriever, granularity) is right for the per-row
+    tables, which print their own `n`, but it silently corrupts the
+    cross-granularity table the moment one granularity is re-run at a different
+    size: turn at n=500 would have been compared against session at n=100 and
+    the difference reported as a granularity effect. Callers now say which they
+    want -- `best_runs` for per-row tables, `matched_runs` for comparisons.
+    """
     runs: dict[str, dict] = {}
     for path in sorted(results_dir.glob("*.json")):
         try:
@@ -33,11 +43,49 @@ def load_all(results_dir: Path) -> dict[str, dict]:
                 continue
             gran = run.get("config", {}).get("granularity", "?")
             n = run.get("metrics", {}).get("n_total", 0)
-            # Keep the run with the most examples for each (retriever, granularity).
-            key = f"{name}|{gran}"
-            if key not in runs or n > runs[key]["metrics"]["n_total"]:
-                runs[key] = run
+            runs[f"{name}|{gran}|{n}"] = run
     return runs
+
+
+def best_runs(runs: dict[str, dict]) -> dict[str, dict]:
+    """Largest run per (retriever, granularity), keyed `<retriever>|<granularity>`.
+
+    For tables whose rows stand alone and print their own `n`.
+    """
+    out: dict[str, dict] = {}
+    for key, run in runs.items():
+        name, gran, n = key.split("|")
+        short = f"{name}|{gran}"
+        if short not in out or int(n) > out[short]["metrics"]["n_total"]:
+            out[short] = run
+    return out
+
+
+def matched_runs(
+    runs: dict[str, dict], grans: list[str]
+) -> tuple[dict[str, dict], int | None]:
+    """Runs at the largest `n` present for *every* granularity in `grans`.
+
+    Returns (`<retriever>|<granularity>` -> run, n). A cross-granularity row is
+    only a granularity comparison if the question set is held fixed, so this
+    trades size for comparability rather than mixing the two.
+    """
+    ns: dict[str, set[int]] = {}
+    for key in runs:
+        _, gran, n = key.split("|")
+        ns.setdefault(gran, set()).add(int(n))
+    if not all(g in ns for g in grans):
+        return {}, None
+    common = set.intersection(*(ns[g] for g in grans))
+    if not common:
+        return {}, None
+    n = max(common)
+    out = {}
+    for key, run in runs.items():
+        name, gran, run_n = key.split("|")
+        if int(run_n) == n and gran in grans:
+            out[f"{name}|{gran}"] = run
+    return out, n
 
 
 GRAN_ORDER = ["turn", "user_turn", "session"]
@@ -82,20 +130,31 @@ def arm_key(arm: dict) -> tuple:
     return (param_count(label), label, c["retriever"], c.get("granularity", ""))
 
 
-def granularity_section(runs: dict[str, dict]) -> None:
+def granularity_section(all_runs: dict[str, dict]) -> None:
     """The same retriever at three definitions of a memory unit. This is the
     knob the field rarely reports and it moves recall more than the retriever
-    choice does."""
+    choice does.
+
+    Held to one question set across the whole section: every cell here comes
+    from the largest `n` that exists for all the granularities shown, so a
+    difference between columns is a granularity effect and not a sample
+    difference.
+    """
     grans = [g for g in GRAN_ORDER
-             if any(k.split("|")[1] == g for k in runs)]
+             if any(k.split("|")[1] == g for k in all_runs)]
     if len(grans) < 2:
+        return
+    runs, n_matched = matched_runs(all_runs, grans)
+    if not runs:
         return
 
     print("\n## What a memory unit should be\n")
-    print("The same retrievers, over the same conversations, cut into turns, "
-          "user turns, or whole sessions. Coarser units retrieve more evidence "
-          "per hit and cost more tokens to read -- the trade this project "
-          "exists to price.\n")
+    print(f"The same retrievers, over the same conversations, cut into turns, "
+          f"user turns, or whole sessions. Coarser units retrieve more evidence "
+          f"per hit and cost more tokens to read -- the trade this project "
+          f"exists to price. Every cell below is n={n_matched}, the largest "
+          f"sample all three granularities share, so the columns differ by unit "
+          f"size and not by question set.\n")
 
     for metric in ("recall@10", "any_hit@10", "mrr"):
         print(f"\n**{metric}**\n")
@@ -335,10 +394,13 @@ def survival_section(results_dir: Path) -> None:
 
 def main() -> None:
     results_dir = Path("results")
-    runs = load_all(results_dir)
-    if not runs:
+    all_runs = load_all(results_dir)
+    if not all_runs:
         print("no results yet -- run scripts/run_retrieval_eval.py first")
         return
+    # Per-row tables take the largest run available and print its own n; the
+    # cross-granularity section re-selects a matched set for itself.
+    runs = best_runs(all_runs)
 
     print("# Results\n")
     print("Auto-generated by `scripts/make_report.py` from `results/*.json`.\n")
@@ -383,7 +445,7 @@ def main() -> None:
               f"{c.get('read_wall_clock_s',0)*1000:.0f} | "
               f"{read_calls/n:.1f} |")
 
-    granularity_section(runs)
+    granularity_section(all_runs)
     survival_section(results_dir)
     e2e_section(load_e2e(results_dir))
 

@@ -116,6 +116,42 @@ def test_new_artifacts_do_not_leak_into_the_retrieval_table() -> None:
             ), f"{artifact} would be read as a run"
 
 
+def test_the_granularity_table_never_mixes_two_question_sets() -> None:
+    """A cross-granularity row is only a granularity comparison if `n` is held
+    fixed. `load_all` used to keep the largest run per (retriever, granularity),
+    so re-running one granularity at n=500 would have compared it against the
+    others at n=100 and reported the sample difference as a unit-size effect.
+    """
+    sys.path.insert(0, str(REPO / "scripts"))
+    from make_report import best_runs, matched_runs
+
+    runs = {
+        "bm25|turn|100": {"metrics": {"n_total": 100, "recall@10": 0.1}},
+        "bm25|turn|500": {"metrics": {"n_total": 500, "recall@10": 0.9}},
+        "bm25|session|100": {"metrics": {"n_total": 100, "recall@10": 0.2}},
+    }
+
+    # The comparison drops to the largest n that every granularity has.
+    matched, n = matched_runs(runs, ["turn", "session"])
+    assert n == 100
+    assert matched["bm25|turn"]["metrics"]["n_total"] == 100
+    assert matched["bm25|session"]["metrics"]["n_total"] == 100
+
+    # Per-row tables still get the biggest run, because they print their own n.
+    assert best_runs(runs)["bm25|turn"]["metrics"]["n_total"] == 500
+
+    # No shared n means no comparison, rather than a wrong one.
+    assert matched_runs(
+        {"bm25|turn|500": runs["bm25|turn|500"],
+         "bm25|session|100": runs["bm25|session|100"]},
+        ["turn", "session"],
+    ) == ({}, None)
+
+    # A granularity that is absent entirely is not silently dropped from the
+    # intersection, which would leave the remaining columns looking matched.
+    assert matched_runs(runs, ["turn", "session", "user_turn"]) == ({}, None)
+
+
 def test_survival_artifacts_live_in_a_subdirectory() -> None:
     """`load_all`'s glob is non-recursive, which is the whole defence."""
     top_level = {p.name for p in (REPO / "results").glob("*.json")}
