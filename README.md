@@ -99,9 +99,11 @@ by construction, and 54 have abstractive gold answers with no checkable surface
 form — the same rule `grade()` uses to return "not gradable".)
 
 **LongMemEval-S is two benchmarks stapled together.** 184 of those 416 questions
-are verbatim needle-finding. The other 232 are not: 66% of multi-session gold
-answers are bare numerals — they are *counts*, computed across sessions, not
-spans to be retrieved.
+are verbatim needle-finding — the three single-session-and-update types, 64 + 70 +
+50. The other 232 are temporal-reasoning and multi-session, and they are a
+different task: **41% of multi-session gold answers are bare numerals**
+(`frac_numeral_gold`), counts computed across sessions rather than spans to be
+retrieved.
 
 Restricting to golds of two or more tokens, so chance matches do not dominate,
 each answer has one of three fates:
@@ -290,7 +292,13 @@ remains." That was wrong** — it described the 2025 paper, not the shipped code
 and the correction cuts both ways. Batched by session, v3 costs roughly a third
 of the 1.63M tokens a competitor measured for the pre-v3 pipeline on this
 benchmark. Called per message pair, it costs more than that, because the system
-prompt grew from 1,137 tokens to 7,671.
+prompt grew a great deal. All three constants still ship in `v2.0.18`, so the
+comparison is checkable rather than asserted: the pre-v3 path sent
+`FACT_RETRIEVAL_PROMPT` (**646** tokens) on its extraction call and
+`DEFAULT_UPDATE_MEMORY_PROMPT` (**1,137**) on each update call, where v3 sends
+`ADDITIVE_EXTRACTION_PROMPT` (**7,671**) on every `add()`.
+[`scripts/verify_write_cost_inputs.py`](scripts/verify_write_cost_inputs.py)
+re-derives all three from the installed package.
 
 Two honest qualifications. This is a **model, not a measurement** — call counts
 and the prompt size are exact, but the length of a stored memory and of the

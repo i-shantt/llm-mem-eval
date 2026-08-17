@@ -84,6 +84,29 @@ def main() -> int:
     if not ok:
         failures.append("V3_MARKER")
 
+    # The README compares v3's system prompt against the pre-v3 pipeline's two.
+    # All three constants still ship at this tag, so the comparison is a
+    # measurement rather than a recollection -- re-derived here so it stops being
+    # one if mem0 ever drops the old ones.
+    for const, expected, role in (
+        ("FACT_RETRIEVAL_PROMPT", 646, "pre-v3 extraction call"),
+        ("DEFAULT_UPDATE_MEMORY_PROMPT", 1137, "pre-v3 update call, per fact"),
+    ):
+        try:
+            from mem0.configs import prompts as _p
+
+            got = count_tokens(getattr(_p, const))
+        except AttributeError:
+            print(f"note  {const:28} no longer present -- the README's "
+                  f"before/after prompt-size comparison is no longer "
+                  f"checkable from the installed package")
+            continue
+        flag = "ok " if got == expected else "FAIL"
+        print(f"{flag}  {const:28} pinned {expected:,}  derived {got:,}"
+              f"  ({role})")
+        if got != expected:
+            failures.append(const)
+
     # "One LLM call per add(), regardless of message count" is the claim the
     # whole write-cost model rests on: it is what makes the cost a function of
     # caller batching rather than of how many facts the extractor emits. It is
