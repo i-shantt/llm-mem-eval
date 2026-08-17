@@ -21,9 +21,11 @@ extraction-based store, so any claimed survival gap should hold under both.
 `survival_union` is a diagnostic only: over a store of ~10^2 records it starts to
 approximate "is this string anywhere", which is a store-size proxy rather than a
 memory measurement. On LongMemEval it happens to agree with `survival_record` on
-every question (no gold answer is split across evidence turns; see
-scripts/audit_benchmark.py), but that is a property of this benchmark, not of the
-definitions.
+every question measured here -- 0 disagreements over 2,576 scored records -- but
+that is a property of this benchmark, not of the definitions. It is also not
+quite universal: `scripts/audit_benchmark.py` finds exactly one gold answer
+assembled across evidence turns rather than present in any single one, and it is
+a temporal-reasoning question, outside the three span types scored below.
 
 Two things this metric is NOT, both of which must be stated wherever it is used:
 

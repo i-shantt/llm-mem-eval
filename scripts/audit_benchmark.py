@@ -193,10 +193,14 @@ def main() -> None:
                 key=lambda kv: -len(kv[1]),
             )
         },
-        # Zero on this benchmark, which is worth recording: no gold answer is
-        # split across two evidence turns, so per-record and whole-store
-        # containment are equivalent here and the survival metric does not have
-        # to worry about reassembly.
+        # One on this benchmark, which is worth recording either way. The single
+        # case is `gpt4_f420262c`, gold "JetBlue, Delta, United, American
+        # Airlines": the four airlines appear in the right order across the
+        # evidence turns but never all within one of them. So per-record and
+        # whole-store containment are equivalent for 415 of 416 questions, and
+        # the one exception is temporal-reasoning -- outside the three span
+        # types the survival metric scores, which is why survival's union and
+        # record definitions still agree on every question it measures.
         "n_union_vs_any_turn_disagreements": sum(
             1 for r in rows
             if r["in_evidence_union"] != r["in_evidence_any_turn"]

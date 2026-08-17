@@ -6,7 +6,7 @@
   "n_scored": 416,
   "overall": {
     "in_evidence_any_turn": 0.47115384615384615,
-    "in_evidence_union": 0.47115384615384615,
+    "in_evidence_union": 0.4735576923076923,
     "in_haystack_any_turn": 0.7043269230769231,
     "outside_evidence_only": 0.23317307692307693
   },
@@ -14,7 +14,7 @@
     "temporal-reasoning": {
       "n": 118,
       "in_evidence_any_turn": 0.2711864406779661,
-      "in_evidence_union": 0.2711864406779661,
+      "in_evidence_union": 0.2796610169491525,
       "in_haystack_any_turn": 0.4745762711864407,
       "outside_evidence_only": 0.2033898305084746,
       "frac_numeral_gold": 0.09322033898305085
@@ -72,7 +72,7 @@
     "4+": {
       "n": 106,
       "in_evidence_any_turn": 0.2358490566037736,
-      "in_evidence_union": 0.2358490566037736,
+      "in_evidence_union": 0.24528301886792453,
       "in_haystack_any_turn": 0.330188679245283,
       "outside_evidence_only": 0.09433962264150944,
       "frac_numeral_gold": 0.0
@@ -144,7 +144,7 @@
     "temporal-reasoning": {
       "n": 99,
       "in_evidence_any_turn": 0.23232323232323232,
-      "in_evidence_union": 0.23232323232323232,
+      "in_evidence_union": 0.24242424242424243,
       "in_haystack_any_turn": 0.3838383838383838,
       "outside_evidence_only": 0.15151515151515152,
       "frac_numeral_gold": 0.0
@@ -214,7 +214,7 @@
       "nowhere_verbatim": 0.12903225806451613
     }
   },
-  "n_union_vs_any_turn_disagreements": 0,
+  "n_union_vs_any_turn_disagreements": 1,
   "reading": [
     "in_evidence_* is the fraction of questions whose gold answer appears verbatim in the turns the benchmark labels has_answer. It is NOT an accuracy: a question can be answered correctly by reasoning over evidence that does not contain the answer string.",
     "outside_evidence_only distinguishes 'the task needs synthesis' from 'the annotation is coarse'. A high value means the answer text exists in an unlabelled turn.",
@@ -2701,7 +2701,7 @@
       "gold_is_numeral": false,
       "n_evidence_turns": 5,
       "in_evidence_any_turn": false,
-      "in_evidence_union": false,
+      "in_evidence_union": true,
       "in_haystack_any_turn": false,
       "outside_evidence_only": false
     },
