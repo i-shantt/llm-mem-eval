@@ -28,7 +28,7 @@
     "_source": "Mem0, arXiv 2504.19413, Table 2",
     "_benchmark": "LoCoMo",
     "_unit": "mean retrieved-memory tokens placed in the answering model's context per question (Table 2's 'chunk size / memory tokens' column)",
-    "_comparability": "This counts retrieved context only, not the surrounding prompt template or the question. This repo's read-path figures are measured the same way, so the two are like-for-like; adding this repo's ~500-token template to both sides would move the full-context ratio from 49.6x to about 40x.",
+    "_comparability": "This counts retrieved context only, not the surrounding prompt template or the question. This repo's read-path figures are measured the same way, so the two are like-for-like; adding this repo's measured 487-token template to both sides would move the full-context ratio from 49.4x to about 40.3x, and would leave the break-even unchanged because a constant added to both read paths cancels in their difference.",
     "_verified": true,
     "_note": "This paper reports NO write-path cost. It documents retrieval and inference latency but is silent on tokens or LLM calls consumed during memory extraction and consolidation. That omission is the gap this repo is about.",
     "systems": [
