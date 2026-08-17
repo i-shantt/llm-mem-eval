@@ -67,12 +67,13 @@ Six instruments, each answering a question the aggregate score cannot:
 | [grader audit](#grading-without-a-judge) | how often is the grader itself wrong? |
 | [control ladder](#how-much-of-the-accuracy-is-actually-memory) | how much of the accuracy is memory, and how much is the model already knowing? |
 
-**If you have five minutes:** [`scripts/audit_benchmark.py`](scripts/audit_benchmark.py)
-is the most reusable finding. [`llm_mem_eval/eval/ablation.py`](llm_mem_eval/eval/ablation.py)
-is the part most likely to be useful in someone else's harness.
-[`RESULTS.md`](RESULTS.md) is every table, regenerated from run artifacts rather
-than typed by hand. [`RUNNING.md`](RUNNING.md) is what is committed here but
-deliberately **not** run.
+**Where to look first.**
+[`scripts/audit_benchmark.py`](scripts/audit_benchmark.py) is the most reusable
+thing here — seconds of deterministic work that changes how the benchmark should
+be read. [`llm_mem_eval/eval/ablation.py`](llm_mem_eval/eval/ablation.py) is the
+part most likely to drop into someone else's harness.
+[`RESULTS.md`](RESULTS.md) is every table. [`RUNNING.md`](RUNNING.md) is the code
+committed here and deliberately **not** run, and why.
 
 ---
 
