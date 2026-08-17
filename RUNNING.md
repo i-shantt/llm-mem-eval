@@ -96,8 +96,13 @@ python scripts/run_survival_eval.py \
 **Run the preflight.** Every failure it checks for is silent in mem0 — the run
 completes either way and produces a worse store. Four of them degrade retrieval:
 
-1. a vector store without `keyword_search` drops BM25 for the whole session
-   (chroma and faiss do this; qdrant does not);
+1. a vector store without `keyword_search` drops BM25 for the whole session.
+   `chroma.py` and `faiss.py` never override it, so they inherit the base
+   class's "returns None if not supported"; `qdrant.py` does override it. Also
+   checkable: qdrant is the only entry under `mem0/configs/vector_stores/` whose
+   config accepts a local `path`, so it is the only store this arm can use
+   without standing up a server — mem0's milvus config takes a server `url`
+   rather than a milvus-lite file;
 2. missing `fastembed` drops BM25 *even on qdrant*;
 3. a collection predating v3 has no sparse slot;
 4. a missing spaCy model turns the entity boost off.
