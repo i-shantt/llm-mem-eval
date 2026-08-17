@@ -148,14 +148,20 @@ aggregate retrieval metric over all 500 questions mixes two tasks that behave
 nothing alike, and this repo's own headline `any_hit@10` of 0.914 is subject to
 exactly the same caveat.
 
-One bookkeeping note on what is measured over what. This audit, the retrieval
-arms and the cost figure's token inputs all run over the full 500 questions; the
-**end-to-end arms remain a stratified n=100**, because those need an answering
-model rather than a CPU. The two full-scale numbers still are not computed over
-an identical denominator: the audit scores **416**, dropping abstention questions
-and abstractive golds, while retrieval scores **479**, dropping only the
-questions with no evidence turn to find. So the audit bounds how the retrieval
-numbers should be *read* rather than being directly commensurable with them.
+One bookkeeping note on what is measured over what, because it is not uniform.
+This audit, the **turn-granularity** retrieval arms and the cost figure's token
+inputs run over the full 500 questions. Two things do not: the **end-to-end arms**
+are a stratified n=100, because each needs an answering model rather than a CPU,
+and the **cross-granularity** tables in [RESULTS.md](RESULTS.md) are held at n=100
+because that is the largest sample the `user_turn` and `session` sweeps share with
+`turn` — a comparison across unit sizes is only a comparison if the question set
+is fixed, so the generator selects a matched sample for that section and says so.
+
+Even the two full-scale numbers are not computed over an identical denominator:
+the audit scores **416**, dropping abstention questions and abstractive golds,
+while retrieval scores **479**, dropping only the questions with no evidence turn
+to find. So the audit bounds how the retrieval numbers should be *read* rather
+than being directly commensurable with them.
 
 ---
 
@@ -979,10 +985,12 @@ slices stay intact. Every reported number carries its own `n`.
 
 ## Honest limits
 
-- **The end-to-end arms are 100 questions, and 100 questions can lie.** Retrieval,
-  the benchmark audit and the cost figure's token inputs are measured on all 500;
-  the end-to-end ladder is not, because each arm needs an answering model rather
-  than a CPU. Each e2e arm is a stratified sample with 91 gradable, giving roughly
+- **The end-to-end arms are 100 questions, and 100 questions can lie.** The
+  benchmark audit, the turn-granularity retrieval arms and the cost figure's token
+  inputs are measured on all 500; the end-to-end ladder is not, because each arm
+  needs an answering model rather than a CPU, and neither are the
+  cross-granularity tables, which are pinned to the largest sample all three unit
+  sizes share. Each e2e arm is a stratified sample with 91 gradable, giving roughly
   ±0.10 near p = 0.5 — wide enough to invent a large effect. The companion repo
   measured +0.132 at p = 0.002 on this same draw and watched it fall to +0.007
   across all 500 (446 gradable). The main lifts here are too large for that to
