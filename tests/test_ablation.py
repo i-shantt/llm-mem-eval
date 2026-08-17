@@ -118,3 +118,54 @@ def test_per_type_breakdown_partitions_the_questions():
     assert sum(d["n"] for d in r.per_type.values()) == 20
     assert r.per_type["even"]["lift"] == 1.0
     assert r.per_type["odd"]["lift"] == 0.0
+
+
+def test_a_system_sharing_no_questions_with_a_control_does_not_crash_the_script(
+    tmp_path,
+):
+    """`run_ablation.py` caught compute_lift's ValueError when printing the
+    table, then re-ran compute_lift over every system in a bare generator to
+    find the best one -- with no except clause. So an arm printed as "skipped"
+    killed the script immediately afterwards, after the output already looked
+    fine. Exercised through the script, because the module was never the bug.
+    """
+    import json
+    import subprocess
+
+    def payload(tag, retriever, qids, correct):
+        return {
+            "config": {"tag": tag, "retriever": retriever,
+                       "answer_backend": "m", "answer_backend_name": "hf:m",
+                       "granularity": "turn"},
+            "accuracy": 0.5,
+            "read_tokens_per_query": 100.0,
+            "records": [
+                {"question_id": q, "question_type": "t",
+                 "deterministic": correct, "prompt_tokens": 100 + i}
+                for i, q in enumerate(qids)
+            ],
+        }
+
+    results = tmp_path / "results"
+    results.mkdir()
+    # The control and the disjoint system share no question id at all.
+    (results / "e2e_ctl.json").write_text(json.dumps(
+        payload("e2e_ctl", "none", ["q1", "q2"], False)))
+    (results / "e2e_disjoint.json").write_text(json.dumps(
+        payload("e2e_disjoint", "hybrid", ["z1", "z2"], True)))
+    # A second system that *does* pair, so `computed` is non-empty and the
+    # by-question-type block still runs rather than being trivially skipped.
+    (results / "e2e_ok.json").write_text(json.dumps(
+        payload("e2e_ok", "bm25", ["q1", "q2"], True)))
+
+    repo = Path(__file__).resolve().parent.parent
+    proc = subprocess.run(
+        [sys.executable, str(repo / "scripts" / "run_ablation.py"),
+         "--results", str(results), "--out", str(tmp_path / "abl.json")],
+        capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, f"script died:\n{proc.stderr}"
+    assert "skipped" in proc.stdout + proc.stderr, "the disjoint arm should be skipped"
+    assert "by question type" in proc.stdout, (
+        "the block after the skip never ran, so the crash path is untested"
+    )

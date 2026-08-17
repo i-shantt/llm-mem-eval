@@ -90,12 +90,14 @@ def main() -> None:
             sorted(controls, key=lambda x: -x.accuracy)))
         print(f"\n  {'system':<10} {'acc':>6} {'ctl':>6} {'lift':>7} "
               f"{'95% CI':>16} {'p':>8} {'attrib':>8}")
+        computed = []
         for s in sorted(systems, key=lambda x: -x.accuracy):
             try:
                 r = compute_lift(s, controls, seed=args.seed)
             except ValueError as e:
                 print(f"  {s.retriever:<10} skipped: {e}")
                 continue
+            computed.append(r)
             star = "*" if r.significant else " "
             print(f"  {s.retriever:<10} {r.system_accuracy:>6.3f} "
                   f"{r.control_accuracy:>6.3f} {r.lift:>+7.3f}{star} "
@@ -105,10 +107,14 @@ def main() -> None:
 
         # Where the lift lives. A system can post a healthy overall lift while
         # contributing nothing on the question types it was bought for.
-        best = max(
-            (compute_lift(s, controls, seed=args.seed) for s in systems),
-            key=lambda r: r.lift, default=None,
-        )
+        #
+        # Reuses the reports computed above rather than recomputing them. The
+        # old version re-ran compute_lift over `systems` in a generator with no
+        # except clause, so a system that shares no graded question with any
+        # control -- printed as "skipped" two lines up -- raised ValueError here
+        # and killed the script after the table had already looked fine. It also
+        # paid for a second 10,000-resample bootstrap per system.
+        best = max(computed, key=lambda r: r.lift, default=None)
         if best is not None:
             print(f"\n  best system ({best.system.split('_')[1] if '_' in best.system else best.system}) by question type:")
             print(f"    {'type':<28} {'n':>4} {'system':>8} {'control':>8} {'lift':>8}")
