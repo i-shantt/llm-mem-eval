@@ -126,6 +126,20 @@ Without all three, the extractor resolves relative time against today and every
 relative reference in the store is wrong — the failure in
 [mem0 issue #3944](https://github.com/mem0ai/mem0/issues/3944).
 
+**One more that reading the code caught, and that no preflight would have.**
+`Memory.get_all(top_k=...)` **defaults to 20**. `build()` originally called it
+without a `top_k`, so it would have read back 20 memories from a conversation of
+~490 turns and measured answer survival over a fraction of the store. Nothing
+would have raised; the arm would simply have reported that Mem0's extraction
+loses most answers, which is both false and the single most misleading result this
+repo could publish. It now passes an explicit `top_k` and raises if the result
+saturates it.
+
+That is the argument for reviewing unrun code rather than trusting that running it
+would have surfaced the problem. Neither of these two defects announces itself at
+runtime: one produces a plausible store with the wrong dates, the other a
+plausible store with most of it missing.
+
 ### Cost
 
 At `MEM0_BATCH=session`, ~48 `add()` calls per conversation × 184 conversations

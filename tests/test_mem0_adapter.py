@@ -236,3 +236,58 @@ def test_the_date_patch_pins_both_prompt_dates_not_just_one() -> None:
     assert not isinstance(
         sys.modules.get("mem0.memory.main", ModuleType("x")).__dict__.get(
             "generate_additive_extraction_prompt"), functools.partial)
+
+
+def test_build_reads_the_whole_store_not_mem0s_default_twenty() -> None:
+    """`Memory.get_all(top_k=...)` defaults to 20.
+
+    A LongMemEval conversation is ~490 turns, so v3 emits far more than 20
+    memories; reading back the default would have measured survival over a
+    fraction of the store, and in the direction that makes extraction look
+    catastrophically lossy. `build()` must pass an explicit top_k and must fail
+    loudly if it saturates.
+
+    Driven through a fake Memory, so it runs with mem0 absent.
+    """
+    from llm_mem_eval.write.mem0_adapter import GET_ALL_TOP_K
+
+    assert GET_ALL_TOP_K > 20
+
+    seen = {}
+
+    class _FakeMemory:
+        def __init__(self, n_rows):
+            self.n_rows = n_rows
+            self.llm = SimpleNamespace(
+                client=SimpleNamespace(chat=SimpleNamespace(
+                    completions=_StubCompletions())))
+
+        def add(self, messages, **kw):
+            return {"results": [{"id": "m1"}]}
+
+        def get_all(self, **kw):
+            seen.update(kw)
+            return {"results": [{"id": f"m{i}", "memory": f"fact {i}",
+                                 "created_at": "2023-04-10T00:00:00+00:00"}
+                                for i in range(self.n_rows)]}
+
+    ex = Example(question_id="q1", question_type="t", question="?", answer="a",
+                 question_date="2023/04/11 (Tue) 10:00",
+                 turns=[Turn(role="user", content="hi", session_id="s1",
+                             session_date="2023/04/10 (Mon) 17:50",
+                             session_index=0, turn_index=0, has_answer=False)])
+
+    policy = Mem0OssPolicy(llm_model="stub")
+    policy._new_memory = lambda collection, path: _FakeMemory(25)
+    policy._add_with_date = lambda m, msgs, **kw: m.add(msgs)
+
+    units = policy.build(ex, CostLedger())
+    assert seen.get("top_k") == GET_ALL_TOP_K, (
+        f"build() must ask for the whole store; it passed {seen.get('top_k')!r}")
+    # 25 rows come back, so all 25 become units -- not mem0's default 20.
+    assert len(units) == 25
+
+    # Saturation is an error, not a silent truncation.
+    policy._new_memory = lambda collection, path: _FakeMemory(GET_ALL_TOP_K)
+    with pytest.raises(RuntimeError, match="truncated on read"):
+        policy.build(ex, CostLedger())

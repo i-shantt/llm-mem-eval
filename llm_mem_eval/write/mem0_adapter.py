@@ -44,6 +44,18 @@ MEM0_PINNED_VERSION = "2.0.18"
 # manifest as an explicit deviation, because Mem0 does not prescribe one.
 DEFAULT_BATCH = "session"
 
+# `Memory.get_all(top_k=...)` defaults to **20**, and that default silently
+# truncates the store this policy exists to measure: one LongMemEval conversation
+# is ~490 turns, so v3 emits far more than 20 memories and reading back 20 of them
+# would have measured survival over a fraction of the store. Worse, it fails in
+# the direction that makes extraction look catastrophically lossy -- exactly the
+# wrong conclusion to hand anyone about Mem0. Set explicitly, with a saturation
+# check below so hitting it is an error rather than a quiet truncation.
+# mem0 imposes no upper bound (`_validate_search_params` only rejects negatives),
+# and internally fetches `max(top_k * 4, 60)`, so this stays cheap for a
+# per-conversation collection.
+GET_ALL_TOP_K = 50_000
+
 
 class CountingChatClient:
     """Wraps an OpenAI-compatible completions client and bills every call.
@@ -275,7 +287,8 @@ class Mem0OssPolicy:
             self._add_with_date(
                 m, [{"role": "user", "content": "I met Priya in Lisbon."}],
                 user_id="preflight", conversation_date=date)
-            rows = m.get_all(filters={"user_id": "preflight"})["results"]
+            rows = m.get_all(filters={"user_id": "preflight"},
+                             top_k=GET_ALL_TOP_K)["results"]
             date_ok = bool(rows) and str(rows[0].get("created_at", "")).startswith(date)
 
         return PreflightResult(bm25_impl, slot, encoder, spacy_ok, date_ok,
@@ -371,7 +384,15 @@ class Mem0OssPolicy:
                             t.turn_index for t in batch)
                         last_date[mid] = batch[0].session_date
 
-                rows = m.get_all(filters={"user_id": ex.question_id})["results"]
+                rows = m.get_all(filters={"user_id": ex.question_id},
+                                 top_k=GET_ALL_TOP_K)["results"]
+            if len(rows) >= GET_ALL_TOP_K:
+                raise RuntimeError(
+                    f"{ex.question_id}: get_all returned {len(rows)} rows, at "
+                    f"the top_k ceiling of {GET_ALL_TOP_K}. The store is being "
+                    f"truncated on read, so every survival number for this arm "
+                    f"would be a floor rather than a measurement. Raise "
+                    f"GET_ALL_TOP_K.")
 
             fallback = ex.turns[0].session_date
             units = [
