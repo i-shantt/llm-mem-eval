@@ -213,8 +213,18 @@ def stratified_subset(
 
     Weeks-scale compute means we subsample; doing it stratified keeps the
     knowledge-update and abstention slices intact, which are the interesting ones.
+
+    `n <= 0` means "no limit", matching what every `--limit` flag in scripts/
+    documents. It has to be handled here rather than by each caller: the final
+    `picked[:n]` turns n=0 into an empty list, so
+    `measure_token_stats.py --limit 0` died inside `statistics.mean` with
+    "mean requires at least one data point", and `run_e2e_eval.py --limit 0`
+    would have written an arm measured on zero examples without complaining.
     """
     import random
+
+    if n <= 0:
+        return list(examples)
 
     rng = random.Random(seed)
     by_type: dict[str, list[Example]] = {}

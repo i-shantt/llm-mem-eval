@@ -27,7 +27,8 @@ from llm_mem_eval.data.loader import load_examples, stratified_subset  # noqa: E
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="data/raw/longmemeval_s")
-    ap.add_argument("--limit", type=int, default=40)
+    ap.add_argument("--limit", type=int, default=40,
+                   help="0 = all questions")
     ap.add_argument("--granularity", default="turn")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None,

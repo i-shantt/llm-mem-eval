@@ -169,3 +169,28 @@ def test_a_system_sharing_no_questions_with_a_control_does_not_crash_the_script(
     assert "by question type" in proc.stdout, (
         "the block after the skip never ran, so the crash path is untested"
     )
+
+
+def test_limit_zero_means_all_questions_not_none():
+    """`--limit 0` documents "all questions" in every script that takes it, but
+    `stratified_subset` ended with `picked[:n]`, so 0 returned an empty list.
+    `measure_token_stats.py --limit 0` died inside statistics.mean with "mean
+    requires at least one data point", and `run_e2e_eval.py --limit 0` would
+    have written an arm measured on zero examples without complaining.
+    """
+    from llm_mem_eval.data.loader import Example, stratified_subset
+
+    examples = [
+        Example(question_id=f"q{i}", question_type=("a" if i % 2 else "b"),
+                question="?", answer="x", question_date="2023/01/01 (Sun) 00:00")
+        for i in range(10)
+    ]
+
+    assert len(stratified_subset(examples, 0)) == 10
+    assert len(stratified_subset(examples, -1)) == 10
+    # A real cap still caps, and still keeps both types represented.
+    picked = stratified_subset(examples, 4)
+    assert len(picked) == 4
+    assert {e.question_type for e in picked} == {"a", "b"}
+    # Asking for more than exists is not an error.
+    assert len(stratified_subset(examples, 999)) == 10
