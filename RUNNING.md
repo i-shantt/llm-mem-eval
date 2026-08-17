@@ -123,16 +123,18 @@ conversation at `session` batching:
 | | tokens |
 |---|---|
 | prompt | 592,877 |
-| of which the 7,671-token system prompt, re-sent every call | 366,198 (62%) |
+| of which the 7,671-token system prompt, re-sent every call | 366,198 |
 | completion (assumed 300/call — the one estimated term) | 14,321 |
 
 So the bill is `592,877 × input_price + 14,321 × output_price` per conversation,
 times however many conversations you run. Two consequences worth planning around:
 
-- **Prompt caching roughly halves it**, because 62% of the input is a byte-identical
-  prefix on every one of the ~48 calls. Whether it applies depends on the provider
-  and on whether mem0's adapter for that provider marks the prefix cacheable —
-  check before assuming it.
+- **Prompt caching roughly halves it**, because **62% of the prompt tokens** are a
+  byte-identical prefix on every one of the ~48 calls. (The README's batching table
+  says 60% for the same quantity; that one is a share of prompt *plus* completion,
+  which is what `share_system_prompt` in the artifact means.) Whether caching
+  applies depends on the provider and on whether mem0's adapter for it marks the
+  prefix cacheable — check before assuming it.
 - **The extractor's tier moves the total by more than the batching does at fixed
   batching.** A frontier extractor is the wrong choice on the merits, not just the
   cost: mem0's OSS default is `gpt-5-mini`, so a frontier model measures a
