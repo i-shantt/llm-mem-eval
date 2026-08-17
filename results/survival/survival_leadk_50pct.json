@@ -26,11 +26,11 @@
           0.6470570975969133,
           0.8097179301609537
         ],
-        "null": 0.12000000000000001,
-        "chance_corrected": 0.7004132231404958,
+        "null": 0.11363636363636363,
+        "chance_corrected": 0.7025641025641025,
         "chance_corrected_ci95": [
-          0.6065904505716208,
-          0.7905027932960894
+          0.6100866474116863,
+          0.7918593894542091
         ]
       },
       "soft": {
@@ -54,11 +54,11 @@
           0.6470570975969133,
           0.8097179301609537
         ],
-        "null": 0.12000000000000001,
-        "chance_corrected": 0.7004132231404958,
+        "null": 0.11363636363636363,
+        "chance_corrected": 0.7025641025641025,
         "chance_corrected_ci95": [
-          0.6065904505716208,
-          0.7905027932960894
+          0.6100866474116863,
+          0.7918593894542091
         ]
       }
     },
@@ -70,11 +70,11 @@
           0.7469640253763591,
           0.8599302940928107
         ],
-        "null": 0.32119565217391305,
-        "chance_corrected": 0.7197758206565252,
+        "null": 0.3173913043478261,
+        "chance_corrected": 0.7213375796178344,
         "chance_corrected_ci95": [
-          0.64,
-          0.7983193277310924
+          0.6421147763217353,
+          0.7991967871485943
         ]
       },
       "soft": {
@@ -131,11 +131,11 @@
             0.7930974330875985,
             0.941787978234447
           ],
-          "null": 0.1647887323943662,
-          "chance_corrected": 0.8650927487352446,
+          "null": 0.15492957746478872,
+          "chance_corrected": 0.8666666666666667,
           "chance_corrected_ci95": [
-            0.7719869706840391,
-            0.9490662139219015
+            0.77491961414791,
+            0.9494949494949494
           ]
         },
         "soft": {
@@ -206,11 +206,11 @@
           0.31038327828457724,
           0.6161622047523264
         ],
-        "null": 0.07027027027027027,
-        "chance_corrected": 0.4186046511627907,
+        "null": 0.051351351351351354,
+        "chance_corrected": 0.43019943019943024,
         "chance_corrected_ci95": [
-          0.2463768115942029,
-          0.5906432748538012
+          0.26136363636363635,
+          0.5988538681948424
         ]
       },
       "single-session-user": {
@@ -241,7 +241,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 13.927569549530745
+      "wall_clock_s": 21.791777086560614
     },
     "read": {
       "llm_calls": 0,
@@ -2287,9 +2287,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 485,
       "store_tokens": 52628
     },
@@ -2422,9 +2422,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 450,
       "store_tokens": 52494
     },
@@ -2662,9 +2662,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 483,
       "store_tokens": 53083
     },
@@ -2722,9 +2722,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 490,
       "store_tokens": 53176
     },
@@ -2737,9 +2737,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.0,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 589,
       "store_tokens": 52478
     },
@@ -2797,9 +2797,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 537,
       "store_tokens": 51992
     },
@@ -2872,9 +2872,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 516,
       "store_tokens": 52308
     },

@@ -26,11 +26,11 @@
           0.4524389026806324,
           0.6354024488112651
         ],
-        "null": 0.10818181818181818,
-        "chance_corrected": 0.49031600407747195,
+        "null": 0.10363636363636364,
+        "chance_corrected": 0.49290060851926976,
         "chance_corrected_ci95": [
-          0.3906093906093906,
-          0.5941258094357077
+          0.3933947427544372,
+          0.5967741935483871
         ]
       },
       "soft": {
@@ -54,11 +54,11 @@
           0.4524389026806324,
           0.6354024488112651
         ],
-        "null": 0.10818181818181818,
-        "chance_corrected": 0.49031600407747195,
+        "null": 0.10363636363636364,
+        "chance_corrected": 0.49290060851926976,
         "chance_corrected_ci95": [
-          0.3906093906093906,
-          0.5941258094357077
+          0.3933947427544372,
+          0.5967741935483871
         ]
       }
     },
@@ -70,11 +70,11 @@
           0.6144543482236752,
           0.7475527897053033
         ],
-        "null": 0.3016304347826087,
-        "chance_corrected": 0.5486381322957199,
+        "null": 0.29891304347826086,
+        "chance_corrected": 0.5503875968992249,
         "chance_corrected_ci95": [
-          0.45848375451263534,
-          0.6364913513038898
+          0.46029298380878947,
+          0.6382451039083212
         ]
       },
       "soft": {
@@ -131,11 +131,11 @@
             0.5461640065219604,
             0.7611517109399859
           ],
-          "null": 0.14929577464788732,
-          "chance_corrected": 0.6026490066225165,
+          "null": 0.14225352112676057,
+          "chance_corrected": 0.6059113300492611,
           "chance_corrected_ci95": [
-            0.4736842105263158,
-            0.7288135593220338
+            0.4779771615008157,
+            0.7315436241610738
           ]
         },
         "soft": {
@@ -206,11 +206,11 @@
           0.31038327828457724,
           0.6161622047523264
         ],
-        "null": 0.05405405405405406,
-        "chance_corrected": 0.4285714285714286,
+        "null": 0.04054054054054054,
+        "chance_corrected": 0.43661971830985924,
         "chance_corrected_ci95": [
-          0.26136363636363635,
-          0.5988538681948424
+          0.27170868347338933,
+          0.6056338028169014
         ]
       },
       "single-session-user": {
@@ -241,7 +241,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 3.741531381267123
+      "wall_clock_s": 9.490316588431597
     },
     "read": {
       "llm_calls": 0,
@@ -2287,9 +2287,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 239,
       "store_tokens": 52407
     },
@@ -2422,9 +2422,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 247,
       "store_tokens": 52341
     },
@@ -2662,9 +2662,9 @@
       "survival_record": false,
       "survival_soft": true,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 245,
       "store_tokens": 52874
     },
@@ -2677,9 +2677,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 271,
       "store_tokens": 52308
     },
@@ -2872,9 +2872,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 259,
       "store_tokens": 52174
     },

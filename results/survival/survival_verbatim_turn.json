@@ -23,11 +23,11 @@
           0.7057473462909243,
           0.8564373032572199
         ],
-        "null": 0.16181818181818183,
-        "chance_corrected": 0.7505422993492408,
+        "null": 0.15272727272727274,
+        "chance_corrected": 0.7532188841201717,
         "chance_corrected_ci95": [
-          0.6617336152219874,
-          0.8353658536585366
+          0.6648648648648648,
+          0.837172838017127
         ]
       },
       "soft": {
@@ -51,11 +51,11 @@
           0.7057473462909243,
           0.8564373032572199
         ],
-        "null": 0.16181818181818183,
-        "chance_corrected": 0.7505422993492408,
+        "null": 0.15272727272727274,
+        "chance_corrected": 0.7532188841201717,
         "chance_corrected_ci95": [
-          0.6617336152219874,
-          0.8353658536585366
+          0.6648648648648648,
+          0.837172838017127
         ]
       }
     },
@@ -67,11 +67,11 @@
           0.819417568185297,
           0.915243976435277
         ],
-        "null": 0.3625,
-        "chance_corrected": 0.803921568627451,
+        "null": 0.35706521739130437,
+        "chance_corrected": 0.8055790363482671,
         "chance_corrected_ci95": [
-          0.7321179425169752,
-          0.8722195929957406
+          0.7341084532545507,
+          0.8734295893493342
         ]
       },
       "soft": {
@@ -128,10 +128,10 @@
             0.8829739389031531,
             0.9855270017501733
           ],
-          "null": 0.22535211267605634,
-          "chance_corrected": 0.9454545454545454,
+          "null": 0.2112676056338028,
+          "chance_corrected": 0.9464285714285712,
           "chance_corrected_ci95": [
-            0.8754448398576511,
+            0.8776223776223775,
             1.0
           ]
         },
@@ -203,11 +203,11 @@
           0.4610014255281996,
           0.7593621253610898
         ],
-        "null": 0.10270270270270271,
-        "chance_corrected": 0.5783132530120483,
+        "null": 0.07567567567567568,
+        "chance_corrected": 0.5906432748538012,
         "chance_corrected_ci95": [
-          0.4134897360703812,
-          0.7507788161993769
+          0.42363112391930835,
+          0.7604790419161677
         ]
       },
       "single-session-user": {
@@ -238,7 +238,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 0.054084133356809616
+      "wall_clock_s": 0.8014619633322582
     },
     "read": {
       "llm_calls": 0,
@@ -2284,9 +2284,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 485,
       "store_tokens": 104817
     },
@@ -2419,9 +2419,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 450,
       "store_tokens": 104684
     },
@@ -2464,9 +2464,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
+      "null_record": 0.2,
       "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_union": 0.2,
       "n_records": 476,
       "store_tokens": 104676
     },
@@ -2659,9 +2659,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
+      "null_record": 0.2,
       "null_soft": 0.1,
-      "null_union": 0.3,
+      "null_union": 0.2,
       "n_records": 483,
       "store_tokens": 105762
     },
@@ -2674,9 +2674,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
+      "null_record": 0.2,
       "null_soft": 0.1,
-      "null_union": 0.3,
+      "null_union": 0.2,
       "n_records": 474,
       "store_tokens": 104620
     },
@@ -2719,9 +2719,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 490,
       "store_tokens": 105963
     },
@@ -2734,9 +2734,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 589,
       "store_tokens": 104772
     },
@@ -2764,9 +2764,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 489,
       "store_tokens": 104592
     },
@@ -2794,9 +2794,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.3,
+      "null_record": 0.2,
       "null_soft": 0.3,
-      "null_union": 0.3,
+      "null_union": 0.2,
       "n_records": 537,
       "store_tokens": 103743
     },
@@ -2869,9 +2869,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 516,
       "store_tokens": 104348
     },

@@ -21,16 +21,16 @@
     "primary": {
       "record": {
         "n": 110,
-        "survival": 0.4,
+        "survival": 0.39090909090909093,
         "survival_ci95": [
-          0.3133177568006176,
-          0.493431269917208
+          0.3048783929724045,
+          0.4843023634470416
         ],
-        "null": 0.08,
-        "chance_corrected": 0.34782608695652173,
+        "null": 0.07363636363636364,
+        "chance_corrected": 0.3424926398429833,
         "chance_corrected_ci95": [
-          0.25016662963785824,
-          0.4485776805251641
+          0.2459486274942123,
+          0.4423545032086745
         ]
       },
       "soft": {
@@ -49,32 +49,32 @@
       },
       "union": {
         "n": 110,
-        "survival": 0.4,
+        "survival": 0.39090909090909093,
         "survival_ci95": [
-          0.3133177568006176,
-          0.493431269917208
+          0.3048783929724045,
+          0.4843023634470416
         ],
-        "null": 0.08,
-        "chance_corrected": 0.34782608695652173,
+        "null": 0.07363636363636364,
+        "chance_corrected": 0.3424926398429833,
         "chance_corrected_ci95": [
-          0.25016662963785824,
-          0.4485776805251641
+          0.2459486274942123,
+          0.4423545032086745
         ]
       }
     },
     "all_questions": {
       "record": {
         "n": 184,
-        "survival": 0.5434782608695652,
+        "survival": 0.5380434782608695,
         "survival_ci95": [
-          0.4713503997523875,
-          0.6138277503485485
+          0.46596449715438937,
+          0.6085663841839296
         ],
-        "null": 0.2766304347826087,
-        "chance_corrected": 0.3688955672426747,
+        "null": 0.2728260869565218,
+        "chance_corrected": 0.3647234678624812,
         "chance_corrected_ci95": [
-          0.2706524435623915,
-          0.46495855312735485
+          0.26760563380281693,
+          0.4604046964776418
         ]
       },
       "soft": {
@@ -126,16 +126,16 @@
       "2-3": {
         "record": {
           "n": 71,
-          "survival": 0.4647887323943662,
+          "survival": 0.4507042253521127,
           "survival_ci95": [
-            0.35358257090400147,
-            0.5796096644303581
+            0.34047773339151494,
+            0.5659913960765884
           ],
-          "null": 0.1056338028169014,
-          "chance_corrected": 0.40157480314960625,
+          "null": 0.09577464788732395,
+          "chance_corrected": 0.3925233644859813,
           "chance_corrected_ci95": [
-            0.27215189873417717,
-            0.5307443365695792
+            0.26677067082683303,
+            0.5207667731629393
           ]
         },
         "soft": {
@@ -201,16 +201,16 @@
       },
       "single-session-assistant": {
         "n": 37,
-        "survival": 0.1891891891891892,
+        "survival": 0.16216216216216217,
         "survival_ci95": [
-          0.09479858757337126,
-          0.342050115709556
+          0.07651103235297099,
+          0.31136799295455864
         ],
-        "null": 0.06486486486486487,
-        "chance_corrected": 0.13294797687861273,
+        "null": 0.04594594594594595,
+        "chance_corrected": 0.12181303116147309,
         "chance_corrected_ci95": [
-          0.002932551319648094,
-          0.27745664739884396
+          0.002849002849002849,
+          0.26136363636363635
         ]
       },
       "single-session-user": {
@@ -241,7 +241,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 3.6988952116807923
+      "wall_clock_s": 11.714911576244049
     },
     "read": {
       "llm_calls": 0,
@@ -2287,9 +2287,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.2,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 109,
       "store_tokens": 26203
     },
@@ -2422,9 +2422,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 119,
       "store_tokens": 26170
     },
@@ -2467,9 +2467,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.3,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 126,
       "store_tokens": 26167
     },
@@ -2677,21 +2677,21 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 94,
       "store_tokens": 26151
     },
     {
       "question_id": "e3fc4d6e",
       "question_type": "single-session-assistant",
-      "deterministic": true,
+      "deterministic": false,
       "gold_len_bucket": "2-3",
       "in_primary": true,
-      "survival_record": true,
+      "survival_record": false,
       "survival_soft": false,
-      "survival_union": true,
+      "survival_union": false,
       "null_record": 0.2,
       "null_soft": 0.2,
       "null_union": 0.2,
@@ -2722,9 +2722,9 @@
       "survival_record": false,
       "survival_soft": true,
       "survival_union": false,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 128,
       "store_tokens": 26490
     },
@@ -2797,9 +2797,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 137,
       "store_tokens": 25933
     },
@@ -2872,9 +2872,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.1,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 131,
       "store_tokens": 26086
     },

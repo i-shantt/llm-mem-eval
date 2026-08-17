@@ -26,11 +26,11 @@
           0.47036133797284124,
           0.6526165541158151
         ],
-        "null": 0.08090909090909092,
-        "chance_corrected": 0.5252225519287833,
+        "null": 0.07727272727272727,
+        "chance_corrected": 0.5270935960591132,
         "chance_corrected_ci95": [
-          0.4255529877847475,
-          0.6240932072983073
+          0.4275688123697774,
+          0.6254517577483298
         ]
       },
       "soft": {
@@ -54,11 +54,11 @@
           0.47036133797284124,
           0.6526165541158151
         ],
-        "null": 0.08090909090909092,
-        "chance_corrected": 0.5252225519287833,
+        "null": 0.07727272727272727,
+        "chance_corrected": 0.5270935960591132,
         "chance_corrected_ci95": [
-          0.4255529877847475,
-          0.6240932072983073
+          0.4275688123697774,
+          0.6254517577483298
         ]
       }
     },
@@ -70,11 +70,11 @@
           0.5976221123179122,
           0.7324432193232151
         ],
-        "null": 0.2766304347826087,
-        "chance_corrected": 0.5416979714500376,
+        "null": 0.27445652173913043,
+        "chance_corrected": 0.543071161048689,
         "chance_corrected_ci95": [
-          0.4542325657625174,
-          0.630516592541909
+          0.4559826410415375,
+          0.6316193399846508
         ]
       },
       "soft": {
@@ -131,11 +131,11 @@
             0.5751576839846767,
             0.7856042452097819
           ],
-          "null": 0.1056338028169014,
-          "chance_corrected": 0.6535433070866141,
+          "null": 0.1,
+          "chance_corrected": 0.6557120500782473,
           "chance_corrected_ci95": [
-            0.53125,
-            0.7685185185185185
+            0.5348837209302326,
+            0.7695852534562212
           ]
         },
         "soft": {
@@ -206,11 +206,11 @@
           0.15397298246990684,
           0.4297847547392133
         ],
-        "null": 0.03513513513513514,
-        "chance_corrected": 0.24369747899159663,
+        "null": 0.024324324324324326,
+        "chance_corrected": 0.2520775623268698,
         "chance_corrected_ci95": [
-          0.09859154929577466,
-          0.39226519337016574
+          0.10863509749303622,
+          0.3989071038251366
         ]
       },
       "single-session-user": {
@@ -241,7 +241,7 @@
       "llm_completion_tokens": 0,
       "embed_calls": 0,
       "embed_tokens": 0,
-      "wall_clock_s": 14.21616258751601
+      "wall_clock_s": 22.516709041548893
     },
     "read": {
       "llm_calls": 0,
@@ -2287,9 +2287,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.0,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 485,
       "store_tokens": 26204
     },
@@ -2422,9 +2422,9 @@
       "survival_record": false,
       "survival_soft": false,
       "survival_union": false,
-      "null_record": 0.2,
+      "null_record": 0.1,
       "null_soft": 0.0,
-      "null_union": 0.2,
+      "null_union": 0.1,
       "n_records": 450,
       "store_tokens": 26160
     },
@@ -2722,9 +2722,9 @@
       "survival_record": false,
       "survival_soft": true,
       "survival_union": false,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.2,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 490,
       "store_tokens": 26502
     },
@@ -2797,9 +2797,9 @@
       "survival_record": true,
       "survival_soft": true,
       "survival_union": true,
-      "null_record": 0.1,
+      "null_record": 0.0,
       "null_soft": 0.1,
-      "null_union": 0.1,
+      "null_union": 0.0,
       "n_records": 537,
       "store_tokens": 25928
     },
