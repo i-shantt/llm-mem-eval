@@ -82,10 +82,21 @@ PRICE_IN_PER_M = 0.25
 PRICE_CACHED_IN_PER_M = 0.025
 PRICE_OUT_PER_M = 2.00
 
-# Read-path tokens per query, for the break-even. Ours is measured
-# (results/e2e_7b_hybrid_turn_k10_n100.json); Mem0's is its own reported LoCoMo
-# Table 2 "memory tokens" figure. Different benchmarks -- the break-even shows
-# the shape of the amortisation, not a head-to-head result.
+# Read-path tokens per query, for the break-even.
+#
+# Ours is *retrieved context only*: k=10 times the measured mean turn size in
+# results/token_stats_turn.json (10 x 209.67). It is deliberately not the
+# `read_tokens_per_query` field of an e2e arm, which is 2,639 for
+# e2e_7b_hybrid_turn_k10_n100 because it counts the whole prompt -- template,
+# date line, question -- plus the completion. The ~542-token difference is the
+# template overhead the README quotes separately.
+#
+# Retrieved-context-only is the right choice because Mem0's 1,764 is the same
+# quantity: its LoCoMo Table 2 "memory tokens" column. Comparing our full prompt
+# against their memory tokens would overstate our read path by ~26%.
+#
+# Different benchmarks either way -- the break-even shows the shape of the
+# amortisation, not a head-to-head result.
 READ_TOKENS_OURS = 2097
 READ_TOKENS_MEM0 = 1764
 
