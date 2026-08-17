@@ -91,6 +91,7 @@ class PreflightResult:
     bm25_encoder_available: bool
     spacy_available: bool
     conversation_date_honoured: bool
+    prompt_dates_patchable: bool = True
 
     @property
     def ok(self) -> bool:
@@ -120,6 +121,14 @@ class PreflightResult:
                 "stored created_at does not match the conversation date -- the "
                 "extractor is resolving 'last week' against today. This "
                 "contaminates every temporal memory in the run.")
+        if not self.prompt_dates_patchable:
+            problems.append(
+                "generate_additive_extraction_prompt no longer takes both "
+                "current_date and timestamp, so _add_with_date cannot pin the "
+                "prompt's Current Date and Observation Date. mem0 renamed or "
+                "dropped them; re-read _resolve_dates before running, because "
+                "the run will otherwise put wall-clock today in every "
+                "extraction prompt and look fine doing it.")
         return ("preflight OK" if not problems
                 else "preflight FAILED:\n  - " + "\n  - ".join(problems))
 
@@ -127,7 +136,7 @@ class PreflightResult:
 class Mem0OssPolicy:
     """Mem0 OSS v3 ingestion, driven by a locally served open model.
 
-    All four degradation modes checked by `preflight()` are silent in mem0: the
+    Every degradation mode checked by `preflight()` is silent in mem0: the
     run completes and produces a store either way, just a worse one. Running
     without preflight is how you publish a number for a configuration you did
     not have.
@@ -247,6 +256,21 @@ class Mem0OssPolicy:
             except Exception:
                 spacy_ok = False
 
+            # Both prompt-date kwargs must still exist by name. If mem0 renames
+            # either, functools.partial binds nothing, no error is raised, and
+            # the prompt silently regains wall-clock today.
+            try:
+                import inspect
+
+                from mem0.configs.prompts import (
+                    generate_additive_extraction_prompt as _gp,
+                )
+
+                params = inspect.signature(_gp).parameters
+                dates_ok = "current_date" in params and "timestamp" in params
+            except Exception:
+                dates_ok = False
+
             date = "2023-05-20"
             self._add_with_date(
                 m, [{"role": "user", "content": "I met Priya in Lisbon."}],
@@ -254,7 +278,8 @@ class Mem0OssPolicy:
             rows = m.get_all(filters={"user_id": "preflight"})["results"]
             date_ok = bool(rows) and str(rows[0].get("created_at", "")).startswith(date)
 
-        return PreflightResult(bm25_impl, slot, encoder, spacy_ok, date_ok)
+        return PreflightResult(bm25_impl, slot, encoder, spacy_ok, date_ok,
+                               dates_ok)
 
     @staticmethod
     def _add_with_date(memory, messages, *, user_id: str,
@@ -266,13 +291,21 @@ class Mem0OssPolicy:
 
         1. Stored `created_at` defaults to `datetime.now()`. A `created_at` in
            `metadata` survives `_strip_identity_keys` and wins.
-        2. The extraction prompt's "Observation Date" also defaults to now, and
-           `main.py` never forwards the `timestamp` argument that
-           `generate_additive_extraction_prompt` accepts. Patched for the
-           duration of the call.
+        2. The extraction prompt carries *two* dates, and `main.py` forwards
+           neither. `generate_additive_extraction_prompt` takes `current_date`
+           and `timestamp`, and `_resolve_dates` maps them to the prompt's
+           "Current Date" and "Observation Date" sections, defaulting each to
+           `datetime.now()`. Both are patched for the duration of the call.
 
-        Without both, the extractor resolves "last week" against today's date
-        and every relative time reference in the store is wrong. This is the
+        Patching only `timestamp` is not enough, and that was the bug here
+        first. It yields a prompt reading "Observation Date 2023-05-20 /
+        Current Date <today>" — a three-year gap invented by the harness, with
+        today's date still present as the anchor a model naturally resolves
+        "last week" against. Both dates have to be the conversation's, because
+        during ingestion the conversation's date *is* the present.
+
+        Without this the extractor resolves relative time against wall-clock
+        today and every relative reference in the store is wrong. This is the
         failure behind mem0 issue #3944.
 
         Not thread-safe: the patch is process-global. Fine for a sequential
@@ -282,7 +315,8 @@ class Mem0OssPolicy:
 
         original = mm.generate_additive_extraction_prompt
         mm.generate_additive_extraction_prompt = functools.partial(
-            original, timestamp=conversation_date)
+            original, current_date=conversation_date,
+            timestamp=conversation_date)
         try:
             meta = dict(kw.pop("metadata", None) or {})
             meta.setdefault("created_at", f"{conversation_date}T00:00:00+00:00")

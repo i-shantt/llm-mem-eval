@@ -136,15 +136,29 @@ def test_iso_date_conversion() -> None:
 
 
 def test_preflight_result_reports_every_failure() -> None:
-    ok = PreflightResult(True, True, True, True, True)
+    n_checks = len(PreflightResult.__dataclass_fields__)
+
+    ok = PreflightResult(*([True] * n_checks))
     assert ok.ok and ok.explain() == "preflight OK"
 
-    bad = PreflightResult(False, False, False, False, False)
+    bad = PreflightResult(*([False] * n_checks))
     assert not bad.ok
     text = bad.explain()
     for expected in ("keyword_search", "fastembed", "sparse slot",
-                     "en_core_web_sm", "created_at"):
+                     "en_core_web_sm", "created_at", "current_date"):
         assert expected in text, f"{expected} not explained"
+
+    # Every check must contribute a line, or a silently-failing one looks fine.
+    # Counted rather than listed, so adding a field without an explanation
+    # fails here instead of going unreported in a real run.
+    assert text.count("\n  - ") == n_checks, (
+        f"{n_checks} checks but {text.count(chr(10) + '  - ')} explanations")
+
+    # And each one alone must be enough to fail the preflight.
+    for field in PreflightResult.__dataclass_fields__:
+        one_bad = PreflightResult(*([True] * n_checks))
+        setattr(one_bad, field, False)
+        assert not one_bad.ok, f"{field} False still reports ok"
 
 
 def test_package_imports_without_the_mem0_extra() -> None:
@@ -155,3 +169,70 @@ def test_package_imports_without_the_mem0_extra() -> None:
     if "mem0" not in sys.modules:
         with pytest.raises((ImportError, SystemExit)):
             w.build_policy("mem0_oss_v3_qwen7b")
+
+
+def test_the_date_patch_pins_both_prompt_dates_not_just_one() -> None:
+    """mem0's extraction prompt carries two dates and defaults both to now.
+
+    `generate_additive_extraction_prompt(current_date=, timestamp=)` feeds
+    `_resolve_dates`, which fills "Current Date" from `current_date` and
+    "Observation Date" from `timestamp`, each defaulting to `datetime.now()`.
+    Binding only `timestamp` -- the original bug here -- produced a prompt
+    reading "Observation Date 2023-05-20 / Current Date <today>", leaving
+    wall-clock today in the prompt as the anchor for "last week". Both must be
+    the conversation's date.
+
+    Checked by inspecting the partial the adapter installs, so this runs with
+    mem0 absent, which is the only state CI has.
+    """
+    import functools
+    import sys
+    from types import ModuleType
+
+    captured = {}
+
+    def fake_prompt(**kw):
+        captured.update(kw)
+        return "prompt"
+
+    # Stand in for mem0.memory.main just long enough for _add_with_date to
+    # patch it. Nothing else about mem0 is needed.
+    mod = ModuleType("mem0.memory.main")
+    mod.generate_additive_extraction_prompt = fake_prompt
+    pkg = ModuleType("mem0")
+    mem = ModuleType("mem0.memory")
+    saved = {k: sys.modules.get(k) for k in ("mem0", "mem0.memory", "mem0.memory.main")}
+    sys.modules.update({"mem0": pkg, "mem0.memory": mem, "mem0.memory.main": mod})
+
+    installed = {}
+
+    class _Memory:
+        def add(self, messages, **kw):
+            # Whatever the adapter patched in is live at this point.
+            fn = sys.modules["mem0.memory.main"].generate_additive_extraction_prompt
+            installed["keywords"] = dict(getattr(fn, "keywords", {}) or {})
+            installed["metadata"] = kw.get("metadata")
+            return {"results": []}
+
+    try:
+        Mem0OssPolicy._add_with_date(
+            _Memory(), [{"role": "user", "content": "hi"}],
+            user_id="u", conversation_date="2023-05-20")
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                sys.modules.pop(k, None)
+            else:
+                sys.modules[k] = v
+
+    kws = installed["keywords"]
+    assert kws.get("timestamp") == "2023-05-20", kws
+    assert kws.get("current_date") == "2023-05-20", (
+        "only the observation date was pinned; the prompt would still carry "
+        f"wall-clock today as its Current Date. bound: {kws}")
+    # And the stored row's created_at still has to be overridden too.
+    assert installed["metadata"]["created_at"].startswith("2023-05-20")
+    # The patch must be undone, or every later call inherits this date.
+    assert not isinstance(
+        sys.modules.get("mem0.memory.main", ModuleType("x")).__dict__.get(
+            "generate_additive_extraction_prompt"), functools.partial)

@@ -597,8 +597,11 @@ the rewriting itself to be lossy.
 **No LLM extraction arm was run**, so this stays a prediction. An adapter that
 runs Mem0's own open-source v3 ingestion is committed at
 [`llm_mem_eval/write/mem0_adapter.py`](llm_mem_eval/write/mem0_adapter.py), with a preflight
-for the four ways mem0 silently degrades and a workaround for the conversation-date
-contamination in [issue #3944](https://github.com/mem0ai/mem0/issues/3944).
+for six ways mem0 silently degrades and a workaround for the conversation-date
+contamination in [issue #3944](https://github.com/mem0ai/mem0/issues/3944) — a
+workaround that had to be corrected once, because pinning the prompt's observation
+date without also pinning its current date leaves wall-clock today in the prompt
+and looks like a fix.
 [`RUNNING.md`](RUNNING.md) explains why it has not been run: an open 7B extractor
 with a 33M-parameter embedder is a configuration Mem0 has already said in writing
 is not the one their published numbers describe, and a weak result from it would

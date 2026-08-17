@@ -93,8 +93,8 @@ python scripts/run_survival_eval.py \
     --policies verbatim_turn truncated_recency_25 leadk_25 mem0_oss_v3_qwen7b
 ```
 
-**Run the preflight.** All four failure modes it checks are silent in mem0 — the
-run completes either way and produces a worse store:
+**Run the preflight.** Every failure it checks for is silent in mem0 — the run
+completes either way and produces a worse store. Four of them degrade retrieval:
 
 1. a vector store without `keyword_search` drops BM25 for the whole session
    (chroma and faiss do this; qdrant does not);
@@ -102,11 +102,28 @@ run completes either way and produces a worse store:
 3. a collection predating v3 has no sparse slot;
 4. a missing spaCy model turns the entity boost off.
 
-It also checks the one that corrupts the store's contents rather than its
-ranking: `add(timestamp=...)` raises in OSS, so the adapter passes the
-conversation date through `metadata["created_at"]` *and* patches
-`generate_additive_extraction_prompt`. Without both, the extractor resolves
-"last week" against today's date — the failure in
+Two more checks cover the failure that corrupts the store's *contents* rather
+than its ranking. `add(timestamp=...)` is hard-rejected in OSS with a "Platform-only"
+error, so the adapter has to pin the conversation date in **three** places:
+
+1. `metadata["created_at"]`, which survives `_strip_identity_keys` and overrides
+   the stored row's `datetime.now()` default;
+2. `generate_additive_extraction_prompt(timestamp=...)`, the prompt's
+   **Observation Date**;
+3. `generate_additive_extraction_prompt(current_date=...)`, the prompt's
+   **Current Date**.
+
+The third was missing at first, and the omission is instructive. `_resolve_dates`
+defaults each date independently, so binding only `timestamp` produced a prompt
+reading *"Observation Date 2023-05-20 / Current Date 2026-08-17"* — a three-year
+gap invented by the harness, with wall-clock today still sitting in the prompt as
+the anchor a model resolves "last week" against. It looks like the fix and is not
+one. During ingestion the conversation's date *is* the present, so both have to be
+it. The preflight now also asserts that both keyword names still exist, because
+`functools.partial` binds a renamed kwarg silently.
+
+Without all three, the extractor resolves relative time against today and every
+relative reference in the store is wrong — the failure in
 [mem0 issue #3944](https://github.com/mem0ai/mem0/issues/3944).
 
 ### Cost
