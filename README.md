@@ -400,7 +400,7 @@ type and length. On the verbatim store:
 | gold length | n | survival | chance null |
 |---|---|---|---|
 | 1 token | 74 | 1.000 | **0.661** |
-| 2–3 tokens | 71 | 0.958 | 0.225 |
+| 2–3 tokens | 71 | 0.958 | 0.211 |
 | 4+ tokens | 39 | 0.487 | 0.046 |
 
 A one-token gold like `3` or `Target` is found in a 104K-token store two thirds
@@ -427,16 +427,16 @@ work — it keeps the same number of sentences from every turn, counted from the
 
 | write policy | store tokens | records | survival | null | **corrected** |
 |---|---|---|---|---|---|
-| verbatim (whole conversation) | 104,110 | 497 | 0.791 | 0.162 | **0.751** |
-| lead-k @ 50% | 52,194 | 497 | 0.736 | 0.120 | **0.700** |
-| tail-k @ 50% | 52,197 | 497 | 0.736 | 0.125 | **0.699** |
-| truncate-recent @ 50% | 52,053 | 253 | 0.545 | 0.108 | **0.490** |
-| tail-k @ 25% | 26,027 | 497 | 0.582 | 0.079 | **0.546** |
-| lead-k @ 25% | 26,021 | 497 | 0.564 | 0.081 | **0.525** |
-| truncate-random @ 25% (3 seeds) | 26,026 | ~130 | 0.309–0.400 | 0.080 | **0.244–0.348** |
-| truncate-recent @ 25% | 26,026 | 128 | 0.309 | 0.065 | **0.261** |
-| lead-k @ 10% | 10,410 | 411 | 0.282 | 0.049 | **0.245** |
-| truncate-recent @ 10% | 10,409 | 54 | 0.182 | 0.037 | **0.150** |
+| verbatim (whole conversation) | 104,110 | 497 | 0.791 | 0.153 | **0.753** |
+| lead-k @ 50% | 52,194 | 497 | 0.736 | 0.114 | **0.703** |
+| tail-k @ 50% | 52,197 | 497 | 0.736 | 0.119 | **0.701** |
+| truncate-recent @ 50% | 52,053 | 253 | 0.545 | 0.104 | **0.493** |
+| tail-k @ 25% | 26,027 | 497 | 0.582 | 0.077 | **0.547** |
+| lead-k @ 25% | 26,021 | 497 | 0.564 | 0.077 | **0.527** |
+| truncate-random @ 25% (3 seeds) | 26,026 | ~130 | 0.309–0.391 | 0.069–0.081 | **0.248–0.342** |
+| truncate-recent @ 25% | 26,026 | 128 | 0.309 | 0.063 | **0.263** |
+| lead-k @ 10% | 10,410 | 411 | 0.282 | 0.047 | **0.246** |
+| truncate-recent @ 10% | 10,409 | 54 | 0.182 | 0.035 | **0.152** |
 
 Paired against the full store on the questions both scored (McNemar plus a paired
 bootstrap — the same functions the memory-lift ablation uses):
@@ -465,7 +465,7 @@ Four things follow.
    under `soft`), which is the test it has to pass.
 
    A tempting stronger claim does **not** survive it. Lead-k at 25% beats
-   truncation at 50% under strict containment (0.525 vs 0.490) — better survival
+   truncation at 50% under strict containment (0.527 vs 0.493) — better survival
    for half the tokens — but under `soft` the ordering reverses (0.541 vs 0.560).
    One budget-halving is about where the two effects cancel, so that version is
    not claimed.
@@ -473,16 +473,17 @@ Four things follow.
 2. **It is breadth that helps, not answers appearing early in a message.** Those
    two explanations predict the same lead-k number, so lead-k alone cannot
    separate them — which is what tail-k is for. Taking the *closing* sentences of
-   every turn instead scores **0.699 against lead-k's 0.700** at 50%, and 0.546
-   against 0.525 at 25%: indistinguishable at both budgets, on stores matched to
+   every turn instead scores **0.701 against lead-k's 0.703** at 50%, and 0.547
+   against 0.527 at 25%: indistinguishable at both budgets, on stores matched to
    within 4 tokens of each other. Meanwhile truncation at the same 50% budget
-   sits at 0.490. Which sentences you keep barely matters; *how many turns you
+   sits at 0.493. Which sentences you keep barely matters; *how many turns you
    touch* matters a great deal.
 
 3. **A recency prior does not help on these questions.** Truncate-recent at 25%
-   (0.261) sits inside the spread of three random seeds (0.244–0.348). That
-   ±0.05 seed spread is the honest noise floor for this whole table, and the
-   breadth-versus-depth gap at the same budget is about five times it.
+   (0.263) sits inside the spread of three random seeds (0.248–0.342). That
+   spread — 0.094 wide, so ±0.047 about its midpoint — is the honest noise floor
+   for this whole table, and the breadth-versus-depth gap at the same budget
+   (0.703 against 0.493, so 0.210) is about four times it.
 
 4. **Compression alone is expensive, but not the way a naive reading suggests.**
    Survival does not fall proportionally with budget — it falls much faster for
@@ -569,9 +570,31 @@ appear in almost any answer, which makes containment nearly uninformative for
 that question shape. A 0.000 false-accept rate over constructed cases is
 *necessary* for trusting a grader, not *sufficient*.
 
-Several of the grader's known defects were found by reading real model output
-rather than by the audit, so the repo does both. Because every arm stores its
-full per-question predictions,
+**Two more, found by reading the answer key against the grader.** Neither was
+reachable by the constructed audit, and they fail in opposite directions.
+
+- The gold answer `Dr. Arati Prabhakar` was split on its period into the
+  alternatives `["Dr", "Arati Prabhakar"]` — the splitter exists because
+  LongMemEval spells genuine alternatives across sentences — and a bare `Dr` is
+  contained in *any* answer that names *any* doctor. So
+  `contains_answer("You mentioned Dr. Johnson.", "Dr. Arati Prabhakar")` returned
+  **True**: naming the wrong doctor scored correct.
+- The mirror error. A question whose answer *is* an ordering had its enumeration
+  check disabled, leaving only contiguous-span matching, so the correct answer
+  written the natural way — `"JetBlue, Delta, United, and American Airlines"` —
+  was scored **wrong**, because the inserted `and` breaks the span.
+
+Both are fixed and regression-tested. Neither moved a headline accuracy:
+`regrade.py` reports 0 of 23 arms changed at full answer length. The false accept
+did move exactly one published column — seven verdicts in the 15-word row of the
+[length-decay table](#containment-grading-rewards-length), where truncation cuts
+the name but leaves `Dr`. That is the whole argument for keeping the decay table
+and the re-grade harness: a defect too small to shift an accuracy still shifted a
+number, and the tooling located it precisely.
+
+Several of the grader's known defects were found by reading real model output or
+the answer key rather than by the audit, so the repo does both. Because every arm
+stores its full per-question predictions,
 [`scripts/regrade.py`](scripts/regrade.py) replays any grader change over all 23
 stored arms and prints each changed verdict, and `tests/test_report.py` asserts
 that re-grading an arm today still reproduces the accuracy stored with it — so
@@ -708,8 +731,8 @@ their first N words prices that:
 
 | arm | full | 40w | 25w | 15w | 8w |
 |---|---|---|---|---|---|
-| 7B hybrid | 0.473 | 0.451 | 0.374 | 0.363 | 0.253 |
-| 14B hybrid | 0.593 | 0.571 | 0.462 | 0.407 | 0.253 |
+| 7B hybrid | 0.473 | 0.451 | 0.374 | 0.352 | 0.253 |
+| 14B hybrid | 0.593 | 0.571 | 0.462 | 0.396 | 0.253 |
 | **14B − 7B** | **+0.121** | +0.121 | +0.088 | +0.044 | **+0.000** |
 
 The 14B lead decays to exactly zero. Token-F1, which penalises length rather than
@@ -828,7 +851,7 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
     --granularity turn --tag sweep_turn_n100 \
     --retrievers random recency bm25 dense hybrid oracle
 ./.venv/bin/python scripts/measure_token_stats.py --limit 100 --granularity turn
-./.venv/bin/python scripts/make_cost_curve.py --results results/sweep_turn_n100.json
+./.venv/bin/python scripts/make_cost_curve.py
 
 # grader audit, then regenerate the report
 ./.venv/bin/python scripts/audit_graders.py

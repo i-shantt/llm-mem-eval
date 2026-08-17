@@ -10,7 +10,7 @@ after many queries hit the same memory. Read-path-only accounting -- what the
 literature reports -- is the n -> infinity limit, which flatters exactly the
 systems that spend the most up front.
 
-    python scripts/make_cost_curve.py --results results/sweep_turn_n100.json
+    python scripts/make_cost_curve.py
 """
 
 from __future__ import annotations
@@ -36,7 +36,12 @@ def tokens_for_context(n_units: int, avg_tokens_per_unit: float) -> float:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--results", default="results/sweep_turn_n100.json")
+    # No --results. This figure is priced entirely from measured token sizes and
+    # published construction costs; it does not read a retrieval sweep. It used
+    # to accept one and load it into a variable that was never referenced, which
+    # implied the curve was derived from that run's results. It is not, and a
+    # decorative input on a cost figure is exactly the kind of thing that should
+    # not be left implying provenance it does not have.
     ap.add_argument("--k", type=int, default=10,
                    help="how many retrieved units get sent to the LLM")
     ap.add_argument("--token-stats", default="results/token_stats_turn.json",
@@ -50,8 +55,6 @@ def main() -> None:
     ap.add_argument("--max-queries", type=int, default=20000)
     ap.add_argument("--out", default="results/cost_curve.png")
     args = ap.parse_args()
-
-    runs = json.loads(Path(args.results).read_text())
 
     # Prefer measured token statistics over any hardcoded guess.
     stats_path = Path(args.token_stats)
