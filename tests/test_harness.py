@@ -95,11 +95,12 @@ def test_embed_cache_replays_cost_not_disk_read() -> None:
     tmp = Path(tempfile.mkdtemp())
     try:
         cache = EmbeddingCache(enabled=True, cache_dir=tmp)
+        texts = [f"turn {i}" for i in range(7)]
         emb = np.random.rand(7, 384).astype("float32")
         true_cost = {"wall_clock_s": 11.843, "tokens": 103_000, "n_items": 7}
-        cache.put("m", "k", emb, true_cost)
+        cache.put("m", "k", texts, emb, true_cost)
 
-        got = cache.get("m", "k", 7)
+        got = cache.get("m", "k", texts)
         assert got is not None, "cache miss on a key we just wrote"
         emb2, cost2 = got
         assert np.allclose(emb, emb2)
@@ -107,8 +108,19 @@ def test_embed_cache_replays_cost_not_disk_read() -> None:
         assert cost2["tokens"] == true_cost["tokens"]
 
         # A different unit count must miss rather than return stale vectors.
-        assert cache.get("m", "k", 8) is None
-        assert cache.get("other-model", "k", 7) is None
+        assert cache.get("m", "k", texts + ["turn 7"]) is None
+        assert cache.get("other-model", "k", texts) is None
+
+        # And so must different *content* at the same count under the same key.
+        # Callers key on question id and granularity, so two write policies that
+        # happen to emit the same number of records for one conversation -- which
+        # verbatim and lead-k both do -- collided and silently served each
+        # other's vectors.
+        same_count_other_text = [f"shortened {i}" for i in range(7)]
+        assert cache.get("m", "k", same_count_other_text) is None, (
+            "same key and count, different text: this must miss, or the cache "
+            "returns one store's embeddings for another store"
+        )
         assert cache.used_replayed_timings is True
         print("  ok  embedding cache replays true compute cost")
     finally:

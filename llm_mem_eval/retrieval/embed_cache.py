@@ -31,18 +31,39 @@ class EmbeddingCache:
         if enabled:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def _path(self, model_name: str, cache_key: str, n_units: int) -> Path:
+    @staticmethod
+    def content_digest(texts: list[str]) -> str:
+        """Fingerprint of exactly the strings that were embedded.
+
+        The key used to be (model, cache_key, n_units), which is not enough to
+        identify what was embedded. Callers key on the question and granularity
+        -- `f"{ex.question_id}|{args.granularity}"` -- so two *different* stores
+        for the same question collide whenever they hold the same number of
+        records. That is not hypothetical: the verbatim and lead-k write policies
+        both produce 497 records for a typical conversation, so routing a write
+        policy's store through DenseRetriever with the cache on would have
+        returned the other policy's vectors and reported it as a hit. Hashing the
+        content makes the key say what it means.
+        """
+        h = hashlib.sha1()
+        for t in texts:
+            h.update(t.encode("utf-8", "replace"))
+            h.update(b"\x00")  # so ["ab","c"] and ["a","bc"] differ
+        return h.hexdigest()[:16]
+
+    def _path(self, model_name: str, cache_key: str, texts: list[str]) -> Path:
         digest = hashlib.sha1(
-            f"{model_name}|{cache_key}|{n_units}".encode()
+            f"{model_name}|{cache_key}|{len(texts)}|"
+            f"{self.content_digest(texts)}".encode()
         ).hexdigest()[:20]
         return self.cache_dir / f"{digest}.npz"
 
     def get(
-        self, model_name: str, cache_key: str, n_units: int
+        self, model_name: str, cache_key: str, texts: list[str]
     ) -> tuple[np.ndarray, dict] | None:
         if not self.enabled:
             return None
-        p = self._path(model_name, cache_key, n_units)
+        p = self._path(model_name, cache_key, texts)
         if not p.exists():
             self.misses += 1
             return None
@@ -53,7 +74,7 @@ class EmbeddingCache:
         except Exception:
             self.misses += 1
             return None
-        if emb.shape[0] != n_units:
+        if emb.shape[0] != len(texts):
             self.misses += 1
             return None
         self.hits += 1
@@ -63,12 +84,13 @@ class EmbeddingCache:
         self,
         model_name: str,
         cache_key: str,
+        texts: list[str],
         emb: np.ndarray,
         cost: dict,
     ) -> None:
         if not self.enabled:
             return
-        p = self._path(model_name, cache_key, emb.shape[0])
+        p = self._path(model_name, cache_key, texts)
         try:
             np.savez(p, emb=emb, cost=np.array(json.dumps(cost)))
         except Exception:

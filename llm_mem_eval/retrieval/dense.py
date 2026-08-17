@@ -93,7 +93,7 @@ class DenseRetriever:
         self._unit_ids = [u.unit_id for u in units]
 
         if self.cache is not None and cache_key is not None:
-            cached = self.cache.get(self.model_name, cache_key, len(texts))
+            cached = self.cache.get(self.model_name, cache_key, texts)
             if cached is not None:
                 self._emb, cost = cached
                 # Replay the cost actually incurred when these were computed,
@@ -118,6 +118,7 @@ class DenseRetriever:
             self.cache.put(
                 self.model_name,
                 cache_key,
+                texts,
                 self._emb,
                 {
                     "wall_clock_s": elapsed,
