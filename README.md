@@ -407,16 +407,16 @@ arm makes an LLM call on the write path. Full tables in
 | **hybrid (BM25 + dense, RRF)** | **0.537** | 0.914 | 0.826 | **0.665** |
 | oracle (gold evidence ranked first) | 1.000 | 1.000 | 1.000 | 1.000 |
 
-Two findings that hold at full scale, and one that flipped.
+Three findings that hold at full scale. Two others did not, and those are below.
 
 - **Hybrid rank-fusion is the best ranker**, beating both of its own inputs on
   `any_hit@1` (0.537) and MRR (0.665). Fusing a lexical and a semantic ranking
   recovers more than either signal alone, which is the same conclusion Mem0's v3
   retrieval reaches and why the comparison in this repo is between *write* paths.
-- **The embedder buys depth; the lexical index buys cheap precision.** dense leads
-  `recall@10` 0.844 to 0.729, and BM25 leads `any_hit@1` 0.511 to 0.482 for
-  **~75× less write cost**. Which you want depends on whether the answering model
-  needs one evidence turn or all of them.
+- **The embedder buys depth; the lexical index buys cheap precision.** The dense
+  arm leads `recall@10` 0.844 to 0.729, and BM25 leads `any_hit@1` 0.511 to 0.482
+  for **~75× less write cost**. Which you want depends on whether the answering
+  model needs one evidence turn or all of them.
 - **"Just keep the last N turns" does not work, and at full scale it is worse
   than that.** Recency scores **0.025** against random's 0.046 — not merely no
   better than chance but *below* it, because the most recent turns are
