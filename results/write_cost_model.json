@@ -4,7 +4,7 @@
   "benchmark": "LongMemEval-S",
   "n_conversations": 500,
   "_session_count_note": "Session granularity averages ~48 calls, not the ~50 you get from len(haystack_sessions). The split contains 1,230 empty sessions and 15 conversations reuse a session id; an empty session triggers no add() call, so 48 is the right figure for a call count.",
-  "_break_even_note": "break_even_queries_tokens = write tokens / (this repo's read tokens per query - Mem0's reported read tokens per query) = total / (2097 - 1764). It ignores the 8x price premium on output tokens, so it is a floor. The point is not the number: it is that under v3 there is no single break-even, because the write cost is set by the caller's batching.",
+  "_break_even_note": "break_even_queries_tokens = write tokens / (this repo's read tokens per query - Mem0's reported read tokens per query) = total / (2109 - 1764). It ignores the 8x price premium on output tokens, so it is a floor. The point is not the number: it is that under v3 there is no single break-even, because the write cost is set by the caller's batching.",
   "exact_inputs": {
     "system_prompt_tokens": 7671,
     "last_k_messages": 10,
@@ -46,7 +46,7 @@
       "share_system_prompt": 0.7125541583753814,
       "share_resent_context": 0.1935484967583868,
       "share_new_content": 0.01958586960872878,
-      "break_even_queries_tokens": 15965.911675675678
+      "break_even_queries_tokens": 15410.575617391305
     },
     "per_pair": {
       "n_calls": 248.868,
@@ -61,7 +61,7 @@
       "share_system_prompt": 0.6994454786953918,
       "share_resent_context": 0.189458457782789,
       "share_new_content": 0.0381516777890187,
-      "break_even_queries_tokens": 8196.396132132133
+      "break_even_queries_tokens": 7911.304092753623
     },
     "per_session": {
       "n_calls": 47.738,
@@ -76,7 +76,7 @@
       "share_system_prompt": 0.6030944847943502,
       "share_resent_context": 0.16251505656176302,
       "share_new_content": 0.17149441017100436,
-      "break_even_queries_tokens": 1823.4195735735736
+      "break_even_queries_tokens": 1759.996284057971
     },
     "per_conversation": {
       "n_calls": 1,
@@ -91,7 +91,7 @@
       "share_system_prompt": 0.0681247875596305,
       "share_resent_context": 0.0,
       "share_new_content": 0.9247705546320388,
-      "break_even_queries_tokens": 338.1447027027027
+      "break_even_queries_tokens": 326.38314782608694
     }
   },
   "sensitivity_at_per_session": {

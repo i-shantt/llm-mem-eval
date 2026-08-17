@@ -85,7 +85,8 @@ PRICE_OUT_PER_M = 2.00
 # Read-path tokens per query, for the break-even.
 #
 # Ours is *retrieved context only*: k=10 times the measured mean turn size in
-# results/token_stats_turn.json (10 x 209.67). It is deliberately not the
+# results/token_stats_turn.json (10 x 210.85, measured over all 500
+# conversations). It is deliberately *not* the
 # `read_tokens_per_query` field of an e2e arm, which is 2,639 for
 # e2e_7b_hybrid_turn_k10_n100 because it counts the whole prompt -- template,
 # date line, question -- plus the completion. The ~542-token difference is the
@@ -97,7 +98,7 @@ PRICE_OUT_PER_M = 2.00
 #
 # Different benchmarks either way -- the break-even shows the shape of the
 # amortisation, not a head-to-head result.
-READ_TOKENS_OURS = 2097
+READ_TOKENS_OURS = 2109
 READ_TOKENS_MEM0 = 1764
 
 

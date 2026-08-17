@@ -231,8 +231,8 @@ Modelled over all 500 LongMemEval conversations
 
 | `add()` batching | calls | tokens | of which system prompt | break-even vs this repo |
 |---|---|---|---|---|
-| per turn | 494 | 5.32M | 71% | ~16,000 queries |
-| per message pair | 249 | 2.73M | 70% | ~8,200 queries |
+| per turn | 494 | 5.32M | 71% | ~15,000 queries |
+| per message pair | 249 | 2.73M | 70% | ~7,900 queries |
 | **per session** | 48 | 0.61M | 60% | ~1,800 queries |
 
 **An earlier version of this section said "one extraction call per message pair
@@ -261,8 +261,8 @@ gpt-4o-mini prompt rates:
 
 | | write, per conversation | read, per query |
 |---|---|---|
-| this repo's hybrid retriever | **$0** (no LLM calls) | $0.00031 (2,097 tok) |
-| full context | $0 | $0.01561 (104,059 tok) |
+| this repo's hybrid retriever | **$0** (no LLM calls) | $0.00032 (2,109 tok) |
+| full context | $0 | $0.01562 (104,131 tok) |
 | Mem0 — *reported*, LoCoMo | $0.185 (1.23M tok) | $0.00026 (1,764 tok) |
 
 That `$0` is **API dollars, not free**. Indexing one conversation still costs
@@ -273,22 +273,22 @@ it is a rounding-to-zero, not a zero.
 
 Two readings, and the second is the one that matters.
 
-**A search index with no LLM write path reads 49.6× cheaper per query than
+**A search index with no LLM write path reads 49.4× cheaper per query than
 sending the whole conversation**, and has no build cost to repay.
 
 **Mem0's read path is genuinely cheaper per query than this repo's** — 1,764
-tokens against 2,097, because extracted facts are terser than raw turns. It just
+tokens against 2,109, because extracted facts are terser than raw turns. It just
 starts a build cost behind. At that rate of saving the crossover is around
-**3,700 queries against a single conversation**.
+**3,600 queries against a single conversation**.
 
 That figure depends on which construction measurement you use, so all three are
 shown rather than the most convenient one:
 
 | construction source | tokens | break-even |
 |---|---|---|
-| RecMem Table 1, LoCoMo, gpt-4o-mini extraction | 1.23M | **~3,700 queries** |
-| RecMem Table 1, LoCoMo, gpt-4.1-mini extraction | 1.52M | ~4,570 queries |
-| RecMem Table 2, LongMemEval-S | 1.63M | ~4,890 queries |
+| RecMem Table 1, LoCoMo, gpt-4o-mini extraction | 1.23M | **~3,600 queries** |
+| RecMem Table 1, LoCoMo, gpt-4.1-mini extraction | 1.52M | ~4,400 queries |
+| RecMem Table 2, LongMemEval-S | 1.63M | ~4,700 queries |
 
 The headline uses the smallest, because its extraction model matches the prices
 used everywhere else here, and because quoting the largest would be picking the
@@ -305,9 +305,19 @@ carrying a large fixed prompt — which is the point of the batching table above
 **What "read, per query" counts.** Retrieved context only — not the prompt
 template, the date line or the question. Mem0's 1,764 is the same quantity, its
 Table 2 "memory tokens" column, so the two are like-for-like. This repo's
-template adds ~500 tokens, and adding it to both sides would move the
-full-context ratio from 49.6× to about 40×. The break-even is unaffected in
-direction and lands near 1,500 queries on that basis instead of 3,700.
+template, date line and question add a measured **487 tokens** on top (mean
+prompt 2,596 against 2,109 retrieved, `e2e_7b_hybrid_turn_k10_n100`). Two ways to
+account for it, and neither changes the direction:
+
+- Add it to **both** sides and the full-context ratio falls from 49.4× to
+  **40.3×**. The break-even does not move at all, because a constant added to
+  both read paths cancels in their difference.
+- Charge it to this repo alone — Mem0 reports no template overhead, so its true
+  per-query total is unknown and certainly above 1,764 — and the per-query saving
+  widens from 345 tokens to 832, pulling the break-even in to **~1,500 queries**.
+
+The second is the version unfavourable to this repo, which is why it is the one
+worth stating: even there, a build cost still has to be repaid.
 
 **No memory product was re-run here.** Mem0's read path comes from its own
 Table 2; the construction tokens come from
@@ -746,8 +756,9 @@ cannot quietly lapse.
 
 ### Granularity has to be priced, not just measured
 
-Retrieval units differ ~40× in size — a turn averages 210 tokens, a user turn 54,
-a whole session 2,164 (`results/token_stats_*.json`). Comparing granularities at
+Retrieval units differ ~40× in size — a turn averages 211 tokens, a user turn 54,
+a whole session 2,182 (`results/token_stats_*.json`, all 500 conversations).
+Comparing granularities at
 a shared `k` compares a 2,600-token prompt against a 22,000-token one, which is
 not a comparison. Two measured symptoms:
 
@@ -850,7 +861,7 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
 ./.venv/bin/python scripts/run_retrieval_eval.py --limit 100 \
     --granularity turn --tag sweep_turn_n100 \
     --retrievers random recency bm25 dense hybrid oracle
-./.venv/bin/python scripts/measure_token_stats.py --limit 100 --granularity turn
+./.venv/bin/python scripts/measure_token_stats.py --limit 0 --granularity turn
 ./.venv/bin/python scripts/make_cost_curve.py
 
 # grader audit, then regenerate the report
