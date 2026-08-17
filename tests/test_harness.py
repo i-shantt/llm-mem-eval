@@ -217,6 +217,67 @@ def test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question() -> 
     print("  ok  grader rejects a reordered answer to an ordering question")
 
 
+def test_grader_accepts_a_correctly_ordered_list_written_with_and() -> None:
+    """Rejecting a reordered list must not also reject a correct one.
+
+    Gating the enumeration off entirely for ordering questions left only strict
+    span matching, and "A, B, and C" is the natural way to write a list -- the
+    inserted "and" breaks the contiguous span. Both of LongMemEval-S's two
+    ordering questions with enumerated golds were false-rejected that way.
+    """
+    from llm_mem_eval.eval.grade import contains_answer, grade
+
+    gold = "JetBlue, Delta, United, American Airlines"
+    q = "What is the order of airlines I flew with from earliest to latest?"
+
+    assert grade("JetBlue, Delta, United, and American Airlines", gold,
+                 question=q) is True
+    # The order still has to be right, or this would have reopened the false
+    # accept the ordering gate exists to prevent.
+    assert grade("JetBlue, Delta, American Airlines, and then United", gold,
+                 question=q) is False
+    # A partial answer is not an ordered answer.
+    assert grade("JetBlue and Delta", gold, question=q) is False
+
+    # The other such question's gold is 19 normalised tokens, so `grade`
+    # abstains before reaching the ordering path -- but `contains_answer` is
+    # what survival uses, and survival applies no extractive threshold, so the
+    # fix has to hold at that level too.
+    museums = ("Science Museum, Museum of Contemporary Art, Metropolitan Museum "
+               "of Art, Museum of History, Modern Art Museum, Natural History "
+               "Museum")
+    museums_q = "What is the order of the six museums I visited, earliest to latest?"
+    natural = ("Science Museum, Museum of Contemporary Art, Metropolitan Museum "
+               "of Art, Museum of History, Modern Art Museum, and Natural "
+               "History Museum")
+    rotated = ("Natural History Museum, Science Museum, Museum of Contemporary "
+               "Art, Metropolitan Museum of Art, Museum of History, and Modern "
+               "Art Museum")
+    assert contains_answer(natural, museums, museums_q) is True
+    assert contains_answer(rotated, museums, museums_q) is False
+    assert grade(natural, museums, question=museums_q) is None
+    print("  ok  grader accepts a correctly ordered list joined with 'and'")
+
+
+def test_grader_does_not_split_a_title_abbreviation_into_an_alternative() -> None:
+    """Measured false accept: gold "Dr. Arati Prabhakar" split on the period
+    into ["Dr", "Arati Prabhakar"], and a bare "Dr" is contained in any answer
+    naming any doctor -- so a wrong doctor graded correct."""
+    from llm_mem_eval.eval.grade import gold_alternatives, grade
+
+    gold = "Dr. Arati Prabhakar"
+    assert "Dr" not in gold_alternatives(gold)
+    assert grade("You mentioned Dr. Johnson.", gold) is False
+    assert grade("It was Dr. Arati Prabhakar.", gold) is True
+
+    # Masking abbreviation periods must not stop a genuinely multi-sentence
+    # answer key from yielding its alternatives, including one-token ones.
+    assert "Yes" in gold_alternatives("Yes. (You have a road bike too.)")
+    assert grade("about 2 days",
+                 "1 day. 2 days (including the last day) is also acceptable.") is True
+    print("  ok  grader does not split a title abbreviation into an alternative")
+
+
 def test_write_policy_preserves_unit_contract() -> None:
     """Store contracts that fail silently rather than loudly.
 
@@ -290,6 +351,8 @@ if __name__ == "__main__":
     test_grader_rejects_near_misses()
     test_grader_matches_regular_plurals()
     test_grader_will_not_accept_a_reordered_answer_to_an_ordering_question()
+    test_grader_accepts_a_correctly_ordered_list_written_with_and()
+    test_grader_does_not_split_a_title_abbreviation_into_an_alternative()
     test_write_policy_preserves_unit_contract()
     test_grader_audit_has_zero_false_accepts()
     print("all passed")

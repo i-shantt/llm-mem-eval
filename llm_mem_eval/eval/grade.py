@@ -125,6 +125,18 @@ _GOLD_ABSTAIN = re.compile(
 _ACCEPTABLE_CLAUSE = re.compile(
     r"\s*(?:is|are|would be)?\s*(?:also\s+)?acceptable(?:\s+too)?\s*\.?", re.I)
 
+# Titles and abbreviations whose trailing period does NOT end a sentence.
+# Measured false accept: gold "Dr. Arati Prabhakar" split into the alternatives
+# ["Dr", "Arati Prabhakar"], and a bare "Dr" is contained in *any* answer that
+# names any doctor -- so "You mentioned Dr. Johnson" graded correct. The period
+# is masked before splitting and restored after, which is narrower than
+# suppressing short alternatives: "Yes. (You have a road bike too.)" has to keep
+# yielding "Yes", because there the one-token alternative is the real answer.
+_ABBREV_PERIOD = re.compile(
+    r"\b(?:dr|mr|mrs|ms|messrs|prof|rev|hon|sgt|capt|lt|col|gen|st|jr|sr|mt|"
+    r"no|vs|approx|etc|inc|ltd|co|corp|dept|est|avg|fig|vol|pp)\.", re.I)
+_PERIOD_MASK = "\x00"
+
 
 def normalize_tokens(text: str) -> list[str]:
     """SQuAD-style normalisation, plus fixes for this benchmark's answers.
@@ -175,8 +187,10 @@ def gold_alternatives(gold: str) -> list[str]:
     reasoning for a reason that has nothing to do with the system.
     """
     text = _ACCEPTABLE_CLAUSE.sub("", str(gold))
+    text = _ABBREV_PERIOD.sub(lambda m: m.group(0)[:-1] + _PERIOD_MASK, text)
     parts: list[str] = []
     for sentence in re.split(r"[.;]\s+", text):
+        sentence = sentence.replace(_PERIOD_MASK, ".")
         for clause in re.split(r"\s+\bor\b\s+", sentence):
             clause = clause.strip().strip(".;,")
             if not clause:
@@ -195,6 +209,49 @@ def _contains_span(pred: str, gold: str) -> bool:
     if not g:
         return False
     return any(p[i:i + len(g)] == g for i in range(len(p) - len(g) + 1))
+
+
+def _span_index_after(p: list[str], gold: str, after: int) -> int | None:
+    """First index > `after` where gold's token sequence occurs in `p`."""
+    g = normalize_tokens(gold)
+    if not g:
+        return None
+    for i in range(after + 1, len(p) - len(g) + 1):
+        if p[i:i + len(g)] == g:
+            return i
+    return None
+
+
+def _items_in_order(pred: str, items: list[str]) -> bool:
+    """Do all `items` appear in `pred`, in this order?
+
+    The right test for a question whose answer *is* an ordering. Gating the
+    enumeration off entirely left only strict span matching, which errs the
+    other way: a prediction listing every item in the correct order but joining
+    the last with "and" was scored incorrect, because the inserted token breaks
+    the contiguous span -- and "A, B, and C" is the *natural* way to write a
+    list.
+
+    Narrow but real. LongMemEval-S has two ordering questions with enumerated
+    golds; both were false-rejected this way. Only one ("JetBlue, Delta, United,
+    American Airlines") is reachable through `grade()` -- the other's gold runs
+    to 19 tokens, so `is_extractive` abstains first. The second one still
+    matters, because `contains_answer` is also what `eval/survival.py` uses to
+    ask whether a store kept the answer, and survival has no such threshold.
+
+    Order is still enforced, so this does not reopen the reordering false accept
+    the set comparison caused: positions must strictly increase, which is what
+    rejects "JetBlue, Delta, American Airlines, and then United" against gold
+    "JetBlue, Delta, United, American Airlines".
+    """
+    p = normalize_tokens(pred)
+    last = -1
+    for item in items:
+        idx = _span_index_after(p, item, last)
+        if idx is None:
+            return False
+        last = idx
+    return True
 
 
 # Questions whose answer IS the ordering. Set comparison is invalid for these:
@@ -233,21 +290,27 @@ def contains_answer(pred: str, gold: str, question: str | None = None) -> bool:
     order scored wrong. ALL items must appear, so this cannot accept a partial
     answer -- the audit's false-accept rate stays at zero.
 
-    `question` gates that set comparison off when the question asks for an
-    ordering, and omitting it keeps the old, more permissive behaviour. Passing
-    it matters: on "What is the order of airlines I flew with from earliest to
-    latest", gold "JetBlue, Delta, United, American Airlines", a 14B model
-    answered "JetBlue, Delta, American Airlines, and then United" -- the right
-    four airlines in the wrong order, which is simply the wrong answer -- and
-    set comparison accepted it. Found by re-grading stored predictions, not by
-    the constructed audit, which had no reordering case for an ordered gold.
+    `question` switches that comparison from a set to an ordered sequence when
+    the question asks for an ordering, and omitting it keeps the old, more
+    permissive behaviour. Passing it matters: on "What is the order of airlines
+    I flew with from earliest to latest", gold "JetBlue, Delta, United, American
+    Airlines", a 14B model answered "JetBlue, Delta, American Airlines, and then
+    United" -- the right four airlines in the wrong order, which is simply the
+    wrong answer -- and set comparison accepted it. Found by re-grading stored
+    predictions, not by the constructed audit, which had no reordering case for
+    an ordered gold.
     """
     if any(_contains_span(pred, alt) for alt in gold_alternatives(gold)):
         return True
-    if question is not None and _ORDER_QUESTION.search(question):
-        return False
     items = _set_items(gold)
-    return bool(items) and all(_contains_span(pred, it) for it in items)
+    if not items:
+        return False
+    if question is not None and _ORDER_QUESTION.search(question):
+        # Order is the answer, so compare as an ordered sequence rather than a
+        # set -- not by giving up on the enumeration entirely, which rejected
+        # correct answers for writing "and" before the last item.
+        return _items_in_order(pred, items)
+    return all(_contains_span(pred, it) for it in items)
 
 
 def token_f1(pred: str, gold: str) -> float:
