@@ -25,6 +25,13 @@ runs it reports on.
   retrieval metric over all 500 questions mixes two tasks that behave nothing
   alike, this repo's own headline included.
   [→](#what-longmemeval-actually-asks)
+- **The benchmark penalises a memory system for respecting time.** 76 questions
+  have a session logged *after* the question — never by a full day, which is why
+  day-truncating the date hides all of it. 43 have gold evidence in one, and
+  **21 have all of it there**. So a retriever that treats the question timestamp
+  as a cutoff, which is what a deployed system must do, scores zero on those by
+  construction. 42 of the 43 are temporal-reasoning.
+  [→](#the-dates-support-day-resolution-and-no-finer)
 - **Mem0 v3's write cost is set by the caller, not the algorithm.** One `add()`
   is one LLM call whatever it carries, so batching per turn instead of per session
   costs **8.8× more**, running the same shipped code. Correcting this repo's
@@ -35,6 +42,11 @@ runs it reports on.
   keeping half the turns whole loses **24.5**. A tail-k control shows it is
   coverage doing the work, not answers appearing early in a message.
   [→](#answer-survival-what-a-write-path-keeps)
+- **A recency prior does not help the strongest retriever at any weight**, at
+  either unit size — so the absence of a recency signal from Mem0's OSS ranker
+  is not a defect. The one question type that looked like an exception gained
+  +0.039 MRR at n=26 and **−0.001 at n=132**, which is the more useful half of
+  the result. [→](#a-recency-prior-does-not-help-at-any-weight)
 - **76–85% of the reported accuracy survives its strongest control**, and
   closed-book accuracy is flat across 9× of model size — so almost none of the
   lift is the model already knowing the answer.
@@ -56,11 +68,12 @@ reported a 0.000 false-accept rate.
 
 ---
 
-Six instruments, each answering a question the aggregate score cannot:
+Seven instruments, each answering a question the aggregate score cannot:
 
 | | |
 |---|---|
 | [benchmark audit](#what-longmemeval-actually-asks) | which questions is a retrieval metric even meaningful for? |
+| [date audit](#the-dates-support-day-resolution-and-no-finer) | what resolution do the benchmark's timestamps actually support? |
 | [cost accounting](#the-measurement-gap) | what does the write path cost, separately from the read path? |
 | [retrieval metrics](#retrieval-quality) | how good is retrieval, scored against gold labels rather than a judge? |
 | [answer survival](#answer-survival-what-a-write-path-keeps) | did the write path keep the answer at all? |
@@ -147,6 +160,47 @@ is reading and computing over retrieved context, not locating an answer. So an
 aggregate retrieval metric over all 500 questions mixes two tasks that behave
 nothing alike, and this repo's own headline `any_hit@10` of 0.914 is subject to
 exactly the same caveat.
+
+### The dates support day resolution and no finer
+
+A second property of the same 500 questions, and one that only bites a system
+built to behave correctly. A deployed memory system must not retrieve what it has
+not seen yet, which is what Mem0's platform-only `search(reference_date=...)`
+exists to enforce — the open-source SDK raises "Platform-only" on it. Implement
+that filter against LongMemEval-S and it costs you points
+([`scripts/audit_question_dates.py`](scripts/audit_question_dates.py) →
+[`results/question_date_audit.json`](results/question_date_audit.json)):
+
+| | day resolution | minute resolution |
+|---|---|---|
+| questions with a session dated after the question | **0** / 500 | **76** / 500 |
+| …of those, with gold evidence in one | — | **43** |
+| …with *all* their gold evidence there | — | **21** |
+
+`parse_date` keeps the calendar day and discards the time, and the overshoot is
+never a full day — 1,421 minutes at the largest. That is precisely why day
+truncation hides all of it. The affected questions are not spread evenly: 42 of
+the 43 are temporal-reasoning, so **32% of temporal-reasoning questions have gold
+evidence timestamped after they were asked, and 16% have nothing else.** A
+retriever that honours the question timestamp to the minute scores zero on those
+21 by construction, having done exactly the right thing.
+
+At day resolution none of this exists, and the date is inert in a stronger sense
+than "unused": no session postdates its question, so ranking by proximity to the
+question and ranking by absolute recency are the *same permutation* at every
+granularity, and under exponential decay the origin cancels out of every pairwise
+ratio (largest relative deviation 4.5e-13). That is checked by sorting both ways
+and comparing, not argued. It is why `search()` here takes a `question_date` that
+every retriever ignores, and why that is a decision rather than an omission.
+
+**This is not a claim that the benchmark is broken.** At day resolution it is
+internally consistent, and the sub-day component of `question_date` is most
+likely not meant as a cutoff at all. The claim is narrower and it is for
+implementers: these dates support day resolution and no finer, and anyone
+building reference-date filtering against this benchmark will otherwise measure
+their own correctness as a loss. It also compounds the finding above — the
+question type whose answers are least often present in its evidence is the same
+one whose timestamps misbehave.
 
 One bookkeeping note on what is measured over what, because it is not uniform.
 This audit, the **turn-granularity** retrieval arms and the cost figure's token
@@ -493,6 +547,54 @@ per-question-type row flagged as unreplicated. Replicating them was worth it.
 The first two are the reason the per-type rows carried a warning. The third is the
 reason it was worth writing the warning rather than dropping the slice.
 
+### A recency prior does not help, at any weight
+
+Mem0's open-source ranker has no recency input — `created_at` and `updated_at`
+are stored on every memory and are not arguments to `score_and_rank`, and
+`search(reference_date=...)` raises "Platform-only". So it is worth knowing
+whether it is missing anything. `HybridRetriever` fuses a most-recent-first
+ranking into BM25 and dense at a weight of your choosing, where 1.0 gives recency
+an equal vote with relevance:
+
+| weight | turn, n=500 (MRR) | ΔMRR vs 0 | session, n=100 (MRR) | ΔMRR vs 0 |
+|---|---|---|---|---|
+| 0 | 0.665 | — | 0.903 | — |
+| 0.25 | 0.664 | −0.001 [−0.015, +0.013] | 0.889 | −0.014 [−0.044, +0.014] |
+| 0.5 | 0.650 | −0.015 [−0.034, +0.005] | 0.850 | **−0.052** [−0.097, −0.010] |
+| 1 | 0.543 | **−0.122** [−0.152, −0.093] | 0.728 | **−0.175** [−0.237, −0.117] |
+| 2 | 0.286 | **−0.378** [−0.419, −0.339] | 0.578 | **−0.325** [−0.402, −0.250] |
+
+The answer is no, at both unit sizes: flat at the smallest weight, monotonically
+worse beyond it. Reported as MRR because a recency prior *reorders* a ranking
+rather than admitting new documents to it — and because at session granularity
+`any_hit@10` is saturated at 0.990, with five of six question types at exactly
+1.000, so a threshold metric there would show ties whatever the prior did.
+
+**The more useful part of this is a subgroup result that did not replicate.** At
+session granularity, temporal-reasoning is the one type that improves, gaining
+**+0.039 MRR [+0.005, +0.087]** at weight 0.25 — an interval excluding zero, and
+a plausible story: temporal questions are the ones that should care when
+something happened. That was written down as a hypothesis. Then the same subset
+at turn granularity, on **five times the questions** (n=132 against n=26), moved
+**−0.001 [−0.016, +0.013]**. Nothing there. And the type that gains at turn
+granularity is knowledge-update, which gains nothing at session.
+
+One subgroup at *p* just under 0.05, selected after looking at six question types
+across four weights, resting on the five questions whose ranking actually moved,
+is what a false positive looks like from the inside. It is reported here rather
+than dropped because the sequence — predict, measure, fail to replicate, publish
+the failure — is the part worth copying. A repo that only showed the session
+table would have claimed a real finding about temporal reasoning.
+
+**What this does and does not say about Mem0.** It says a *global* recency
+weight would not improve their OSS ranker on this benchmark, so its absence is
+not a defect. It does not say recency is worthless in deployment: LongMemEval's
+haystacks are synthetic, of near-uniform age, and — per the
+[date audit](#the-dates-support-day-resolution-and-no-finer) — carry timestamps
+that cannot support a sub-day signal in the first place. A benchmark this
+recency-insensitive is weak evidence about a production workload where the
+distribution of memory ages is nothing like it.
+
 ---
 
 ## Answer survival: what a write path keeps
@@ -558,9 +660,11 @@ work — it keeps the same number of sentences from every turn, counted from the
 | verbatim (whole conversation) | 104,110 | 497 | 0.791 | 0.153 | **0.753** |
 | lead-k @ 50% | 52,194 | 497 | 0.736 | 0.114 | **0.703** |
 | tail-k @ 50% | 52,197 | 497 | 0.736 | 0.119 | **0.701** |
+| LexRank @ 50% | 52,166 | 497 | 0.709 | 0.118 | **0.670** |
 | truncate-recent @ 50% | 52,053 | 253 | 0.545 | 0.104 | **0.493** |
 | tail-k @ 25% | 26,027 | 497 | 0.582 | 0.077 | **0.547** |
 | lead-k @ 25% | 26,021 | 497 | 0.564 | 0.077 | **0.527** |
+| LexRank @ 25% | 26,043 | 497 | 0.518 | 0.085 | **0.474** |
 | truncate-random @ 25% (3 seeds) | 26,026 | ~130 | 0.309–0.391 | 0.069–0.081 | **0.248–0.342** |
 | truncate-recent @ 25% | 26,026 | 128 | 0.309 | 0.063 | **0.263** |
 | lead-k @ 10% | 10,410 | 411 | 0.282 | 0.047 | **0.246** |
@@ -606,6 +710,26 @@ Four things follow.
    within 4 tokens of each other. Meanwhile truncation at the same 50% budget
    sits at 0.493. Which sentences you keep barely matters; *how many turns you
    touch* matters a great deal.
+
+   A third selector was added to test whether that holds against a rule with an
+   actual theory behind it, rather than two positional rules that might both be
+   arbitrary in the same way. `LexRank @ 50%` keeps each turn's most *central*
+   sentence — TF-IDF cosine centrality, the classic extractive-summarisation
+   objective — and scores **0.670 against lead-k's 0.703**, a paired difference
+   of −0.027 [−0.073, +0.018], p = 0.45. At 25% it is −0.045 [−0.127, +0.036],
+   p = 0.38. **No selector is distinguishable from any other.** With 110 paired
+   questions the detection floor here is around 8 points, so this bounds the
+   effect of sentence selection rather than measuring it — the honest reading is
+   that centrality does not beat position, *and* that the experiment could not
+   have shown a small effect in either direction.
+
+   The 5% and 10% LexRank rows are deliberately not read as selector results.
+   Centrality picks longer sentences than position does — 40 tokens per record
+   against 26 at a 5% budget — so below about 25% the budget runs out before
+   every turn is reached and LexRank covers 135 turns where lead-k covers 207.
+   Those arms differ in coverage as well as selection, which is the very axis
+   this section shows dominates, so attributing their gap to selection would be
+   the mistake the rest of this section exists to avoid.
 
 3. **A recency prior does not help on these questions.** Truncate-recent at 25%
    (0.263) sits inside the spread of three random seeds (0.248–0.342). That
@@ -918,6 +1042,7 @@ llm_mem_eval/
     verbatim.py              store the turns unchanged (the ceiling control)
     truncated.py             verbatim turns to a fraction of the token budget
     extractive.py            lead-k / tail-k sentences per turn: breadth, not depth
+    centrality.py            LexRank sentences per turn: selection, at matched budget
     mem0_adapter.py          Mem0 OSS v3 ingestion -- committed, NOT run
   eval/
     retrieval_metrics.py     judge-free metrics from has_answer labels
@@ -930,6 +1055,7 @@ llm_mem_eval/
 
 scripts/
   audit_benchmark.py         what fraction of answers are spans at all
+  audit_question_dates.py    what resolution the benchmark's timestamps support
   sample_tr_misses.py        regenerate the hand-labelled temporal sample
   model_write_cost.py        Mem0 v3 write cost vs caller batching
   verify_write_cost_inputs.py  re-derives that model's pinned mem0 constants
@@ -951,6 +1077,7 @@ tests/
   test_mem0_adapter.py       the cost shim, without needing mem0 installed
   test_ablation.py           the statistics
   test_report.py             the report agrees with the arms it reports on
+  test_retrieval_fusion.py   weighted RRF + the recency prior built on it
 ```
 
 ## Reproducing
@@ -968,6 +1095,7 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
 
 # benchmark audit + the v3 write-cost model: seconds, no GPU, no API key
 ./.venv/bin/python scripts/audit_benchmark.py
+./.venv/bin/python scripts/audit_question_dates.py
 ./.venv/bin/python scripts/sample_tr_misses.py
 ./.venv/bin/python scripts/model_write_cost.py
 
@@ -976,13 +1104,24 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
     verbatim_turn truncated_recency_50 truncated_recency_25 \
     truncated_recency_10 truncated_recency_5 \
     truncated_random_25_s0 truncated_random_25_s1 truncated_random_25_s2 \
-    leadk_50 leadk_25 leadk_10 leadk_5 tailk_50 tailk_25
+    leadk_50 leadk_25 leadk_10 leadk_5 tailk_50 tailk_25 \
+    lexrank_50 lexrank_25 lexrank_10 lexrank_5
 
 # retrieval over all 500 questions (~1.5 h, CPU/MPS). --no-cache is what makes
 # the write-path wall-clock a measurement rather than a replay of a cached one.
 ./.venv/bin/python scripts/run_retrieval_eval.py --limit 0 --no-cache \
     --granularity turn --tag sweep_turn_n500 \
     --retrievers random recency bm25 dense hybrid oracle
+
+# the recency-prior sweep. Cached embeddings, so run it after the sweep above;
+# the arm name carries the weight, which is what keeps a weighted run from
+# landing on the unweighted baseline's key and replacing it.
+for w in 0.25 0.5 1.0 2.0; do
+  ./.venv/bin/python scripts/run_retrieval_eval.py --limit 0 --retrievers hybrid \
+      --granularity turn --recency-weight $w --tag recency_turn_rw${w}_n500
+  ./.venv/bin/python scripts/run_retrieval_eval.py --limit 100 --retrievers hybrid \
+      --granularity session --recency-weight $w --tag recency_session_rw${w}_n100
+done
 
 # the cost figure's inputs, also over all 500
 ./.venv/bin/python scripts/measure_token_stats.py --limit 0 --granularity turn

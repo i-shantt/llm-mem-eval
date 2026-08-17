@@ -48,7 +48,21 @@ class HybridRetriever:
         self.dense.index(units, ledger, cache_key)
 
     def _recency_ranking(self, question_date: str | None) -> list[Hit]:
-        """Most recent session first. Ordinal, so it fuses cleanly via RRF."""
+        """Most recent session first. Ordinal, so it fuses cleanly via RRF.
+
+        `question_date` is accepted and deliberately unused. In LongMemEval-S it
+        cannot change this ordering: the question is dated at or after every
+        session in its own haystack for all 500 questions, so "closest to the
+        question date" and "most recent" are the same permutation. See
+        `scripts/audit_question_dates.py`, which checks that rather than
+        assuming it.
+
+        The stronger version of the same point: any recency prior that is
+        monotone in session date produces this permutation, whatever origin it
+        measures age from. Making the prior a function of `question_date - date`
+        does not escape it either -- for exponential decay the origin cancels
+        out of every pairwise ratio exactly.
+        """
         order = sorted(
             self._units,
             key=lambda u: (parse_date(u.session_date), u.session_index),
@@ -68,12 +82,18 @@ class HybridRetriever:
         dn_hits = self.dense.search(query, d, ledger)
 
         rankings = [bm_hits, dn_hits]
+        weights = [1.0, 1.0]
         if self.recency_weight > 0:
-            # Fuse the recency ordering in proportionally by repeating it --
-            # crude but keeps RRF's rank-only contract intact.
-            reps = max(1, int(round(self.recency_weight * 2)))
-            rankings.extend([self._recency_ranking(question_date)] * reps)
+            # Weighted directly, so `recency_weight` reads as "this ranking's
+            # influence relative to BM25 and dense, each of which is 1.0".
+            # It used to be expressed as integer repetitions of the ranking,
+            # which quantised it: every weight in (0, 0.75] rounded to one whole
+            # ranking, so the knob had no setting between "off" and "as strong
+            # as BM25". Nothing committed ran at a non-zero weight, so no
+            # published number is affected by the change of meaning.
+            rankings.append(self._recency_ranking(question_date))
+            weights.append(self.recency_weight)
 
         with ledger.timer("read"):
-            fused = rrf_fuse(rankings, k_rrf=self.rrf_k)
+            fused = rrf_fuse(rankings, k_rrf=self.rrf_k, weights=weights)
         return fused[:k]

@@ -35,11 +35,35 @@ class Retriever(Protocol):
         ...
 
 
-def rrf_fuse(rankings: list[list[Hit]], k_rrf: int = 60) -> list[Hit]:
+def rrf_fuse(
+    rankings: list[list[Hit]],
+    k_rrf: int = 60,
+    weights: list[float] | None = None,
+) -> list[Hit]:
     """Reciprocal rank fusion. Score-agnostic, so BM25 and cosine can be
-    combined without calibrating their scales against each other."""
+    combined without calibrating their scales against each other.
+
+    `weights` scales each ranking's contribution and defaults to 1.0 each. It
+    exists because the alternative -- expressing a ranking's weight by repeating
+    it in the list -- quantises the weight to integers. A caller wanting a
+    recency prior at a *fraction* of BM25's influence cannot say so that way:
+    the smallest expressible non-zero weight is one whole ranking.
+
+    A zero weight is skipped rather than multiplied through, so `weights=0` is
+    exactly equivalent to omitting the ranking. Multiplying would instead insert
+    that ranking's unit ids at score 0.0, padding the tail of the result with
+    units the caller asked to ignore.
+    """
+    if weights is None:
+        weights = [1.0] * len(rankings)
+    if len(weights) != len(rankings):
+        raise ValueError(
+            f"weights has length {len(weights)}, rankings has {len(rankings)}"
+        )
     scores: dict[int, float] = {}
-    for ranking in rankings:
+    for ranking, w in zip(rankings, weights):
+        if w == 0:
+            continue
         for rank, (unit_id, _) in enumerate(ranking):
-            scores[unit_id] = scores.get(unit_id, 0.0) + 1.0 / (k_rrf + rank + 1)
+            scores[unit_id] = scores.get(unit_id, 0.0) + w / (k_rrf + rank + 1)
     return sorted(scores.items(), key=lambda x: -x[1])

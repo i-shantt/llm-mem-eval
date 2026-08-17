@@ -216,14 +216,26 @@ granularity, whereas the end-to-end ladder is four model sizes through an
 answering model. So the retrieval table and the end-to-end table remain different
 question sets, which the README states wherever both appear.
 
-**A recency signal at retrieval time.** Mem0's OSS ranker provably has none:
-`created_at`/`updated_at` are stored on every memory and are not inputs to
-`score_and_rank`, and `search(reference_date=...)` raises "Platform-only". This
-repo's `search()` already takes a `question_date` that every retriever ignores,
-and `HybridRetriever`'s `recency_weight` is implemented but quantised to integer
-rank-list repetitions and exercised by no committed result. Worth doing properly;
-it is a second thread, and splitting focus was the larger risk.
+**A recency signal at retrieval time — now run.** The weight is continuous
+rather than quantised to integer rank-list repetitions, and the sweep is in
+[RESULTS.md](RESULTS.md) and the README. Two things came out of it that were not
+the plan. A global recency prior monotonically *damages* the strongest retriever,
+significantly from a weight of 0.5 up. And `question_date` turned out to be
+unusable rather than merely unused: at the day resolution `parse_date` produces
+it cannot reorder anything, and at minute resolution 21 questions have all their
+gold evidence timestamped after the question, so consuming it as a cutoff — the
+correct behaviour, and what Mem0's platform-only `search(reference_date=...)`
+does — scores zero on them by construction. Mem0's OSS ranker still provably has
+no recency input: `created_at`/`updated_at` are stored on every memory and are
+not inputs to `score_and_rank`. The result here says a *global* one would not
+help it.
 
-**LexRank / TextRank selection.** `ExtractiveSelectionPolicy` implements lead-k
-only. A centrality-based selector would give a third point on the
-survival-versus-store-size curve that is neither truncation nor lead-k.
+**LexRank selection — now run.** `llm_mem_eval/write/centrality.py`, swept at
+four budgets. The honest summary is a null result with a stated floor: at the two
+budgets where breadth is matched, centrality is not distinguishable from lead-k
+(−0.045 and −0.027, both intervals crossing zero), and with 110 paired questions
+the experiment could not have detected less than about 8 points either way. The
+low-budget arms are not a selector comparison at all, because centrality picks
+longer sentences and so reaches fewer turns. TextRank over a different similarity
+would be a fourth point on the same curve and is not obviously worth the fifth
+arm until the sample is larger.

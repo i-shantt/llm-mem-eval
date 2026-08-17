@@ -1,0 +1,98 @@
+{
+  "n_questions": 500,
+  "n_unparsable_dates": 0,
+  "day_resolution": {
+    "question_position": {
+      "latest session same day as the question": 369,
+      "all sessions strictly before the question": 131
+    },
+    "recency_vs_proximity_ordering": {
+      "session: agree": 500,
+      "user_turn: agree": 500,
+      "turn: agree": 500
+    },
+    "orderings_identical_everywhere": true,
+    "gap_to_latest_session_days": {
+      "min": 0,
+      "median": 0.0,
+      "max": 188
+    },
+    "exponential_origin_max_relative_deviation": 4.511946372076636e-13
+  },
+  "minute_resolution": {
+    "question_position": {
+      "all sessions strictly before the question": 424,
+      "at least one session after the question": 76
+    },
+    "recency_vs_proximity_ordering": {
+      "session: agree": 428,
+      "user_turn: agree": 428,
+      "turn: agree": 428,
+      "session: DIFFER": 72,
+      "user_turn: DIFFER": 72,
+      "turn: DIFFER": 72
+    },
+    "questions_with_post_question_sessions": 76,
+    "questions_with_post_question_evidence": 43,
+    "questions_with_all_evidence_post_question": 21,
+    "post_question_session_types": {
+      "temporal-reasoning": 60,
+      "knowledge-update": 16
+    },
+    "post_question_evidence_types": {
+      "temporal-reasoning": 42,
+      "knowledge-update": 1
+    },
+    "all_evidence_post_question_types": {
+      "temporal-reasoning": 21
+    },
+    "max_overshoot_minutes": 1421,
+    "max_overshoot_days": 0.9868055555555556,
+    "question_ids_with_post_question_evidence": [
+      "0bb5a684",
+      "2133c1b5",
+      "2a1811e2",
+      "6613b389",
+      "8c18457d",
+      "982b5123",
+      "993da5e2",
+      "a3045048",
+      "a3838d2b",
+      "b9cfe692",
+      "c9f37c46",
+      "cc6d1ec1",
+      "d01c6aa8",
+      "e4e14d04",
+      "gpt4_0a05b494",
+      "gpt4_0b2f1d21",
+      "gpt4_1a1dc16d",
+      "gpt4_213fd887",
+      "gpt4_2312f94c",
+      "gpt4_2487a7cb",
+      "gpt4_2655b836",
+      "gpt4_2f56ae70",
+      "gpt4_2f584639",
+      "gpt4_385a5000",
+      "gpt4_483dd43c",
+      "gpt4_4cd9eba1",
+      "gpt4_4edbafa2",
+      "gpt4_5438fa52",
+      "gpt4_5dcc0aab",
+      "gpt4_65aabe59",
+      "gpt4_6ed717ea",
+      "gpt4_70e84552",
+      "gpt4_70e84552_abs",
+      "gpt4_76048e76",
+      "gpt4_78cf46a3",
+      "gpt4_8c8961ae",
+      "gpt4_9a159967",
+      "gpt4_b4a80587",
+      "gpt4_c27434e8_abs",
+      "gpt4_cd90e484",
+      "gpt4_d9af6064",
+      "gpt4_fe651585",
+      "gpt4_fe651585_abs"
+    ]
+  },
+  "conclusion": "LongMemEval-S's dates support day resolution and no finer. At day resolution question_date is inert: no session is dated after its question in 500/500 cases, proximity and recency orderings are identical at every granularity, and under exponential decay the origin cancels from every pairwise ratio (max relative deviation 4.51e-13). At minute resolution 76 questions have a session logged after the question -- never by a full day, which is why day truncation hides it -- and 43 have gold evidence in one, 21 of them entirely. Treating the question timestamp as a retrieval cutoff, which is what a deployed memory system must do, therefore scores zero on those 21 by construction."
+}

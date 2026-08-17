@@ -21,12 +21,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from llm_mem_eval.cost import CostLedger, count_tokens  # noqa: E402
 from llm_mem_eval.data.loader import Example, Turn, parse_date  # noqa: E402
 from llm_mem_eval.write import (  # noqa: E402
+    CentralitySelectionPolicy,
     ExtractiveSelectionPolicy,
     TruncatedVerbatimPolicy,
     VerbatimPolicy,
     build_policy,
     check_store,
 )
+from llm_mem_eval.write.extractive import split_sentences  # noqa: E402
 
 SESSIONS = [("s1", "2023/01/01 (Sun) 10:00"),
             ("s2", "2023/02/01 (Wed) 10:00"),
@@ -55,6 +57,8 @@ ALL_POLICIES = [
     ExtractiveSelectionPolicy(0.5),
     ExtractiveSelectionPolicy(0.1),
     ExtractiveSelectionPolicy(0.5, rule="tail"),
+    CentralitySelectionPolicy(0.5),
+    CentralitySelectionPolicy(0.1),
 ]
 
 
@@ -268,3 +272,104 @@ def test_extractive_does_not_abandon_budget_on_one_bad_depth() -> None:
     # Depth 0 alone is ~6 short sentences; reaching depth 2 is the whole point.
     assert any("Gamma" in u.text for u in units), \
         "stopped at the long sentence instead of skipping past it"
+
+
+# -- centrality selection ------------------------------------------------------
+
+
+def _centrality_example(text: str) -> Example:
+    """One session of identical turns, so per-turn centrality is the variable."""
+    turns = [
+        Turn("user" if j % 2 == 0 else "assistant", text, "s1",
+             "2023/01/01 (Sun) 10:00", 0, j, j == 0)
+        for j in range(4)
+    ]
+    return Example("q1", "single-session-user", "What happened?", "mat",
+                   "2023/02/01 (Wed) 10:00", turns)
+
+
+def test_build_policy_parses_the_lexrank_spec() -> None:
+    p = build_policy("lexrank_25")
+    assert isinstance(p, CentralitySelectionPolicy)
+    assert p.fraction == 0.25
+    assert p.name == "lexrank_25pct"
+    with pytest.raises(ValueError) as e:
+        build_policy("lexrank")
+    assert "lexrank" in str(e.value)
+
+
+def test_lexrank_is_budget_matched_to_leadk() -> None:
+    """The property that makes it a third point rather than a third experiment.
+
+    A centrality arm is only interpretable against lead-k if the token budget is
+    held equal, which it is by construction: both spend `fraction` of the
+    conversation's tokens under the same round-robin schedule.
+
+    Record *count* is deliberately not asserted equal. A turn's most central
+    sentence is not its shortest, so the same budget can buy a different number
+    of turns -- it does on this fixture, and asserting otherwise would be
+    pinning an accident of the toy text. Breadth is instead checked the way it
+    is for lead-k: every session must still be reached.
+    """
+    ex = _example()
+    full = sum(count_tokens(u.text) for u in ex.units("turn"))
+    for frac in (0.25, 0.5):
+        lex = CentralitySelectionPolicy(frac).build(ex, CostLedger())
+        lead = ExtractiveSelectionPolicy(frac).build(ex, CostLedger())
+        lex_tok = sum(count_tokens(u.text) for u in lex)
+        lead_tok = sum(count_tokens(u.text) for u in lead)
+        assert lex_tok <= frac * full + 1e-6, f"over budget at {frac}"
+        assert abs(lex_tok - lead_tok) / max(lead_tok, 1) < 0.15, \
+            f"budgets diverged at {frac}"
+        assert len({u.session_id for u in lex}) == len(SESSIONS), \
+            f"lost a session at {frac}"
+
+
+def test_lexrank_prefers_the_central_sentence_over_the_first() -> None:
+    """The whole point: position and centrality must be able to disagree.
+
+    Sentence one shares no vocabulary with anything; the rest are near
+    paraphrases of each other and so are mutually central. At a budget of
+    roughly one sentence per turn, lead-k keeps the outlier and LexRank does not.
+    """
+    text = ("Zebra quantum xylophone oscillates. "
+            "The cat sat on the mat. "
+            "The cat likes the mat. "
+            "The mat is where the cat sits.")
+    ex = _centrality_example(text)
+    lex = CentralitySelectionPolicy(0.3).build(ex, CostLedger())
+    lead = ExtractiveSelectionPolicy(0.3).build(ex, CostLedger())
+
+    assert all("Zebra" in u.text for u in lead), "lead-k should keep sentence one"
+    assert all("Zebra" not in u.text for u in lex), \
+        "LexRank kept the vocabulary outlier over the mutually central sentences"
+
+
+def test_lexrank_degenerates_to_leadk_when_there_is_no_signal() -> None:
+    """The documented fallback, asserted rather than assumed.
+
+    With no shared vocabulary every sentence is equally central, the stable
+    sort keeps original order, and the policy is lead-k exactly. The failure
+    this rules out is a tie being broken into an arbitrary permutation, which
+    would make the arm's result partly a sorting artifact.
+    """
+    ex = _centrality_example("Alpha one. Beta two. Gamma three. Delta four.")
+    for frac in (0.25, 0.5, 0.75):
+        lex = CentralitySelectionPolicy(frac).build(ex, CostLedger())
+        lead = ExtractiveSelectionPolicy(frac).build(ex, CostLedger())
+        assert [u.text for u in lex] == [u.text for u in lead], \
+            f"tie-break diverged from lead-k at {frac}"
+
+
+def test_lexrank_keeps_sentences_in_reading_order() -> None:
+    """Selection order is centrality; the record still reads front to back."""
+    text = ("The cat sat on the mat. "
+            "Zebra quantum xylophone oscillates. "
+            "The cat likes the mat. "
+            "The mat is where the cat sits.")
+    ex = _centrality_example(text)
+    units = CentralitySelectionPolicy(0.8).build(ex, CostLedger())
+    for u in units:
+        kept = [s for s in split_sentences(text) if s in u.text]
+        positions = [u.text.index(s) for s in kept]
+        assert positions == sorted(positions), "record was reordered by centrality"

@@ -14,6 +14,8 @@ Runs from the stored predictions. No model, no benchmark download.
 from __future__ import annotations
 
 import json
+import os
+import re
 import sys
 from pathlib import Path
 
@@ -91,7 +93,7 @@ def test_new_artifacts_do_not_leak_into_the_retrieval_table() -> None:
     current file list, so a future artifact fails here instead of in RESULTS.md.
     """
     sys.path.insert(0, str(REPO / "scripts"))
-    from make_report import load_all
+    from make_report import is_recency_variant, load_all
 
     keys = set(load_all(REPO / "results"))
     assert keys, "no runs found; the glob or the artifacts moved"
@@ -100,6 +102,12 @@ def test_new_artifacts_do_not_leak_into_the_retrieval_table() -> None:
                         "random", "none"}
     for key in keys:
         name = key.split("|")[0]
+        # A recency-weighted hybrid arm is a real run and belongs in load_all;
+        # it is one system at one setting rather than a new system, so what has
+        # to be pinned about it is that it stays out of the system-comparison
+        # tables. That is the test below, not this one.
+        if is_recency_variant(key):
+            continue
         assert name in known_retrievers, (
             f"{name!r} was folded into the retrieval table but is not a "
             f"retriever. A non-run artifact in results/ grew a 'metrics' key, "
@@ -158,4 +166,95 @@ def test_survival_artifacts_live_in_a_subdirectory() -> None:
     assert not any(n.startswith("survival") for n in top_level), (
         "survival artifacts belong in results/survival/ -- at the top level "
         "they are one 'metrics' key away from becoming retriever rows"
+    )
+
+
+def test_recency_sweep_arms_stay_out_of_the_system_comparison_tables() -> None:
+    """A parameter sweep must not be read as a set of competing systems.
+
+    `load_all` keys runs `<retriever>|<granularity>|<n>`, so a weighted hybrid
+    run at turn/n=500 lands on exactly the key the unweighted baseline occupies.
+    Two things could go wrong and neither would raise: the sweep silently
+    replacing the baseline it is measured against, or every weight appearing as
+    its own row in the retrieval and cost tables. Both are checked against the
+    rendered report rather than against the loader, because the rendered report
+    is the thing that has to be right.
+    """
+    import contextlib
+    import io
+
+    sys.path.insert(0, str(REPO / "scripts"))
+    from make_report import is_recency_variant, load_all, main
+
+    if not any(is_recency_variant(k) for k in load_all(REPO / "results")):
+        print("  skip recency hold-out test (no sweep artifacts present)")
+        return
+
+    buf = io.StringIO()
+    cwd = os.getcwd()
+    os.chdir(REPO)
+    try:
+        with contextlib.redirect_stdout(buf):
+            main()
+    finally:
+        os.chdir(cwd)
+    report = buf.getvalue()
+
+    sections = report.split("\n## ")
+    for section in sections:
+        title = section.split("\n", 1)[0]
+        weighted = [ln for ln in section.splitlines()
+                    if ln.startswith("| hybrid_rw")]
+        if title.startswith("A recency prior"):
+            continue
+        assert not weighted, (
+            f"weighted hybrid rows leaked into the {title!r} section: "
+            f"{weighted[:2]}"
+        )
+
+    assert "A recency prior" in report, "the sweep ran but reported nothing"
+    # The baseline must survive alongside the sweep, not be overwritten by it.
+    retrieval = report.split("\n## ")[1]
+    assert any(ln.startswith("| hybrid | turn |") for ln in retrieval.splitlines()), \
+        "the unweighted hybrid baseline vanished from the retrieval table"
+
+
+def test_readme_survival_rows_match_their_artifacts() -> None:
+    """The README's survival table is hand-typed; RESULTS.md is not.
+
+    That asymmetry is where a wrong number survives review: RESULTS.md is
+    regenerated and CI diffs it, so drift there is caught mechanically, while a
+    README row can be edited into disagreement with the artifact it quotes and
+    nothing complains. This parses the rows back out and checks them, so the
+    hand-typed half is held to the same standard as the generated half.
+    """
+    readme = (REPO / "README.md").read_text()
+    # `| LexRank @ 50% | 52,166 | 497 | 0.709 | 0.118 | **0.670** |`
+    row = re.compile(
+        r"^\|\s*(LexRank|lead-k|tail-k)\s*@\s*(\d+)%\s*\|\s*([\d,]+)\s*\|\s*"
+        r"(\d+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*\*\*([\d.]+)\*\*\s*\|",
+        re.MULTILINE,
+    )
+    policy = {"LexRank": "lexrank", "lead-k": "leadk", "tail-k": "tailk"}
+
+    checked = 0
+    for name, pct, tokens, records, survival, null, corrected in row.findall(readme):
+        path = REPO / "results" / "survival" / f"survival_{policy[name]}_{pct}pct.json"
+        if not path.exists():
+            continue
+        s = json.loads(path.read_text())["survival"]
+        st, p = s["store_stats"], s["primary"]["record"]
+        where = f"README row {name} @ {pct}%"
+        assert int(tokens.replace(",", "")) == round(st["tokens_per_store_mean"]), where
+        assert int(records) == round(st["records_per_store_mean"]), where
+        assert float(survival) == pytest.approx(p["survival"], abs=5e-4), where
+        assert float(null) == pytest.approx(p["null"], abs=5e-4), where
+        assert float(corrected) == pytest.approx(
+            p["chance_corrected"], abs=5e-4
+        ), where
+        checked += 1
+
+    assert checked >= 4, (
+        f"only {checked} README survival rows matched an artifact; the table "
+        f"format changed and this test stopped checking anything"
     )

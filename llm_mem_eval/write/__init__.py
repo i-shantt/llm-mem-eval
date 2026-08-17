@@ -11,13 +11,15 @@ that turns a name into an object, so adding a policy is one branch.
 from __future__ import annotations
 
 from llm_mem_eval.write.base import WritePolicy, check_store, renumber
+from llm_mem_eval.write.centrality import CentralitySelectionPolicy
 from llm_mem_eval.write.extractive import ExtractiveSelectionPolicy
 from llm_mem_eval.write.truncated import TruncatedVerbatimPolicy
 from llm_mem_eval.write.verbatim import VerbatimPolicy
 
 __all__ = [
     "WritePolicy", "VerbatimPolicy", "TruncatedVerbatimPolicy",
-    "ExtractiveSelectionPolicy", "build_policy", "check_store", "renumber",
+    "ExtractiveSelectionPolicy", "CentralitySelectionPolicy", "build_policy",
+    "check_store", "renumber",
 ]
 
 
@@ -54,6 +56,7 @@ def build_policy(spec: str) -> WritePolicy:
         verbatim_turn                   verbatim_user_turn
         truncated_recency_25            truncated_random_25_s1
         leadk_25                        tailk_25
+        lexrank_25
         mem0_oss_v3_<model>             (requires the optional mem0 extra)
 
     Percentages are integers, so `truncated_recency_5` is a 5% token budget.
@@ -85,6 +88,9 @@ def build_policy(spec: str) -> WritePolicy:
             fraction=_percent(spec, parts, 1),
             rule="lead" if parts[0] == "leadk" else "tail",
         )
+
+    if parts[0] == "lexrank":
+        return CentralitySelectionPolicy(fraction=_percent(spec, parts, 1))
 
     if spec.startswith("mem0"):
         # Imported here, not at module scope, so the package stays importable

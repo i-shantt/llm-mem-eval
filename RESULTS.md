@@ -102,6 +102,84 @@ The same retrievers, over the same conversations, cut into turns, user turns, or
 | user_turn | multi-session | 0.958 | 0.851 | 0.107 |
 | user_turn | single-session-preference | 0.833 | 0.694 | 0.139 |
 
+## A recency prior on the strongest retriever
+
+`recency_weight` is the weight of a most-recent-first ranking fused into hybrid's BM25 and dense rankings, each of which is 1.0. So 1.0 means recency gets an equal vote with relevance. The weight used to be quantised to whole rank-list repetitions, which made every value below 1.0 unreachable; it is continuous now, and no published number was measured at a non-zero weight before this section.
+
+The row at weight 0 is the plain `hybrid` arm from the table above, on the same question set, not a re-run.
+
+
+**session granularity**, n=100
+
+| recency weight | scorable | any_hit@1 | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|---|
+| 0 | 97 | 0.845 | 0.990 | 0.981 | 0.903 |
+| 0.25 | 97 | 0.814 | 1.000 | 0.991 | 0.889 |
+| 0.5 | 97 | 0.742 | 1.000 | 0.991 | 0.850 |
+| 1 | 97 | 0.557 | 0.990 | 0.981 | 0.728 |
+| 2 | 97 | 0.412 | 0.897 | 0.765 | 0.578 |
+
+MRR by question type across the sweep, because the prior reorders rather than admits:
+
+| question type | n | w=0 | w=0.25 | w=0.5 | w=1 | w=2 |
+|---|---|---|---|---|---|---|
+| knowledge-update | 16 | 0.969 | 0.969 | 0.969 | 0.906 | 0.804 |
+| multi-session | 24 | 0.979 | 0.979 | 0.896 | 0.774 | 0.616 |
+| single-session-assistant | 11 | 1.000 | 0.955 | 0.894 | 0.647 | 0.458 |
+| single-session-preference | 6 | 0.694 | 0.611 | 0.496 | 0.450 | 0.378 |
+| single-session-user | 14 | 0.929 | 0.833 | 0.792 | 0.667 | 0.446 |
+| temporal-reasoning | 26 | 0.785 | 0.824 | 0.831 | 0.705 | 0.571 |
+
+Paired against weight 0 on the same questions, bootstrap over per-question reciprocal rank (10,000 resamples, seeded):
+
+| weight | all questions | temporal-reasoning |
+|---|---|---|
+| 0.25 | -0.014 [-0.044, +0.014] | +0.039 [+0.005, +0.087] \* |
+| 0.5 | -0.052 [-0.097, -0.010] \* | +0.046 [-0.026, +0.125] |
+| 1 | -0.175 [-0.237, -0.117] \* | -0.080 [-0.186, +0.016] |
+| 2 | -0.325 [-0.402, -0.250] \* | -0.214 [-0.358, -0.081] \* |
+
+\* interval excludes zero.
+
+
+**turn granularity**, n=500
+
+| recency weight | scorable | any_hit@1 | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|---|
+| 0 | 479 | 0.537 | 0.914 | 0.826 | 0.665 |
+| 0.25 | 479 | 0.530 | 0.914 | 0.823 | 0.664 |
+| 0.5 | 479 | 0.514 | 0.900 | 0.810 | 0.650 |
+| 1 | 479 | 0.367 | 0.881 | 0.764 | 0.543 |
+| 2 | 479 | 0.177 | 0.547 | 0.364 | 0.286 |
+
+MRR by question type across the sweep, because the prior reorders rather than admits:
+
+| question type | n | w=0 | w=0.25 | w=0.5 | w=1 | w=2 |
+|---|---|---|---|---|---|---|
+| knowledge-update | 72 | 0.700 | 0.740 | 0.746 | 0.667 | 0.464 |
+| multi-session | 125 | 0.644 | 0.632 | 0.625 | 0.554 | 0.309 |
+| single-session-assistant | 56 | 0.772 | 0.756 | 0.706 | 0.527 | 0.173 |
+| single-session-preference | 30 | 0.382 | 0.414 | 0.389 | 0.277 | 0.136 |
+| single-session-user | 64 | 0.784 | 0.758 | 0.740 | 0.595 | 0.244 |
+| temporal-reasoning | 132 | 0.627 | 0.626 | 0.615 | 0.506 | 0.271 |
+
+Paired against weight 0 on the same questions, bootstrap over per-question reciprocal rank (10,000 resamples, seeded):
+
+| weight | all questions | temporal-reasoning |
+|---|---|---|
+| 0.25 | -0.001 [-0.015, +0.013] | -0.001 [-0.016, +0.013] |
+| 0.5 | -0.015 [-0.034, +0.005] | -0.012 [-0.037, +0.010] |
+| 1 | -0.122 [-0.152, -0.093] \* | -0.121 [-0.171, -0.072] \* |
+| 2 | -0.378 [-0.419, -0.339] \* | -0.356 [-0.427, -0.284] \* |
+
+\* interval excludes zero.
+
+
+**A global recency prior does not help at any weight, and the one subgroup that looked like an exception did not replicate.** The aggregate is flat at a weight of 0.25 and monotonically worse beyond it, at both granularities. Below that headline the two sweeps disagree about *which* question type benefits, which is what noise looks like: at session granularity temporal-reasoning gains +0.039 MRR at weight 0.25 on an interval that excludes zero, and at turn granularity the same subset on five times the questions moves -0.001 [-0.016, +0.013]. Meanwhile the type that gains at turn granularity is knowledge-update, which loses nothing at session.
+
+The session result was reported as a hypothesis before the turn sweep was run, which is the only reason it is stated here at all rather than quietly dropped. One subgroup at p just under 0.05, chosen after looking at six question types across four weights and resting on the five questions whose ranking actually moved, is what a false positive looks like from the inside. The larger sample is the answer to it.
+
+
 ## Answer survival, by write policy
 
 Did the write path keep the answer at all? Measured over the store with no retrieval, so it is a ceiling on retrieval and on accuracy. `null` is the chance floor, measured by re-running survival against gold answers borrowed from other questions of the same type and length; `corrected` is (survival - null) / (1 - null). Raw survival alone is not interpretable, so it is never shown without both.
@@ -113,7 +191,9 @@ Restricted to golds of two or more normalised tokens: one-token answers match a 
 | verbatim_turn | 104,110 | 497 | 0.791 | 0.153 | **0.753** | [0.665, 0.837] |
 | tailk_50pct | 52,197 | 497 | 0.736 | 0.119 | **0.701** | [0.606, 0.791] |
 | leadk_50pct | 52,194 | 497 | 0.736 | 0.114 | **0.703** | [0.610, 0.792] |
+| lexrank_50pct | 52,166 | 497 | 0.709 | 0.118 | **0.670** | [0.575, 0.762] |
 | truncated_recency_50pct | 52,053 | 253 | 0.545 | 0.104 | **0.493** | [0.393, 0.597] |
+| lexrank_25pct | 26,043 | 497 | 0.518 | 0.085 | **0.474** | [0.373, 0.575] |
 | tailk_25pct | 26,027 | 497 | 0.582 | 0.077 | **0.547** | [0.448, 0.643] |
 | truncated_random_25pct_s1 | 26,026 | 129 | 0.391 | 0.074 | **0.342** | [0.246, 0.442] |
 | truncated_random_25pct_s2 | 26,026 | 130 | 0.309 | 0.081 | **0.248** | [0.157, 0.342] |
@@ -121,9 +201,33 @@ Restricted to golds of two or more normalised tokens: one-token answers match a 
 | truncated_recency_25pct | 26,026 | 128 | 0.309 | 0.063 | **0.263** | [0.175, 0.356] |
 | leadk_25pct | 26,021 | 497 | 0.564 | 0.077 | **0.527** | [0.428, 0.625] |
 | leadk_10pct | 10,410 | 411 | 0.282 | 0.047 | **0.246** | [0.159, 0.337] |
+| lexrank_10pct | 10,410 | 269 | 0.209 | 0.049 | **0.168** | [0.091, 0.250] |
 | truncated_recency_10pct | 10,409 | 54 | 0.182 | 0.035 | **0.152** | [0.082, 0.228] |
 | leadk_5pct | 5,205 | 207 | 0.136 | 0.025 | **0.114** | [0.052, 0.182] |
+| lexrank_5pct | 5,205 | 135 | 0.145 | 0.023 | **0.126** | [0.063, 0.196] |
 | truncated_recency_5pct | 5,204 | 29 | 0.118 | 0.019 | **0.101** | [0.044, 0.163] |
+
+### Selector against selector, at one budget
+
+`leadk` keeps each turn's first sentences, `tailk` its last, `lexrank` its most central. Same budget, same round-robin schedule, so the only thing varying is which sentence of a turn survives -- and `records` is printed because that is the assumption most likely to be false.
+
+| budget | selector | records | tokens/record | corrected | vs leadk | 95% CI | McNemar p |
+|---|---|---|---|---|---|---|---|
+| 5% | leadk | 207 | 26 | 0.114 | -- | -- | -- |
+| 5% | lexrank | 135 | 40 | 0.126 | +0.009 | [-0.045, +0.073] | 1.00 |
+| 10% | leadk | 411 | 26 | 0.246 | -- | -- | -- |
+| 10% | lexrank | 269 | 39 | 0.168 | -0.073 | [-0.164, +0.018] | 0.17 |
+| 25% | leadk | 497 | 53 | 0.527 | -- | -- | -- |
+| 25% | tailk | 497 | 53 | 0.547 | +0.018 | [-0.073, +0.109] | 0.85 |
+| 25% | lexrank | 497 | 53 | 0.474 | -0.045 | [-0.127, +0.036] | 0.38 |
+| 50% | leadk | 497 | 105 | 0.703 | -- | -- | -- |
+| 50% | tailk | 497 | 105 | 0.701 | +0.000 | [-0.055, +0.055] | 1.00 |
+| 50% | lexrank | 497 | 105 | 0.670 | -0.027 | [-0.073, +0.018] | 0.45 |
+
+**Read the `records` column before the `corrected` one.** A budget below about 25% runs out before every turn has contributed a sentence, and centrality picks longer sentences than position does, so `lexrank` reaches materially fewer turns there. At 5% and 10% the selectors therefore differ in coverage as well as in selection, and those rows cannot separate the two. Only the rows where every selector reaches all 497 records are a controlled comparison.
+
+On those rows no selector is distinguishable from any other: every interval crosses zero. With 110 paired questions the detection floor is around 8 points, so this bounds the effect of sentence selection rather than measuring it. Centrality does not beat position, and the experiment is not powered to show the reverse either.
+
 
 Paired against `verbatim_turn`, on the questions both scored. McNemar plus a paired bootstrap, the same functions the memory-lift ablation uses.
 
@@ -133,6 +237,10 @@ Paired against `verbatim_turn`, on the questions both scored. McNemar plus a pai
 | leadk_25pct vs verbatim_turn | -0.227 | [-0.309, -0.155] | 5.96e-08 |
 | leadk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
 | leadk_5pct vs verbatim_turn | -0.655 | [-0.736, -0.564] | 4.24e-22 |
+| lexrank_10pct vs verbatim_turn | -0.582 | [-0.673, -0.491] | 1.08e-19 |
+| lexrank_25pct vs verbatim_turn | -0.273 | [-0.355, -0.191] | 1.86e-09 |
+| lexrank_50pct vs verbatim_turn | -0.082 | [-0.136, -0.036] | 3.91e-03 |
+| lexrank_5pct vs verbatim_turn | -0.645 | [-0.736, -0.555] | 8.47e-22 |
 | tailk_25pct vs verbatim_turn | -0.209 | [-0.291, -0.136] | 2.38e-07 |
 | tailk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
 | truncated_random_25pct_s0 vs verbatim_turn | -0.445 | [-0.536, -0.355] | 3.55e-15 |

@@ -92,6 +92,14 @@ def main() -> None:
 
     all_results = {}
     for rname in args.retrievers:
+        # The arm's name has to carry the recency weight, because make_report
+        # keys runs by `<retriever>|<granularity>|<n>`. A weighted hybrid run at
+        # turn/n=500 would otherwise land on exactly the key the unweighted
+        # baseline occupies and silently replace it in every table -- a sweep
+        # over a parameter quietly overwriting the point it is measured against.
+        arm = rname
+        if rname == "hybrid" and args.recency_weight > 0:
+            arm = f"hybrid_rw{args.recency_weight:g}"
         retriever = build_retriever(rname, args, cache=cache)
         # Model load must not be billed to the write or read path.
         if hasattr(retriever, "warmup"):
@@ -117,12 +125,13 @@ def main() -> None:
             )
             if i % 10 == 0 or i == len(examples):
                 el = time.perf_counter() - t0
-                print(f"  [{rname}] {i}/{len(examples)}  {el:.0f}s", flush=True)
+                print(f"  [{arm}] {i}/{len(examples)}  {el:.0f}s", flush=True)
 
         metrics = aggregate(results, ks=tuple(args.ks))
         n = len(examples)
         payload = {
-            "retriever": rname,
+            "retriever": arm,
+            "retriever_base": rname,
             "config": {
                 "granularity": args.granularity,
                 "k": args.k,
@@ -166,9 +175,9 @@ def main() -> None:
                 "write_embed_tokens": ledger.write.embed_tokens / n,
             },
         }
-        all_results[rname] = payload
+        all_results[arm] = payload
 
-        print(f"\n=== {rname} ({args.granularity}) ===")
+        print(f"\n=== {arm} ({args.granularity}) ===")
         print(f"  scorable {metrics['n_scorable']}/{metrics['n_total']} "
               f"(zero-evidence excluded: {metrics['n_zero_evidence']})")
         for k in (1, 5, 10, 20):

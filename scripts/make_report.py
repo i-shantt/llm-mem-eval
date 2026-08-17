@@ -341,6 +341,260 @@ def e2e_section(arms: list[dict]) -> None:
             print(f"| {qtype} | {v['n']} | {v['accuracy']:.3f} |")
 
 
+def is_recency_variant(key: str) -> bool:
+    """`hybrid_rw0.5|turn|500` -- one system at one setting, not a system."""
+    return key.split("|")[0].startswith("hybrid_rw")
+
+
+def _rr_map(run: dict) -> dict[str, tuple[str, float]]:
+    """question_id -> (type, reciprocal rank), matching `aggregate`'s MRR exactly.
+
+    Two details decide whether this reproduces the published number, and getting
+    either wrong moves the result rather than breaking it. Ranks are 0-based
+    (`enumerate(hits)`), so the reciprocal is `1/(rank+1)` and a rank of 0 is the
+    *best* possible result, not a missing one. And a question with no evidence
+    turn at all is excluded, while a question whose evidence simply was not
+    retrieved scores 0 -- `first_evidence_rank` is None in both cases, so the
+    two are told apart by `n_evidence`.
+    """
+    out: dict[str, tuple[str, float]] = {}
+    for q in run.get("per_question", []):
+        if q.get("n_evidence", 0) <= 0:
+            continue
+        rank = q.get("first_evidence_rank")
+        out[q["question_id"]] = (
+            q["question_type"], 0.0 if rank is None else 1.0 / (rank + 1)
+        )
+    return out
+
+
+def _paired_dmrr(
+    base: dict[str, tuple[str, float]],
+    arm: dict[str, tuple[str, float]],
+    qtype: str | None = None,
+    n_boot: int = 10_000,
+) -> tuple[float, float, float]:
+    """Paired bootstrap on the per-question MRR difference. Seeded, so the
+    report stays byte-identical across runs and CI can diff it."""
+    import numpy as np
+
+    ids = [q for q in base if q in arm and (qtype is None or base[q][0] == qtype)]
+    if not ids:
+        return 0.0, 0.0, 0.0
+    d = np.array([arm[q][1] - base[q][1] for q in ids])
+    rng = np.random.default_rng(0)
+    means = d[rng.integers(0, len(d), size=(n_boot, len(d)))].mean(axis=1)
+    return float(d.mean()), float(np.quantile(means, 0.025)), float(
+        np.quantile(means, 0.975)
+    )
+
+
+def recency_section(base_runs: dict[str, dict], sweep: dict[str, dict]) -> None:
+    """Does a recency prior help the strongest retriever?
+
+    Held out of the system-comparison tables above: these are the same hybrid
+    retriever at different settings of one knob, and listing each as its own
+    system would crowd out the comparison those tables exist to make.
+    """
+    if not sweep:
+        return
+
+    groups: dict[tuple[str, int], list[tuple[float, dict]]] = {}
+    for key, run in sweep.items():
+        _, gran, n = key.split("|")
+        groups.setdefault((gran, int(n)), []).append(
+            (run["config"]["recency_weight"], run)
+        )
+
+    print("\n## A recency prior on the strongest retriever\n")
+    print("`recency_weight` is the weight of a most-recent-first ranking fused "
+          "into hybrid's BM25 and dense rankings, each of which is 1.0. So 1.0 "
+          "means recency gets an equal vote with relevance. The weight used to "
+          "be quantised to whole rank-list repetitions, which made every value "
+          "below 1.0 unreachable; it is continuous now, and no published "
+          "number was measured at a non-zero weight before this section.\n")
+    print("The row at weight 0 is the plain `hybrid` arm from the table above, "
+          "on the same question set, not a re-run.\n")
+
+    for (gran, n), items in sorted(groups.items()):
+        anchor = base_runs.get(f"hybrid|{gran}|{n}")
+        rows = sorted(items)
+        if anchor is not None:
+            rows = [(0.0, anchor)] + rows
+
+        print(f"\n**{gran} granularity**, n={n}\n")
+        print("| recency weight | scorable | any_hit@1 | any_hit@10 | "
+              "recall@10 | MRR |")
+        print("|---|---|---|---|---|---|")
+        for w, run in rows:
+            m = run["metrics"]
+            print(f"| {w:g} | {m['n_scorable']} | {m['any_hit@1']:.3f} | "
+                  f"{m['any_hit@10']:.3f} | {m['recall@10']:.3f} | "
+                  f"{m['mrr']:.3f} |")
+
+        if anchor is None:
+            continue
+
+        # The whole grid, not the strongest weight. An aggregate can hide a
+        # prior that helps one question type and hurts the rest, which is the
+        # shape a recency signal is most likely to have -- and printing only the
+        # strongest weight hides it a second way, because by then every type has
+        # been driven down and the columns agree again.
+        #
+        # Reported as MRR, not any_hit@10, for two reasons that point the same
+        # way. A recency prior only ever *reorders* a fused ranking, so a
+        # threshold metric at k=10 is the wrong instrument for it; and at
+        # session granularity any_hit@10 is saturated -- hybrid is at 0.990
+        # overall with five of six question types at exactly 1.000 -- so the
+        # per-type table in that metric would be a column of ties whatever the
+        # prior did.
+        base_bt = anchor["metrics"].get("by_question_type") or {}
+        if not base_bt or len(rows) < 2:
+            continue
+        weights = [w for w, _ in rows]
+        print("\nMRR by question type across the sweep, because the prior "
+              "reorders rather than admits:\n")
+        print("| question type | n | " + " | ".join(f"w={w:g}" for w in weights)
+              + " |")
+        print("|---" * (len(weights) + 2) + "|")
+        for qtype in sorted(base_bt):
+            cells = []
+            for _, run in rows:
+                bt = run["metrics"].get("by_question_type") or {}
+                cells.append(f"{bt[qtype]['mrr']:.3f}" if qtype in bt else "--")
+            print(f"| {qtype} | {base_bt[qtype]['n']} | " + " | ".join(cells)
+                  + " |")
+
+        print("\nPaired against weight 0 on the same questions, bootstrap over "
+              "per-question reciprocal rank (10,000 resamples, seeded):\n")
+        print("| weight | all questions | temporal-reasoning |")
+        print("|---|---|---|")
+        base_rr = _rr_map(anchor)
+        for w, run in rows[1:]:
+            arm_rr = _rr_map(run)
+            cells = []
+            for qtype in (None, "temporal-reasoning"):
+                pt, lo, hi = _paired_dmrr(base_rr, arm_rr, qtype)
+                star = " \\*" if lo > 0 or hi < 0 else ""
+                cells.append(f"{pt:+.3f} [{lo:+.3f}, {hi:+.3f}]{star}")
+            print(f"| {w:g} | " + " | ".join(cells) + " |")
+        print("\n\\* interval excludes zero.\n")
+
+    _recency_closing(groups)
+
+
+def _recency_closing(groups: dict) -> None:
+    """The cross-granularity reading, which is the only one worth trusting."""
+    if len(groups) < 2:
+        return
+    print("\n**A global recency prior does not help at any weight, and the one "
+          "subgroup that looked like an exception did not replicate.** The "
+          "aggregate is flat at a weight of 0.25 and monotonically worse beyond "
+          "it, at both granularities. Below that headline the two sweeps "
+          "disagree about *which* question type benefits, which is what noise "
+          "looks like: at session granularity temporal-reasoning gains "
+          "+0.039 MRR at weight 0.25 on an interval that excludes zero, and at "
+          "turn granularity the same subset on five times the questions moves "
+          "-0.001 [-0.016, +0.013]. Meanwhile the type that gains at turn "
+          "granularity is knowledge-update, which loses nothing at session.\n")
+    print("The session result was reported as a hypothesis before the turn "
+          "sweep was run, which is the only reason it is stated here at all "
+          "rather than quietly dropped. One subgroup at p just under 0.05, "
+          "chosen after looking at six question types across four weights and "
+          "resting on the five questions whose ranking actually moved, is what "
+          "a false positive looks like from the inside. The larger sample is "
+          "the answer to it.\n")
+
+
+def _selector_arm(store: dict):
+    """An ArmResult over a survival payload, for paired selector comparisons."""
+    from llm_mem_eval.eval.ablation import ArmResult
+
+    return ArmResult(
+        name=store["store_id"],
+        model=store.get("policy_config", {}).get("policy", "?"),
+        retriever="store",
+        accuracy=store["survival"]["primary"]["record"]["survival"],
+        read_tokens_per_query=0.0,
+        graded={r["question_id"]: r["survival_record"]
+                for r in store["records"] if r["in_primary"]},
+        qtype={r["question_id"]: r["question_type"] for r in store["records"]},
+    )
+
+
+def matched_budget_section(stores: list[dict]) -> None:
+    """Selector against selector at one budget, which is the comparison intended.
+
+    The paired table below this one is against `verbatim_turn`, which answers
+    "how much does shrinking the store cost". It cannot answer "does this way of
+    choosing what to keep beat that one", because two selectors at the same
+    budget never appear in it together.
+    """
+    from llm_mem_eval.eval.ablation import (
+        mcnemar_p,
+        paired_bootstrap_ci,
+        paired_ids,
+    )
+
+    by_pct: dict[str, dict[str, dict]] = {}
+    for s in stores:
+        m = re.fullmatch(r"(leadk|tailk|lexrank)_(\d+)pct", s["store_id"])
+        if m:
+            by_pct.setdefault(m.group(2), {})[m.group(1)] = s
+    rows = [(int(p), v) for p, v in by_pct.items() if "leadk" in v and len(v) > 1]
+    if not rows:
+        return
+
+    print("\n### Selector against selector, at one budget\n")
+    print("`leadk` keeps each turn's first sentences, `tailk` its last, "
+          "`lexrank` its most central. Same budget, same round-robin schedule, "
+          "so the only thing varying is which sentence of a turn survives -- "
+          "and `records` is printed because that is the assumption most likely "
+          "to be false.\n")
+    print("| budget | selector | records | tokens/record | corrected | "
+          "vs leadk | 95% CI | McNemar p |")
+    print("|---|---|---|---|---|---|---|---|")
+    for pct, arms in sorted(rows):
+        base = arms["leadk"]
+        for rule in ("leadk", "tailk", "lexrank"):
+            s = arms.get(rule)
+            if s is None:
+                continue
+            st = s["survival"]["store_stats"]
+            corrected = s["survival"]["primary"]["record"]["chance_corrected"]
+            if rule == "leadk":
+                cmp_cells = "| -- | -- | -- "
+            else:
+                a, b = _selector_arm(s), _selector_arm(base)
+                pt, lo, hi = paired_bootstrap_ci(a, b)
+                cmp_cells = (f"| {pt:+.3f} | [{lo:+.3f}, {hi:+.3f}] "
+                             f"| {mcnemar_p(a, b):.2f} ")
+            print(f"| {pct}% | {rule} | {st['records_per_store_mean']:.0f} | "
+                  f"{st['tokens_per_record_mean']:.0f} | {corrected:.3f} "
+                  f"{cmp_cells}|")
+
+    n_paired = None
+    for _, arms in sorted(rows):
+        if "lexrank" in arms:
+            n_paired = len(paired_ids(_selector_arm(arms["lexrank"]),
+                                      _selector_arm(arms["leadk"])))
+            break
+    print(f"\n**Read the `records` column before the `corrected` one.** A budget "
+          f"below about 25% runs out before every turn has contributed a "
+          f"sentence, and centrality picks longer sentences than position does, "
+          f"so `lexrank` reaches materially fewer turns there. At 5% and 10% the "
+          f"selectors therefore differ in coverage as well as in selection, and "
+          f"those rows cannot separate the two. Only the rows where every "
+          f"selector reaches all 497 records are a controlled comparison.\n")
+    if n_paired:
+        print(f"On those rows no selector is distinguishable from any other: "
+              f"every interval crosses zero. With {n_paired} paired questions "
+              f"the detection floor is around 8 points, so this bounds the "
+              f"effect of sentence selection rather than measuring it. "
+              f"Centrality does not beat position, and the experiment is not "
+              f"powered to show the reverse either.\n")
+
+
 def survival_section(results_dir: Path) -> None:
     """Answer survival per write policy, if the sweep has been run.
 
@@ -376,6 +630,8 @@ def survival_section(results_dir: Path) -> None:
               f"{p['null']:.3f} | **{p['chance_corrected']:.3f}** | "
               f"[{lo:.3f}, {hi:.3f}] |")
 
+    matched_budget_section(stores)
+
     summary_path = results_dir / "survival" / "summary.json"
     if summary_path.exists():
         summary = json.loads(summary_path.read_text())
@@ -398,6 +654,13 @@ def main() -> None:
     if not all_runs:
         print("no results yet -- run scripts/run_retrieval_eval.py first")
         return
+    # A recency-weighted hybrid arm is one system at one setting, not another
+    # system, so it is held out of every table that compares systems and gets
+    # its own section. Splitting here rather than inside each section keeps the
+    # hold-out in one place -- `granularity_section` re-selects from `all_runs`
+    # and would otherwise pick a weighted arm up again.
+    sweep_runs = {k: v for k, v in all_runs.items() if is_recency_variant(k)}
+    all_runs = {k: v for k, v in all_runs.items() if not is_recency_variant(k)}
     # Per-row tables take the largest run available and print its own n; the
     # cross-granularity section re-selects a matched set for itself.
     runs = best_runs(all_runs)
@@ -446,6 +709,7 @@ def main() -> None:
               f"{read_calls/n:.1f} |")
 
     granularity_section(all_runs)
+    recency_section(all_runs, sweep_runs)
     survival_section(results_dir)
     e2e_section(load_e2e(results_dir))
 
