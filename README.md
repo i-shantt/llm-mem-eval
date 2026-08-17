@@ -1013,10 +1013,14 @@ slices stay intact. Every reported number carries its own `n`.
   at store scale. The placebo null bounds accidental matches; it does not bound
   this one.
 - **The grader audit's 0.000 false-accept rate covers constructed negatives**,
-  which are easy negatives, and the reordered-list case above was found by
-  re-grading stored predictions rather than by the audit. Survival inherits that
-  caveat and should not be read as inheriting a stronger guarantee than the
-  grading section claims.
+  which are easy negatives. **Three real grader defects were found by other means
+  and would not have been caught by it**: the two-alternative false accept, found
+  by reading model output; a title abbreviation (`Dr.`) split into a one-token
+  alternative that matched any answer naming any doctor; and a correct ordered list
+  rejected for joining its last item with "and". The last two were found by reading
+  the answer key against the grader, after the audit had reported 0.000. Survival
+  inherits that caveat and should not be read as inheriting a stronger guarantee
+  than the grading section claims.
 - **The v3 write-cost table is a model, not a measurement.** Call counts, the
   7,671-token system prompt and the content tokens are exact; the length of a
   stored memory, the emitted JSON and the template overhead are assumed. The
