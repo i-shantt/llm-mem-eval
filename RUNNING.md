@@ -116,6 +116,36 @@ At `MEM0_BATCH=session`, ~48 `add()` calls per conversation × 184 conversations
 conversation at that granularity. Pilot on 10 conversations before committing to
 the full set.
 
+Priced for whatever extractor you point it at, from
+[`results/write_cost_model.json`](results/write_cost_model.json). Per
+conversation at `session` batching:
+
+| | tokens |
+|---|---|
+| prompt | 592,877 |
+| of which the 7,671-token system prompt, re-sent every call | 366,198 (62%) |
+| completion (assumed 300/call — the one estimated term) | 14,321 |
+
+So the bill is `592,877 × input_price + 14,321 × output_price` per conversation,
+times however many conversations you run. Two consequences worth planning around:
+
+- **Prompt caching roughly halves it**, because 62% of the input is a byte-identical
+  prefix on every one of the ~48 calls. Whether it applies depends on the provider
+  and on whether mem0's adapter for that provider marks the prefix cacheable —
+  check before assuming it.
+- **The extractor's tier moves the total by more than the batching does at fixed
+  batching.** A frontier extractor is the wrong choice on the merits, not just the
+  cost: mem0's OSS default is `gpt-5-mini`, so a frontier model measures a
+  configuration nobody deploys, and the deviation from their documented stack is
+  larger, not smaller. Match the tier, and name whatever you used in the arm name.
+
+**Deliberately not priced here in dollars.** The one figure in this repo that
+cannot be traced to a primary source is a vendor's list price, and
+`model_write_cost.py` already says so about the `gpt-5-mini` rates it uses for the
+README table. Adding a second vendor's prices would compound an input the repo
+cannot verify. The token counts above are exact except the completion term; the
+arithmetic is yours.
+
 ### Naming
 
 The store is `mem0_oss_v3_qwen7b`, never `mem0` — in code, in payloads, and in
