@@ -291,3 +291,16 @@ def test_build_reads_the_whole_store_not_mem0s_default_twenty() -> None:
     policy._new_memory = lambda collection, path: _FakeMemory(GET_ALL_TOP_K)
     with pytest.raises(RuntimeError, match="truncated on read"):
         policy.build(ex, CostLedger())
+
+
+def test_an_unknown_batch_granularity_fails_immediately() -> None:
+    """`MEM0_BATCH=sessions` used to survive vLLM startup and a passing
+    preflight, then raise on the first conversation. Batching is the biggest
+    lever on the write cost; a typo in it should cost a second, not an hour."""
+    from llm_mem_eval.write.mem0_adapter import BATCHES
+
+    for good in BATCHES:
+        assert Mem0OssPolicy(llm_model="stub", batch=good).batch == good
+
+    with pytest.raises(SystemExit, match="unknown batch granularity"):
+        Mem0OssPolicy(llm_model="stub", batch="sessions")

@@ -43,6 +43,7 @@ MEM0_PINNED_VERSION = "2.0.18"
 # per-session on this benchmark. Whatever is used must be recorded in the
 # manifest as an explicit deviation, because Mem0 does not prescribe one.
 DEFAULT_BATCH = "session"
+BATCHES = ("session", "pair", "turn")
 
 # `Memory.get_all(top_k=...)` defaults to **20**, and that default silently
 # truncates the store this policy exists to measure: one LongMemEval conversation
@@ -162,6 +163,15 @@ class Mem0OssPolicy:
         self.llm_base_url = llm_base_url
         self.embed_model = embed_model
         self.embed_dims = embed_dims
+        # Validated here rather than in _batches. `MEM0_BATCH=sessions` used to
+        # get all the way through vLLM startup and a passing preflight before
+        # raising on the first conversation, which is a long way to walk for a
+        # typo -- and the batching choice is the single biggest lever on the
+        # write cost, so it is worth failing on immediately.
+        if batch not in BATCHES:
+            raise SystemExit(
+                f"unknown batch granularity {batch!r}; expected one of "
+                f"{', '.join(BATCHES)} (set MEM0_BATCH)")
         self.batch = batch
         self.workdir = workdir
         # Set by build() when a server returns no usage block and the write
