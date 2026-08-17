@@ -9,22 +9,22 @@ Gold labels are LongMemEval's per-turn `has_answer` flags, so these numbers invo
 | system | granularity | n | any_hit@1 | any_hit@5 | any_hit@10 | recall@10 | MRR |
 |---|---|---|---|---|---|---|---|
 | random | session | 97 | 0.031 | 0.175 | 0.351 | 0.213 | 0.116 |
-| random | turn | 97 | 0.021 | 0.031 | 0.041 | 0.021 | 0.027 |
+| random | turn | 479 | 0.010 | 0.025 | 0.046 | 0.029 | 0.019 |
 | random | user_turn | 88 | 0.034 | 0.114 | 0.148 | 0.073 | 0.066 |
 | recency | session | 97 | 0.082 | 0.289 | 0.454 | 0.292 | 0.188 |
-| recency | turn | 97 | 0.000 | 0.010 | 0.062 | 0.028 | 0.012 |
+| recency | turn | 479 | 0.000 | 0.004 | 0.025 | 0.014 | 0.007 |
 | recency | user_turn | 88 | 0.000 | 0.068 | 0.125 | 0.062 | 0.033 |
 | bm25 | session | 97 | 0.887 | 1.000 | 1.000 | 0.984 | 0.931 |
-| bm25 | turn | 97 | 0.546 | 0.742 | 0.825 | 0.693 | 0.634 |
+| bm25 | turn | 479 | 0.511 | 0.758 | 0.820 | 0.729 | 0.622 |
 | bm25 | user_turn | 88 | 0.580 | 0.818 | 0.864 | 0.764 | 0.689 |
 | dense | session | 97 | 0.722 | 0.907 | 0.948 | 0.925 | 0.806 |
-| dense | turn | 97 | 0.464 | 0.814 | 0.897 | 0.821 | 0.616 |
+| dense | turn | 479 | 0.482 | 0.841 | 0.921 | 0.844 | 0.640 |
 | dense | user_turn | 88 | 0.545 | 0.852 | 0.943 | 0.854 | 0.692 |
 | hybrid | session | 97 | 0.845 | 0.969 | 0.990 | 0.981 | 0.903 |
-| hybrid | turn | 97 | 0.536 | 0.814 | 0.907 | 0.811 | 0.649 |
+| hybrid | turn | 479 | 0.537 | 0.831 | 0.914 | 0.826 | 0.665 |
 | hybrid | user_turn | 88 | 0.580 | 0.864 | 0.943 | 0.886 | 0.709 |
 | oracle | session | 97 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
-| oracle | turn | 97 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| oracle | turn | 479 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
 | oracle | user_turn | 88 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
 
 ## Cost, split by write path and read path
@@ -37,16 +37,16 @@ The write path is paid once per conversation; the read path is paid per query. P
 | random | turn | 0 | 0.0 | 0 | 0 | 0.0 |
 | random | user_turn | 0 | 0.0 | 0 | 0 | 0.0 |
 | recency | session | 0 | 0.0 | 0 | 0 | 0.0 |
-| recency | turn | 0 | 0.0 | 0 | 1 | 0.0 |
+| recency | turn | 0 | 0.0 | 0 | 0 | 0.0 |
 | recency | user_turn | 0 | 0.0 | 0 | 0 | 0.0 |
 | bm25 | session | 36 | 0.0 | 0 | 0 | 0.0 |
-| bm25 | turn | 40 | 0.0 | 0 | 2 | 0.0 |
+| bm25 | turn | 15 | 0.0 | 0 | 1 | 0.0 |
 | bm25 | user_turn | 6 | 0.0 | 0 | 1 | 0.0 |
 | dense | session | 663 | 0.0 | 0 | 11 | 0.0 |
-| dense | turn | 3020 | 0.0 | 0 | 11 | 0.0 |
+| dense | turn | 6182 | 0.0 | 0 | 21 | 0.0 |
 | dense | user_turn | 1311 | 0.0 | 0 | 11 | 0.0 |
 | hybrid | session | 699 | 0.0 | 0 | 12 | 0.0 |
-| hybrid | turn | 3075 | 0.0 | 0 | 14 | 0.0 |
+| hybrid | turn | 7255 | 0.0 | 0 | 25 | 0.0 |
 | hybrid | user_turn | 1311 | 0.0 | 0 | 12 | 0.0 |
 | oracle | session | 0 | 0.0 | 0 | 0 | 0.0 |
 | oracle | turn | 0 | 0.0 | 0 | 0 | 0.0 |
@@ -54,7 +54,7 @@ The write path is paid once per conversation; the read path is paid per query. P
 
 ## What a memory unit should be
 
-The same retrievers, over the same conversations, cut into turns, user turns, or whole sessions. Coarser units retrieve more evidence per hit and cost more tokens to read -- the trade this project exists to price.
+The same retrievers, over the same conversations, cut into turns, user turns, or whole sessions. Coarser units retrieve more evidence per hit and cost more tokens to read -- the trade this project exists to price. Every cell below is n=100, the largest sample all three granularities share, so the columns differ by unit size and not by question set.
 
 
 **recall@10**
@@ -110,20 +110,20 @@ Restricted to golds of two or more normalised tokens: one-token answers match a 
 
 | write policy | store tokens | records | survival | null | corrected | 95% CI |
 |---|---|---|---|---|---|---|
-| verbatim_turn | 104,110 | 497 | 0.791 | 0.162 | **0.751** | [0.662, 0.835] |
-| tailk_50pct | 52,197 | 497 | 0.736 | 0.125 | **0.699** | [0.603, 0.790] |
-| leadk_50pct | 52,194 | 497 | 0.736 | 0.120 | **0.700** | [0.607, 0.791] |
-| truncated_recency_50pct | 52,053 | 253 | 0.545 | 0.108 | **0.490** | [0.391, 0.594] |
-| tailk_25pct | 26,027 | 497 | 0.582 | 0.079 | **0.546** | [0.447, 0.642] |
-| truncated_random_25pct_s1 | 26,026 | 129 | 0.400 | 0.080 | **0.348** | [0.250, 0.449] |
-| truncated_random_25pct_s2 | 26,026 | 130 | 0.309 | 0.086 | **0.244** | [0.151, 0.338] |
-| truncated_random_25pct_s0 | 26,026 | 130 | 0.345 | 0.075 | **0.292** | [0.199, 0.389] |
-| truncated_recency_25pct | 26,026 | 128 | 0.309 | 0.065 | **0.261** | [0.173, 0.355] |
-| leadk_25pct | 26,021 | 497 | 0.564 | 0.081 | **0.525** | [0.426, 0.624] |
-| leadk_10pct | 10,410 | 411 | 0.282 | 0.049 | **0.245** | [0.157, 0.336] |
-| truncated_recency_10pct | 10,409 | 54 | 0.182 | 0.037 | **0.150** | [0.080, 0.227] |
-| leadk_5pct | 5,205 | 207 | 0.136 | 0.027 | **0.112** | [0.050, 0.181] |
-| truncated_recency_5pct | 5,204 | 29 | 0.118 | 0.021 | **0.099** | [0.042, 0.162] |
+| verbatim_turn | 104,110 | 497 | 0.791 | 0.153 | **0.753** | [0.665, 0.837] |
+| tailk_50pct | 52,197 | 497 | 0.736 | 0.119 | **0.701** | [0.606, 0.791] |
+| leadk_50pct | 52,194 | 497 | 0.736 | 0.114 | **0.703** | [0.610, 0.792] |
+| truncated_recency_50pct | 52,053 | 253 | 0.545 | 0.104 | **0.493** | [0.393, 0.597] |
+| tailk_25pct | 26,027 | 497 | 0.582 | 0.077 | **0.547** | [0.448, 0.643] |
+| truncated_random_25pct_s1 | 26,026 | 129 | 0.391 | 0.074 | **0.342** | [0.246, 0.442] |
+| truncated_random_25pct_s2 | 26,026 | 130 | 0.309 | 0.081 | **0.248** | [0.157, 0.342] |
+| truncated_random_25pct_s0 | 26,026 | 130 | 0.345 | 0.069 | **0.297** | [0.204, 0.393] |
+| truncated_recency_25pct | 26,026 | 128 | 0.309 | 0.063 | **0.263** | [0.175, 0.356] |
+| leadk_25pct | 26,021 | 497 | 0.564 | 0.077 | **0.527** | [0.428, 0.625] |
+| leadk_10pct | 10,410 | 411 | 0.282 | 0.047 | **0.246** | [0.159, 0.337] |
+| truncated_recency_10pct | 10,409 | 54 | 0.182 | 0.035 | **0.152** | [0.082, 0.228] |
+| leadk_5pct | 5,205 | 207 | 0.136 | 0.025 | **0.114** | [0.052, 0.182] |
+| truncated_recency_5pct | 5,204 | 29 | 0.118 | 0.019 | **0.101** | [0.044, 0.163] |
 
 Paired against `verbatim_turn`, on the questions both scored. McNemar plus a paired bootstrap, the same functions the memory-lift ablation uses.
 
@@ -136,7 +136,7 @@ Paired against `verbatim_turn`, on the questions both scored. McNemar plus a pai
 | tailk_25pct vs verbatim_turn | -0.209 | [-0.291, -0.136] | 2.38e-07 |
 | tailk_50pct vs verbatim_turn | -0.055 | [-0.100, -0.018] | 3.12e-02 |
 | truncated_random_25pct_s0 vs verbatim_turn | -0.445 | [-0.536, -0.355] | 3.55e-15 |
-| truncated_random_25pct_s1 vs verbatim_turn | -0.391 | [-0.482, -0.300] | 2.27e-13 |
+| truncated_random_25pct_s1 vs verbatim_turn | -0.400 | [-0.491, -0.309] | 1.14e-13 |
 | truncated_random_25pct_s2 vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
 | truncated_recency_10pct vs verbatim_turn | -0.609 | [-0.700, -0.518] | 1.36e-20 |
 | truncated_recency_25pct vs verbatim_turn | -0.482 | [-0.573, -0.391] | 2.22e-16 |
@@ -199,20 +199,20 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 | 1.5b_oracle_turn_k10_n100 | 15 | 0.352 | 0.352 | 0.330 | 0.308 | 0.220 |
 | 1.5b_random_turn_k10_n100 | 24 | 0.077 | 0.066 | 0.066 | 0.055 | 0.044 |
 | 1.5b_recency_turn_k10_n100 | 22 | 0.066 | 0.066 | 0.066 | 0.066 | 0.055 |
-| 3b_hybrid_turn_k10_n100 | 17 | 0.319 | 0.308 | 0.286 | 0.275 | 0.209 |
+| 3b_hybrid_turn_k10_n100 | 17 | 0.319 | 0.308 | 0.286 | 0.264 | 0.209 |
 | 3b_none_turn_k10_n100 | 21 | 0.044 | 0.044 | 0.033 | 0.033 | 0.033 |
-| 3b_oracle_turn_k10_n100 | 23 | 0.418 | 0.385 | 0.352 | 0.341 | 0.253 |
+| 3b_oracle_turn_k10_n100 | 23 | 0.418 | 0.385 | 0.352 | 0.330 | 0.253 |
 | 3b_random_turn_k10_n100 | 19 | 0.066 | 0.066 | 0.066 | 0.066 | 0.044 |
 | 3b_recency_turn_k10_n100 | 22 | 0.077 | 0.077 | 0.077 | 0.066 | 0.066 |
-| 7b_bm25_turn_k10_n100 | 30 | 0.418 | 0.407 | 0.374 | 0.363 | 0.231 |
-| 7b_hybrid_turn_k10_n100 | 24 | 0.473 | 0.451 | 0.374 | 0.363 | 0.253 |
+| 7b_bm25_turn_k10_n100 | 30 | 0.418 | 0.407 | 0.374 | 0.352 | 0.231 |
+| 7b_hybrid_turn_k10_n100 | 24 | 0.473 | 0.451 | 0.374 | 0.352 | 0.253 |
 | 7b_none_turn_k10_n100 | 25 | 0.055 | 0.055 | 0.044 | 0.044 | 0.022 |
-| 7b_oracle_turn_k10_n100 | 28 | 0.593 | 0.571 | 0.527 | 0.429 | 0.286 |
+| 7b_oracle_turn_k10_n100 | 28 | 0.593 | 0.571 | 0.527 | 0.418 | 0.286 |
 | 7b_random_turn_k10_n100 | 23 | 0.066 | 0.066 | 0.066 | 0.066 | 0.066 |
 | 7b_recency_turn_k10_n100 | 22 | 0.088 | 0.088 | 0.088 | 0.088 | 0.077 |
-| 14b_hybrid_turn_k10_n100 | 32 | 0.593 | 0.571 | 0.462 | 0.407 | 0.253 |
+| 14b_hybrid_turn_k10_n100 | 32 | 0.593 | 0.571 | 0.462 | 0.396 | 0.253 |
 | 14b_none_turn_k10_n100 | 34 | 0.044 | 0.044 | 0.044 | 0.044 | 0.011 |
-| 14b_oracle_turn_k10_n100 | 29 | 0.560 | 0.549 | 0.451 | 0.418 | 0.242 |
+| 14b_oracle_turn_k10_n100 | 29 | 0.560 | 0.549 | 0.451 | 0.407 | 0.242 |
 | 14b_random_turn_k10_n100 | 36 | 0.055 | 0.055 | 0.044 | 0.022 | 0.022 |
 | 14b_recency_turn_k10_n100 | 33 | 0.088 | 0.088 | 0.099 | 0.088 | 0.077 |
 
@@ -467,12 +467,12 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 
 | question type | n | any_hit@10 | recall@10 | MRR |
 |---|---|---|---|---|
-| knowledge-update | 16 | 0.250 | 0.125 | 0.048 |
-| multi-session | 24 | 0.042 | 0.021 | 0.007 |
-| single-session-assistant | 11 | 0.000 | 0.000 | 0.000 |
-| single-session-preference | 6 | 0.000 | 0.000 | 0.014 |
-| single-session-user | 14 | 0.000 | 0.000 | 0.000 |
-| temporal-reasoning | 26 | 0.038 | 0.008 | 0.006 |
+| knowledge-update | 72 | 0.069 | 0.035 | 0.016 |
+| multi-session | 125 | 0.016 | 0.008 | 0.004 |
+| single-session-assistant | 56 | 0.000 | 0.000 | 0.003 |
+| single-session-preference | 30 | 0.000 | 0.000 | 0.008 |
+| single-session-user | 64 | 0.047 | 0.047 | 0.010 |
+| temporal-reasoning | 132 | 0.015 | 0.003 | 0.005 |
 
 **recency** (user_turn)
 
@@ -500,12 +500,12 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 
 | question type | n | any_hit@10 | recall@10 | MRR |
 |---|---|---|---|---|
-| knowledge-update | 16 | 1.000 | 0.906 | 0.839 |
-| multi-session | 24 | 0.875 | 0.574 | 0.617 |
-| single-session-assistant | 11 | 0.818 | 0.818 | 0.652 |
-| single-session-preference | 6 | 0.667 | 0.528 | 0.158 |
-| single-session-user | 14 | 0.786 | 0.786 | 0.724 |
-| temporal-reasoning | 26 | 0.731 | 0.606 | 0.579 |
+| knowledge-update | 72 | 0.944 | 0.882 | 0.738 |
+| multi-session | 125 | 0.792 | 0.596 | 0.515 |
+| single-session-assistant | 56 | 0.893 | 0.893 | 0.775 |
+| single-session-preference | 30 | 0.400 | 0.339 | 0.205 |
+| single-session-user | 64 | 0.906 | 0.898 | 0.753 |
+| temporal-reasoning | 132 | 0.803 | 0.709 | 0.627 |
 
 **bm25** (user_turn)
 
@@ -533,12 +533,12 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 
 | question type | n | any_hit@10 | recall@10 | MRR |
 |---|---|---|---|---|
-| knowledge-update | 16 | 0.938 | 0.844 | 0.618 |
-| multi-session | 24 | 1.000 | 0.863 | 0.750 |
-| single-session-assistant | 11 | 1.000 | 1.000 | 0.520 |
-| single-session-preference | 6 | 0.833 | 0.778 | 0.681 |
-| single-session-user | 14 | 0.857 | 0.857 | 0.631 |
-| temporal-reasoning | 26 | 0.769 | 0.682 | 0.510 |
+| knowledge-update | 72 | 0.972 | 0.924 | 0.625 |
+| multi-session | 125 | 0.976 | 0.830 | 0.702 |
+| single-session-assistant | 56 | 0.964 | 0.964 | 0.623 |
+| single-session-preference | 30 | 0.900 | 0.844 | 0.678 |
+| single-session-user | 64 | 0.906 | 0.898 | 0.699 |
+| temporal-reasoning | 132 | 0.833 | 0.737 | 0.559 |
 
 **dense** (user_turn)
 
@@ -566,12 +566,12 @@ The median gold answer is 11 characters. These re-grade the same stored answers 
 
 | question type | n | any_hit@10 | recall@10 | MRR |
 |---|---|---|---|---|
-| knowledge-update | 16 | 1.000 | 0.906 | 0.735 |
-| multi-session | 24 | 0.958 | 0.770 | 0.787 |
-| single-session-assistant | 11 | 1.000 | 1.000 | 0.619 |
-| single-session-preference | 6 | 0.667 | 0.528 | 0.274 |
-| single-session-user | 14 | 0.857 | 0.857 | 0.621 |
-| temporal-reasoning | 26 | 0.846 | 0.750 | 0.583 |
+| knowledge-update | 72 | 0.986 | 0.933 | 0.700 |
+| multi-session | 125 | 0.920 | 0.718 | 0.644 |
+| single-session-assistant | 56 | 0.964 | 0.964 | 0.772 |
+| single-session-preference | 30 | 0.700 | 0.617 | 0.382 |
+| single-session-user | 64 | 0.953 | 0.945 | 0.784 |
+| temporal-reasoning | 132 | 0.879 | 0.802 | 0.627 |
 
 **hybrid** (user_turn)
 

@@ -332,7 +332,9 @@ granularity, top-10 retrieved, priced at gpt-4o-mini prompt rates:
 | Mem0 — *reported*, LoCoMo | $0.185 (1.23M tok) | $0.00026 (1,764 tok) |
 
 That `$0` is **API dollars, not free**. Indexing one conversation still costs
-3.1 s of local compute and ~104K embedding tokens through a 33M-parameter model.
+local compute — 3.1 s on a short run, 7.3 s under sustained load, for reasons
+[measured below](#wall-clock-is-not-a-portable-ratio-and-this-repo-has-two-runs-to-prove-it)
+— and ~104K embedding tokens through a 33M-parameter model.
 Priced at a hosted embedding rate it is on the order of $0.002 per conversation
 — about 1% of the LLM-extraction figure above, so the comparison survives, but
 it is a rounding-to-zero, not a zero.
@@ -431,18 +433,40 @@ Three findings that hold at full scale. Two others did not, and those are below.
   retrieval reaches and why the comparison in this repo is between *write* paths.
 - **The embedder buys depth; the lexical index buys cheap precision.** The dense
   arm leads `recall@10` 0.844 to 0.729, and BM25 leads `any_hit@1` 0.511 to 0.482
-  for **~75× less write cost**. Which you want depends on whether the answering
-  model needs one evidence turn or all of them.
+  for **~75× less write cost** — a ratio that is real but not portable, for
+  reasons measured [below](#wall-clock-is-not-a-portable-ratio-and-this-repo-has-two-runs-to-prove-it).
+  Which you want depends on whether the answering model needs one evidence turn or
+  all of them.
 - **"Just keep the last N turns" does not work, and at full scale it is worse
   than that.** Recency scores **0.025** against random's 0.046 — not merely no
   better than chance but *below* it, because the most recent turns are
   systematically not the ones carrying an old answer.
 
-Write cost is wall-clock, and wall-clock is machine-dependent. The ~75× figure is
-from the n=100 sweep, which is the run made on an otherwise-idle machine with the
-embedding cache disabled (`timing_is_authoritative: true` in that artifact): BM25
-40 ms per conversation against dense's 3,020. The ratio between rows is what
-transfers; the absolute figures are not portable.
+### Wall-clock is not a portable ratio, and this repo has two runs to prove it
+
+Write cost here is wall-clock, because no arm makes an LLM call. Two runs of the
+same code on the same machine, both with the embedding cache disabled and both
+carrying `timing_is_authoritative: true`, disagree by a factor of five about how
+much cheaper the lexical index is:
+
+| run | BM25 | dense | ratio |
+|---|---|---|---|
+| n=100 | 40.5 ms/conv | 3,020 ms/conv | **75×** |
+| n=500 | 15.2 ms/conv | 6,182 ms/conv | **406×** |
+
+Both movements have a mechanism, and they push in opposite directions. BM25 looks
+*faster* over 500 conversations because its fixed startup — imports, the first
+index build — is amortised over five times as many examples. The embedder looks
+*slower* because embedding 500 haystacks is a fifty-minute continuous MPS
+workload that throttles, where the five-minute n=100 version does not. Neither
+figure is wrong; one measures a short burst and the other a sustained load.
+
+**The claims above quote 75×, the smaller one**, for the same reason the
+break-even table quotes the smallest construction figure: it is the number least
+flattering to the argument being made. Reproduce this and expect a different
+multiple — trust the ordering, not the factor. It is also why the headline cost
+accounting in this repo is denominated in **LLM tokens**, which are counted rather
+than timed, and why the survival comparison is denominated in **store tokens**.
 
 ### Running at full scale contradicted two of this repo's own claims
 
