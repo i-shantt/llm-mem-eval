@@ -13,8 +13,11 @@ with its own ~490-turn, ~104K-token conversation history.
 
 ## What it found
 
-Every number below is regenerated from a run artifact rather than typed by hand,
-and each bullet links to the section that derives it.
+Each bullet links to the section that derives it. Every number there traces to an
+artifact in [`results/`](results/), and [`RESULTS.md`](RESULTS.md) is regenerated
+from those artifacts by script rather than written by hand — CI re-runs the
+generator on every push and fails if the committed report has drifted from the
+runs it reports on.
 
 - **LongMemEval-S is two benchmarks stapled together.** For temporal-reasoning
   and multi-session questions, about **61% of gold answers appear nowhere** in the
@@ -24,7 +27,7 @@ and each bullet links to the section that derives it.
   [→](#what-longmemeval-actually-asks)
 - **Mem0 v3's write cost is set by the caller, not the algorithm.** One `add()`
   is one LLM call whatever it carries, so batching per turn instead of per session
-  costs **8.8× more** running identical shipped code. Correcting this repo's
+  costs **8.8× more**, running the same shipped code. Correcting this repo's
   earlier reading of that code moved the number partly *in Mem0's favour*.
   [→](#what-one-add-actually-costs)
 - **How a write budget is spent beats how large it is.** At an identical 50%
