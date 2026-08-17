@@ -306,8 +306,9 @@ changing their ordering.
 
 ![Total cost against number of queries against one conversation's memory](results/cost_curve.png)
 
-Measured on LongMemEval, n=100, turn granularity, top-10 retrieved, priced at
-gpt-4o-mini prompt rates:
+Token sizes measured over all 500 LongMemEval conversations
+([`results/token_stats_turn.json`](results/token_stats_turn.json)), turn
+granularity, top-10 retrieved, priced at gpt-4o-mini prompt rates:
 
 | | write, per conversation | read, per query |
 |---|---|---|
