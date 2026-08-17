@@ -139,8 +139,13 @@ fsync-per-example append and a torn-tail truncation on resume. Not written,
 because nothing shipping here runs long enough to need it; it is a prerequisite
 for the Mem0 arm, not for anything already done.
 
-**n=500 refresh of the existing retrieval and end-to-end arms.** They are
-n=100 stratified. The benchmark audit is n=500. The two are therefore different
+**n=500 refresh of the end-to-end arms.** No longer deferred for retrieval: the
+retrieval sweep and the cost figure's token inputs are now measured on all 500
+questions, which is what the benchmark audit was always measured on. The
+end-to-end arms are still a stratified n=100, and that is a compute limit rather
+than a choice — the retrieval sweep is CPU-only and takes about an hour per
+granularity, whereas the end-to-end ladder is four model sizes through an
+answering model. So the retrieval table and the end-to-end table remain different
 question sets, which the README states wherever both appear.
 
 **A recency signal at retrieval time.** Mem0's OSS ranker provably has none:

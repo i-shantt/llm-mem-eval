@@ -11,6 +11,48 @@ of **using** it.
 Built on [LongMemEval](https://arxiv.org/abs/2410.10813): 500 questions, each
 with its own ~490-turn, ~104K-token conversation history.
 
+## What it found
+
+Every number below is regenerated from a run artifact rather than typed by hand,
+and each bullet links to the section that derives it.
+
+- **LongMemEval-S is two benchmarks stapled together.** For temporal-reasoning
+  and multi-session questions, about **61% of gold answers appear nowhere** in the
+  104K-token haystack — they are computed, not retrieved. So an aggregate
+  retrieval metric over all 500 questions mixes two tasks that behave nothing
+  alike, this repo's own headline included.
+  [→](#what-longmemeval-actually-asks)
+- **Mem0 v3's write cost is set by the caller, not the algorithm.** One `add()`
+  is one LLM call whatever it carries, so batching per turn instead of per session
+  costs **8.8× more** running identical shipped code. Correcting this repo's
+  earlier reading of that code moved the number partly *in Mem0's favour*.
+  [→](#what-one-add-actually-costs)
+- **How a write budget is spent beats how large it is.** At an identical 50%
+  token budget, shortening every turn loses **5.5 points** of answer survival;
+  keeping half the turns whole loses **24.5**. A tail-k control shows it is
+  coverage doing the work, not answers appearing early in a message.
+  [→](#answer-survival-what-a-write-path-keeps)
+- **76–85% of the reported accuracy survives its strongest control**, and
+  closed-book accuracy is flat across 9× of model size — so almost none of the
+  lift is the model already knowing the answer.
+  [→](#how-much-of-the-accuracy-is-actually-memory)
+- **Memory quality has a per-question-type capacity threshold.** The same
+  retrieved context is worth **+0.04** to a 1.5B model on temporal-reasoning and
+  **+0.48** to a 14B one. Below the threshold, better memory is wasted money.
+  [→](#memory-only-pays-where-the-model-can-spend-it)
+- **A gold-context "oracle" arm is not a ceiling.** 4.9% of answers sit in turns
+  the benchmark never labelled as evidence, and the hybrid retriever beat oracle
+  at 14B. Any paper reporting a gold-context arm as an upper bound is making this
+  mistake. [→](#oracle-is-not-a-ceiling)
+
+**What checking it cost.** Re-running the retrieval arms at full scale
+contradicted two of this repo's own n=100 claims and settled a third it had
+flagged as untested — [below](#retrieval-quality). Other self-corrections are
+marked where they occur, including two grader defects found *after* the audit
+reported a 0.000 false-accept rate.
+
+---
+
 Six instruments, each answering a question the aggregate score cannot:
 
 | | |
@@ -100,9 +142,14 @@ aggregate retrieval metric over all 500 questions mixes two tasks that behave
 nothing alike, and this repo's own headline `any_hit@10` of 0.907 is subject to
 exactly the same caveat.
 
-One bookkeeping note: this audit covers all 500 questions, while the retrieval
-and end-to-end arms below are a stratified n=100. They are different question
-sets, so the audit bounds how those numbers should be *read*, not their values.
+One bookkeeping note on what is measured over what. This audit, the retrieval
+arms and the cost figure's token inputs all run over the full 500 questions; the
+**end-to-end arms remain a stratified n=100**, because those need an answering
+model rather than a CPU. The two full-scale numbers still are not computed over
+an identical denominator: the audit scores **416**, dropping abstention questions
+and abstractive golds, while retrieval scores **479**, dropping only the
+questions with no evidence turn to find. So the audit bounds how the retrieval
+numbers should be *read* rather than being directly commensurable with them.
 
 ---
 
