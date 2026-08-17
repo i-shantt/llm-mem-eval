@@ -84,6 +84,25 @@ def main() -> int:
     if not ok:
         failures.append("V3_MARKER")
 
+    # "One LLM call per add(), regardless of message count" is the claim the
+    # whole write-cost model rests on: it is what makes the cost a function of
+    # caller batching rather than of how many facts the extractor emits. It is
+    # also the one structural claim here that can be checked mechanically, by
+    # counting the generation calls in the v3 block, so it is checked rather
+    # than left as a comment.
+    if ok:
+        end = next((i for i, ln in enumerate(src[marker + 1:], marker + 1)
+                    if re.match(r"    (async )?def |^class ", ln)), len(src))
+        calls = [(i, ln) for i, ln in enumerate(src[marker:end], marker + 1)
+                 if "generate_response(" in ln]
+        one_call = len(calls) == 1
+        print(f"{'ok ' if one_call else 'FAIL'}  one LLM call/add()    "
+              f"{len(calls)} generate_response call(s) in the v3 block")
+        for i, ln in calls:
+            print(f"  mem0/memory/main.py:{i}: {ln.strip()}")
+        if not one_call:
+            failures.append("ONE_CALL_PER_ADD")
+
     # LAST_K_MESSAGES and EXISTING_MEMORIES_TOP_K are bare literals inside a
     # method body, so there is nothing to import and no assertion that would
     # mean anything -- "is 10 somewhere in this file" passes on almost any

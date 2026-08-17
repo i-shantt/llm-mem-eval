@@ -18,8 +18,8 @@ Three terms, and only one of them is granularity-invariant:
   system prompt   ADDITIVE_EXTRACTION_PROMPT, sent in full on every call
                   (main.py:942, 958). Measured, not assumed: see SYSTEM_PROMPT_TOKENS.
   resent context  each call re-sends the last 10 messages of the session
-                  (`get_last_messages(..., limit=10)`, main.py:919) plus the top
-                  10 existing memories (`top_k=10`, main.py:925). More calls
+                  (`get_last_messages(..., limit=10)`, main.py:920) plus the top
+                  10 existing memories (`top_k=10`, main.py:929). More calls
                   means the same text is paid for more times.
   new content     the messages themselves. Every turn is carried by exactly one
                   call at any granularity, so this term is constant.
