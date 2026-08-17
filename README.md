@@ -848,9 +848,9 @@ cannot quietly lapse.
 
 Retrieval units differ ~40× in size — a turn averages 211 tokens, a user turn 54,
 a whole session 2,182 (`results/token_stats_*.json`, all 500 conversations).
-Comparing granularities at
-a shared `k` compares a 2,600-token prompt against a 22,000-token one, which is
-not a comparison. Two measured symptoms:
+Comparing granularities at a shared `k` is therefore not a comparison: at `k=10`
+it puts ~2,100 tokens of turns against ~21,800 tokens of sessions. Two measured
+symptoms:
 
 - The `random` baseline's `recall@10` rises from **0.021 to 0.213** between turn
   and session granularity, purely because there are only ~48 sessions per example
