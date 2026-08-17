@@ -139,7 +139,7 @@ high score on that category *cannot* be explained by retrieving the right span,
 because for most of those questions there is no right span. Whatever produces it
 is reading and computing over retrieved context, not locating an answer. So an
 aggregate retrieval metric over all 500 questions mixes two tasks that behave
-nothing alike, and this repo's own headline `any_hit@10` of 0.907 is subject to
+nothing alike, and this repo's own headline `any_hit@10` of 0.914 is subject to
 exactly the same caveat.
 
 One bookkeeping note on what is measured over what. This audit, the retrieval
@@ -390,37 +390,65 @@ underrated, not as a restatement of Mem0's results.
 ## Retrieval quality
 
 Judge-free: LongMemEval labels every turn with `has_answer`, which is a gold
-*retrieval* label, so these are arithmetic. n=100, turn granularity. Full tables
-in [RESULTS.md](RESULTS.md).
+*retrieval* label, so these are arithmetic. **All 500 questions**, turn
+granularity; 479 are scorable, the other 21 having no evidence turn to find. No
+arm makes an LLM call on the write path. Full tables in
+[RESULTS.md](RESULTS.md).
 
-| system | any_hit@1 | any_hit@10 | recall@10 | MRR | write ms/conv | write LLM calls |
-|---|---|---|---|---|---|---|
-| random | 0.021 | 0.041 | 0.021 | 0.027 | 0 | 0 |
-| recency (last-N turns) | 0.000 | 0.062 | 0.028 | 0.012 | 0 | 0 |
-| **BM25** | **0.546** | 0.825 | 0.693 | **0.634** | **40** | **0** |
-| dense (bge-small, 33M) | 0.464 | 0.897 | **0.821** | 0.616 | 3,020 | 0 |
-| hybrid (BM25 + dense, RRF) | 0.536 | **0.907** | 0.811 | 0.649 | 3,075 | 0 |
-| oracle (gold evidence ranked first) | 1.000 | 1.000 | 1.000 | 1.000 | — | — |
+| system | any_hit@1 | any_hit@10 | recall@10 | MRR |
+|---|---|---|---|---|
+| random | 0.010 | 0.046 | 0.029 | 0.019 |
+| recency (last-N turns) | 0.000 | 0.025 | 0.014 | 0.007 |
+| BM25 | 0.511 | 0.820 | 0.729 | 0.622 |
+| dense (bge-small, 33M) | 0.482 | **0.921** | **0.844** | 0.640 |
+| **hybrid (BM25 + dense, RRF)** | **0.537** | 0.914 | 0.826 | **0.665** |
+| oracle (gold evidence ranked first) | 1.000 | 1.000 | 1.000 | 1.000 |
 
-Write cost is wall-clock, and wall-clock is machine-dependent. All six rows come
-from one run on one machine with the embedding cache disabled
-(`timing_is_authoritative: true` in the artifact), so the ratio between rows is
-meaningful even though the absolute figures are not portable.
+Two findings that hold at full scale, and one that flipped.
 
-1. **BM25 beats a neural embedding model on top-1 precision and MRR** (0.546 vs
-   0.464; 0.634 vs 0.616) for **75× less write cost**. The embedding model buys
-   deeper recall and wins clearly there — `recall@10` 0.821 vs 0.693 — but it
-   does not rank better. Which of the two you want depends on whether the
-   answering model needs one evidence turn or all of them.
-2. **BM25 is perfect on knowledge-update questions** (`any_hit@10` = 1.000, vs
-   dense 0.938) — the slice the memory-conflict literature treats as the hard one.
-3. **"Just keep the last N turns" does not work.** Recency scores 0.062, barely
-   above random's 0.041.
+- **Hybrid rank-fusion is the best ranker**, beating both of its own inputs on
+  `any_hit@1` (0.537) and MRR (0.665). Fusing a lexical and a semantic ranking
+  recovers more than either signal alone, which is the same conclusion Mem0's v3
+  retrieval reaches and why the comparison in this repo is between *write* paths.
+- **The embedder buys depth; the lexical index buys cheap precision.** dense leads
+  `recall@10` 0.844 to 0.729, and BM25 leads `any_hit@1` 0.511 to 0.482 for
+  **~75× less write cost**. Which you want depends on whether the answering model
+  needs one evidence turn or all of them.
+- **"Just keep the last N turns" does not work, and at full scale it is worse
+  than that.** Recency scores **0.025** against random's 0.046 — not merely no
+  better than chance but *below* it, because the most recent turns are
+  systematically not the ones carrying an old answer.
 
-The weakest slice for BM25 is `single-session-preference` (MRR 0.158),
-consistent with preference questions not being lexically similar to the turns
-that answer them — but that slice is **n=6**, so treat it as a hypothesis worth
-testing at full scale rather than a result.
+Write cost is wall-clock, and wall-clock is machine-dependent. The ~75× figure is
+from the n=100 sweep, which is the run made on an otherwise-idle machine with the
+embedding cache disabled (`timing_is_authoritative: true` in that artifact): BM25
+40 ms per conversation against dense's 3,020. The ratio between rows is what
+transfers; the absolute figures are not portable.
+
+### Running at full scale contradicted two of this repo's own claims
+
+These arms were previously reported at a stratified n=100, with every
+per-question-type row flagged as unreplicated. Replicating them was worth it.
+
+1. **"BM25 beats a neural embedder on top-1 *and* MRR" was half wrong.** BM25
+   still leads `any_hit@1` (0.511 against 0.482), but it now **loses MRR** —
+   0.622 against 0.640, where at n=100 it led 0.634 to 0.616. The surviving claim
+   is narrower: BM25 finds a first correct hit as well as a neural model for far
+   less write cost, but it does not order the rest of the list as well.
+2. **"BM25 is perfect on knowledge-update" did not survive at all.** At n=16 it
+   scored `any_hit@10` = 1.000 against dense's 0.938. At **n=72** it is **0.944
+   against dense's 0.972** — behind, not ahead. The slice the memory-conflict
+   literature treats as the hard one turns out to be one where the embedder is
+   better, and the n=16 result pointed the opposite way.
+3. **The hypothesis this README declined to claim is now settled, and it holds.**
+   The weakest BM25 slice was `single-session-preference`, MRR 0.158 on **n=6** —
+   explicitly offered as untested. At **n=30** it is still BM25's weakest slice
+   (MRR 0.205), and the gap to dense is large: **0.678 against 0.205** on MRR,
+   0.900 against 0.400 on `any_hit@10`. Preference questions really are not
+   lexically similar to the turns that answer them. That is now a result.
+
+The first two are the reason the per-type rows carried a warning. The third is the
+reason it was worth writing the warning rather than dropping the slice.
 
 ---
 
@@ -904,10 +932,13 @@ python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
     truncated_random_25_s0 truncated_random_25_s1 truncated_random_25_s2 \
     leadk_50 leadk_25 leadk_10 leadk_5 tailk_50 tailk_25
 
-# retrieval + the cost figure
-./.venv/bin/python scripts/run_retrieval_eval.py --limit 100 \
-    --granularity turn --tag sweep_turn_n100 \
+# retrieval over all 500 questions (~1.5 h, CPU/MPS). --no-cache is what makes
+# the write-path wall-clock a measurement rather than a replay of a cached one.
+./.venv/bin/python scripts/run_retrieval_eval.py --limit 0 --no-cache \
+    --granularity turn --tag sweep_turn_n500 \
     --retrievers random recency bm25 dense hybrid oracle
+
+# the cost figure's inputs, also over all 500
 ./.venv/bin/python scripts/measure_token_stats.py --limit 0 --granularity turn
 ./.venv/bin/python scripts/make_cost_curve.py
 
@@ -924,24 +955,30 @@ wait. The arms in `results/` were produced that way and their per-question
 predictions are committed, so `regrade.py` and `run_ablation.py` reproduce every
 end-to-end number here without re-running a model.
 
-`--limit` takes a **stratified** subset preserving the question-type
-distribution, so the knowledge-update and abstention slices stay intact. Every
-reported number carries its own `n`.
+`--limit 0` means all 500. Any other value takes a **stratified** subset
+preserving the question-type distribution, so the knowledge-update and abstention
+slices stay intact. Every reported number carries its own `n`.
 
 ---
 
 ## Honest limits
 
-- **Everything here is 100 questions, and 100 questions can lie.** Each arm is a
-  stratified sample, 91 of them gradable, giving roughly ±0.10 per arm near
-  p = 0.5. That is wide enough to invent a large effect — the companion repo
+- **The end-to-end arms are 100 questions, and 100 questions can lie.** Retrieval,
+  the benchmark audit and the cost figure's token inputs are measured on all 500;
+  the end-to-end ladder is not, because each arm needs an answering model rather
+  than a CPU. Each e2e arm is a stratified sample with 91 gradable, giving roughly
+  ±0.10 near p = 0.5 — wide enough to invent a large effect. The companion repo
   measured +0.132 at p = 0.002 on this same draw and watched it fall to +0.007
-  across all 500 (446 gradable). The main results here are too large for that to
-  explain (lift +0.242
-  to +0.505 at p ≤ 1.1e-05, three to five times the sampling noise), but **every
-  per-question-type row sits on n=6–26**, where one question is worth 0.04 to
-  0.17, and none of those cells has been replicated at full scale. The
-  `single-session-preference` slice is n=6 and should not be quoted at all.
+  across all 500 (446 gradable). The main lifts here are too large for that to
+  explain (+0.242 to +0.505 at p ≤ 1.1e-05, three to five times the sampling
+  noise), but **every end-to-end per-question-type row sits on n=6–26**, where one
+  question is worth 0.04 to 0.17.
+
+  This is a demonstrated risk, not a ritual caveat. Replicating the *retrieval*
+  arms at n=500 contradicted two claims this README previously made from the n=100
+  draw, including one built on an n=16 slice —
+  [see above](#running-at-full-scale-contradicted-two-of-this-repos-own-claims).
+  Read the end-to-end per-type rows as the same kind of number.
 - **No memory product was re-run here.** Every Mem0, A-Mem and RecMem figure is
   quoted from a publication, and the cost comparison mixes benchmarks — Mem0's
   read path is measured on LoCoMo, this repo's on LongMemEval. An adapter that
